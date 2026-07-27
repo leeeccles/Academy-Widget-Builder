@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Academy Widget Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #5d5fe3; --brand-dark: #4a4ccc; --brand-light: #eeeeff;
+    --text-primary: #1a1a2e; --text-secondary: #6b7280; --text-muted: #9ca3af;
+    --border: #e5e7eb; --bg: #f7f8fa; --card: #ffffff;
+    --amber: #b45309; --r: 12px; --r-sm: 8px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  header {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 28px;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  header h1 { font-size: 19px; font-weight: 800; }
+  header p { font-size: 13px; color: var(--text-secondary); }
+  header a { color: var(--brand); font-weight: 600; text-decoration: none; }
+  header a:hover { text-decoration: underline; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 400px minmax(0, 1fr);
+    gap: 20px;
+    padding: 24px 28px;
+    max-width: 1400px;
+    margin: 0 auto;
+    align-items: start;
+  }
+  @media (max-width: 960px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 20px;
+  }
+  .card + .card { margin-top: 16px; }
+  .card h2 {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+  }
+  .hint { font-size: 12.5px; color: var(--text-secondary); margin-top: 10px; line-height: 1.5; }
+
+  /* widget type list */
+  .wtype { display: flex; flex-direction: column; gap: 8px; }
+  .wtype button {
+    display: flex; align-items: center; gap: 10px;
+    font: inherit; font-size: 14px; font-weight: 600;
+    padding: 11px 14px;
+    min-height: 44px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    background: var(--card);
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    touch-action: manipulation;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  }
+  .wtype button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .wtype button svg { flex: none; color: var(--text-secondary); }
+  .wtype button.active svg { color: var(--brand-dark); }
+  .wtype button.active { border-color: var(--brand); background: var(--brand-light); color: var(--brand-dark); }
+  .wtype button:disabled { color: var(--text-muted); cursor: default; background: var(--bg); }
+  .wtype .soon {
+    margin-left: auto; font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-muted); background: var(--border);
+    padding: 2px 8px; border-radius: 999px;
+  }
+
+  /* prompts */
+  .prompt-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+  .prompt-row input[type="text"] {
+    flex: 1; min-width: 0;
+    font: inherit; font-size: 14px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    color: var(--text-primary);
+  }
+  .prompt-row input[type="text"]:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; border-color: var(--brand); }
+  .count { font-size: 11.5px; color: var(--text-secondary); min-width: 42px; text-align: right; font-variant-numeric: tabular-nums; }
+  .count.warn { color: var(--amber); font-weight: 700; }
+  .remove {
+    font: inherit; font-size: 16px; line-height: 1;
+    width: 41px; height: 41px; flex: none;
+    border: 1px solid var(--border); border-radius: var(--r-sm);
+    background: var(--card); color: var(--text-secondary); cursor: pointer;
+    touch-action: manipulation;
+    transition: color 0.15s ease, border-color 0.15s ease;
+  }
+  .remove:hover { color: #b91c1c; border-color: #fca5a5; }
+  .remove:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .remove:disabled { opacity: 0.4; cursor: default; }
+  .add {
+    font: inherit; font-size: 13.5px; font-weight: 700;
+    padding: 11px 16px;
+    min-height: 44px;
+    border: 1px dashed var(--brand);
+    border-radius: var(--r-sm);
+    background: var(--card); color: var(--brand); cursor: pointer;
+    touch-action: manipulation;
+    transition: background-color 0.15s ease;
+  }
+  .add:hover { background: var(--brand-light); }
+  .add:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .add:disabled { opacity: 0.4; cursor: default; }
+
+  /* preview */
+  .preview-stage {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    padding: 22px;
+  }
+  .preview-frame-wrap { margin: 0 auto; background: var(--card); border: 1px dashed var(--border); border-radius: var(--r-sm); padding: 4px 10px; }
+  .preview-frame-wrap iframe { border: none; width: 100%; height: 56px; display: block; background: transparent; }
+
+  /* output */
+  .code-box {
+    background: #101322;
+    color: #dbe2f0;
+    border-radius: var(--r-sm);
+    padding: 16px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 260px;
+    overflow: auto;
+  }
+  .out-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    font: inherit; font-size: 13.5px; font-weight: 700;
+    padding: 11px 18px; min-height: 44px;
+    border-radius: var(--r-sm); border: 1px solid transparent;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  .btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .btn-primary { background: var(--brand); color: #fff; }
+  .btn-primary:hover { background: var(--brand-dark); }
+  .btn-secondary { background: var(--card); color: var(--text-primary); border-color: var(--border); }
+  .btn-secondary:hover { border-color: var(--text-muted); }
+  .size-note { font-size: 12px; color: var(--text-secondary); }
+  @media (max-width: 640px) {
+    .prompt-row input[type="text"] { font-size: 16px; }
+    .layout { padding: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: 0.01ms !important; }
+  }
+  .steps { font-size: 13px; color: var(--text-secondary); line-height: 1.7; margin-top: 14px; padding-left: 18px; }
+  .steps a { color: var(--brand); font-weight: 600; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Academy Widget Builder</h1>
+  <p>Generate copy-paste widgets for 360Learning academy spaces &middot; <a href="https://support.360learning.com/hc/en-us/articles/38078313603092-Configure-an-HTML-widget" target="_blank" rel="noopener">HTML widget guide</a></p>
+</header>
+
+<div class="layout">
+  <div>
+    <section class="card">
+      <h2>Widget</h2>
+      <div class="wtype">
+        <button type="button" class="active">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.7a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-2a2 2 0 0 0 1.3-1.2z"/></svg>
+          AI Companion prompt banner
+        </button>
+        <button type="button" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
+          Hero banner <span class="soon">Soon</span>
+        </button>
+        <button type="button" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 13v4"/><path d="M12 9v8"/><path d="M17 5v12"/></svg>
+          Learning dashboard <span class="soon">Soon</span>
+        </button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Prompts</h2>
+      <div id="prompts"></div>
+      <button type="button" class="add" id="addPrompt">+ Add prompt</button>
+      <p class="hint">Up to 5 prompts, max <strong>50 characters</strong> each so they always fit on one line inside the 360Learning content column. The widget cycles through them with a typing animation.</p>
+    </section>
+  </div>
+
+  <div>
+    <section class="card">
+      <h2>Live preview</h2>
+      <div class="preview-stage">
+        <div class="preview-frame-wrap">
+          <iframe id="preview" title="AI Companion widget preview" scrolling="no"></iframe>
+        </div>
+      </div>
+      <p class="hint">Exactly the code you'll paste, rendered live. Hover it to pause the animation.</p>
+    </section>
+
+    <section class="card">
+      <h2>Widget code</h2>
+      <div class="code-box" id="code" role="region" aria-label="Generated widget code" tabindex="0"></div>
+      <div class="out-actions">
+        <button type="button" class="btn btn-primary" id="copy">Copy widget code</button>
+        <button type="button" class="btn btn-secondary" id="download">Download .html</button>
+        <span class="size-note" id="sizeNote"></span>
+      </div>
+      <ol class="steps">
+        <li>Copy the widget code above. It's self-contained HTML and CSS, no hosting or iframe needed.</li>
+        <li>In 360Learning, edit either your homepage or the group page layout and select the <strong>HTML block</strong> (<a href="https://support.360learning.com/hc/en-us/articles/38078313603092-Configure-an-HTML-widget" target="_blank" rel="noopener">how to</a>).</li>
+        <li>Paste the code and click apply. Done.</li>
+      </ol>
+    </section>
+  </div>
+</div>
+
+<script>
+(function(){
+  var MAX_PROMPTS = 5, MAX_CHARS = 50, WARN_AT = 42;
+
+  var state = {
+    prompts: [
+      "How do our top reps handle objections?",
+      "What are some ways I can use AI to save time?",
+      "What are our company values?"
+    ]
+  };
+
+  // v1 fixed gradient (matches the original Companion widget)
+  var C1 = "#6d28d9", CM = "#a21caf", C2 = "#ec4899";
+
+  /* ================= widget generator =================
+     Produces self-contained HTML+CSS (zero JavaScript) that can be pasted
+     directly into a 360Learning HTML widget. The typing animation is a
+     master timeline: every character gets its own keyframes with show/hide
+     points computed as percentages of the full cycle. All class and
+     keyframe names are prefixed cw- to avoid colliding with platform CSS. */
+
+  var TYPE = 80, DEL = 42, HOLD = 3500, GAP = 500; // ms, matches the original JS widget
+
+  function escChar(ch) {
+    return ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : ch;
+  }
+
+  function buildWidget() {
+    var phrases = state.prompts
+      .map(function(p){ return p.trim().slice(0, MAX_CHARS); })
+      .filter(Boolean);
+    if (!phrases.length) phrases = ["Ask me anything about your training…"];
+
+    var c1 = C1, cm = CM, c2 = C2;
+
+    // master timeline
+    var segs = phrases.map(function(p){ return p.length * TYPE + HOLD + p.length * DEL + GAP; });
+    var T = segs.reduce(function(a, b){ return a + b; }, 0);
+    var EPS = 0.01;
+    function pct(ms) { return +(ms / T * 100).toFixed(3); }
+
+    var keyframes = '', charRules = '', spansHtml = '';
+    var t0 = 0;
+    phrases.forEach(function(p, i) {
+      var len = p.length;
+      var chars = '';
+      for (var j = 0; j < len; j++) {
+        var show = pct(t0 + (j + 1) * TYPE);
+        var hide = pct(t0 + len * TYPE + HOLD + (len - j) * DEL);
+        var name = 'cwk' + i + 'x' + j;
+        keyframes += '@keyframes ' + name +
+          '{0%,' + (show - EPS).toFixed(3) + '%{max-width:0}' +
+          show + '%,' + (hide - EPS).toFixed(3) + '%{max-width:2em}' +
+          hide + '%,100%{max-width:0}}\n';
+        charRules += '.cw-ph' + i + ' .cw-c:nth-child(' + (j + 1) + '){animation-name:' + name + '}\n';
+        chars += '<span class="cw-c">' + escChar(p[j]) + '</span>';
+      }
+      spansHtml += '<span class="cw-ph cw-ph' + i + '">' + chars + '</span>';
+      t0 += segs[i];
+    });
+
+    var css =
+"@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&display=swap');\n" +
+".cw-wrap{container-type:inline-size;position:relative;width:100%;margin:0;overflow:hidden;background:transparent}\n" +
+".cw{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:20px;font-size:clamp(15px,2.5cqw,22px);font-weight:700;line-height:1.3;color:#111827;white-space:nowrap;margin:0;padding:0}\n" +
+".cw-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);border:0}\n" +
+".cw-ai{background:linear-gradient(100deg," + c1 + " 0%," + cm + " 55%," + c2 + " 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}\n" +
+".cw-star{position:relative;display:inline-block}\n" +
+".cw-star::before,.cw-star::after{content:'\\2726';position:absolute;pointer-events:none;opacity:0}\n" +
+".cw-star::before{color:" + cm + ";font-size:.4em;top:-.3em;right:-.5em;animation:cwspk 3s ease-in-out .3s infinite}\n" +
+".cw-star::after{color:" + c2 + ";font-size:.28em;bottom:-.1em;left:-.3em;animation:cwspk 3s ease-in-out 1.5s infinite}\n" +
+"@keyframes cwspk{0%,100%{opacity:0;transform:scale(.4) rotate(0deg)}50%{opacity:1;transform:scale(1) rotate(45deg)}}\n" +
+".cw-c{display:inline-block;vertical-align:bottom;overflow:hidden;max-width:0;white-space:pre;animation-duration:" + T + "ms;animation-timing-function:linear;animation-iteration-count:infinite}\n" +
+".cw-cur{display:inline-block;color:#111827;margin-left:1px;animation:cwblink .82s ease-in-out infinite alternate}\n" +
+"@keyframes cwblink{0%{opacity:1}100%{opacity:0}}\n" +
+".cw:hover .cw-c,.cw:hover .cw-cur,.cw:hover .cw-star::before,.cw:hover .cw-star::after{animation-play-state:paused}\n" +
+"@media (prefers-reduced-motion:reduce){.cw-c{animation:none;max-width:none}.cw-ph~.cw-ph{display:none}.cw-cur{display:none}.cw-star::before,.cw-star::after{display:none}}\n" +
+keyframes + charRules;
+
+    var srText = ('Ask AI Companion: ' + phrases.join(' \u00b7 '))
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    return '<!-- AI Companion widget \u00b7 generated with Academy Widget Builder \u00b7 edit in the builder, not by hand -->\n' +
+      '<div class="cw-wrap">' +
+      '<span class="cw-sr">' + srText + '</span>' +
+      '<div class="cw" aria-hidden="true">' +
+      '<span>Ask&nbsp;<span class="cw-star"><span class="cw-ai">\u2726</span></span><span class="cw-ai"> Companion</span>:&nbsp;</span>' +
+      spansHtml +
+      '<span class="cw-cur">|</span>' +
+      '</div></div>\n<style>\n' + css + '</style>';
+  }
+
+  function previewDoc(snippet) {
+    return '<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;padding:6px 2px;background:transparent}</style></head><body>' +
+      snippet + '</body></html>';
+  }
+
+  /* ================= builder UI ================= */
+
+  var promptsEl = document.getElementById("prompts");
+  var addBtn = document.getElementById("addPrompt");
+  var codeEl = document.getElementById("code");
+  var previewEl = document.getElementById("preview");
+  var sizeNote = document.getElementById("sizeNote");
+
+  var currentSnippet = "";
+  var previewTimer = null;
+  function render(refreshPreview) {
+    currentSnippet = buildWidget();
+    codeEl.textContent = currentSnippet;
+    sizeNote.textContent = (currentSnippet.length / 1024).toFixed(1) + " KB";
+    if (refreshPreview) {
+      clearTimeout(previewTimer);
+      previewTimer = setTimeout(function(){
+        previewEl.srcdoc = previewDoc(currentSnippet);
+      }, 400);
+    }
+  }
+
+  /* ---- prompts ---- */
+  function renderPrompts() {
+    promptsEl.innerHTML = "";
+    state.prompts.forEach(function(p, i) {
+      var row = document.createElement("div");
+      row.className = "prompt-row";
+
+      var input = document.createElement("input");
+      input.type = "text";
+      input.maxLength = MAX_CHARS;
+      input.value = p;
+      input.placeholder = "e.g. Summarise this course for me";
+      input.setAttribute("aria-label", "Prompt " + (i + 1));
+
+      var count = document.createElement("span");
+      count.className = "count";
+
+      function updateCount() {
+        count.textContent = input.value.length + "/" + MAX_CHARS;
+        count.classList.toggle("warn", input.value.length > WARN_AT);
+      }
+      updateCount();
+
+      input.addEventListener("input", function() {
+        state.prompts[i] = input.value;
+        updateCount();
+        render(true);
+      });
+
+      var rm = document.createElement("button");
+      rm.type = "button";
+      rm.className = "remove";
+      rm.textContent = "×";
+      rm.setAttribute("aria-label", "Remove prompt " + (i + 1));
+      rm.disabled = state.prompts.length <= 1;
+      rm.addEventListener("click", function() {
+        state.prompts.splice(i, 1);
+        renderPrompts();
+        render(true);
+      });
+
+      row.appendChild(input);
+      row.appendChild(count);
+      row.appendChild(rm);
+      promptsEl.appendChild(row);
+    });
+    addBtn.disabled = state.prompts.length >= MAX_PROMPTS;
+  }
+
+  addBtn.addEventListener("click", function() {
+    if (state.prompts.length >= MAX_PROMPTS) return;
+    state.prompts.push("");
+    renderPrompts();
+    promptsEl.querySelector(".prompt-row:last-child input").focus();
+    render(false);
+  });
+
+  /* ---- copy ---- */
+  document.getElementById("copy").addEventListener("click", function() {
+    var btn = this, text = currentSnippet;
+    function done(ok) {
+      btn.textContent = ok ? "Copied ✓" : "Copy failed. Select manually";
+      setTimeout(function(){ btn.textContent = "Copy widget code"; }, 2000);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ done(false); });
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { done(document.execCommand("copy")); } catch(e) { done(false); }
+      document.body.removeChild(ta);
+    }
+  });
+
+  /* ---- download ---- */
+  document.getElementById("download").addEventListener("click", function() {
+    var blob = new Blob([previewDoc(currentSnippet)], { type: "text/html" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "ai-companion-widget.html";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  renderPrompts();
+  render(false);
+  previewEl.srcdoc = previewDoc(currentSnippet);
+}());
+</script>
+</body>
+</html>
