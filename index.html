@@ -335,8 +335,11 @@ keyframes + charRules;
       '</div></div>\n<style>\n' + css + '</style>';
   }
 
-  function previewDoc(snippet) {
-    return '<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;padding:6px 2px;background:transparent}</style></head><body>' +
+  function previewDoc(snippet, center) {
+    var bodyCss = center
+      ? 'margin:0;padding:0 2px;background:transparent;display:flex;align-items:center;min-height:100vh'
+      : 'margin:0;padding:6px 2px;background:transparent';
+    return '<!doctype html><html><head><meta charset="utf-8"><style>body{' + bodyCss + '}</style></head><body>' +
       snippet + '</body></html>';
   }
 
@@ -357,7 +360,7 @@ keyframes + charRules;
     if (refreshPreview) {
       clearTimeout(previewTimer);
       previewTimer = setTimeout(function(){
-        previewEl.srcdoc = previewDoc(currentSnippet);
+        previewEl.srcdoc = previewDoc(currentSnippet, true);
       }, 400);
     }
   }
@@ -448,7 +451,7 @@ keyframes + charRules;
 
   renderPrompts();
   render(false);
-  previewEl.srcdoc = previewDoc(currentSnippet);
+  previewEl.srcdoc = previewDoc(currentSnippet, true);
 }());
 </script>
 </body>
