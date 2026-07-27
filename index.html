@@ -10,9 +10,15 @@
 <style>
   :root {
     --brand: #5d5fe3; --brand-dark: #4a4ccc; --brand-light: #eeeeff;
-    --text-primary: #1a1a2e; --text-secondary: #6b7280; --text-muted: #9ca3af;
-    --border: #e5e7eb; --bg: #f7f8fa; --card: #ffffff;
-    --amber: #b45309; --r: 12px; --r-sm: 8px;
+    --text-primary: #1a1a2e; --text-secondary: #5b6472; --text-muted: #8b93a1;
+    --border: #e5e7eb; --border-strong: #d1d5db; --bg: #f7f8fa; --card: #ffffff;
+    --amber: #a15c07; --amber-bg: #fef3c7; --green: #15803d; --green-bg: #dcfce7; --red: #b91c1c;
+
+    /* type scale */
+    --fs-micro: 11px; --fs-sm: 12px; --fs-md: 13px; --fs-base: 14px; --fs-lg: 19px;
+    /* 4px spacing rhythm */
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
+    --r: 12px; --r-sm: 8px;
   }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -21,69 +27,92 @@
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
+    font-size: var(--fs-base);
   }
   header {
     background: var(--card);
     border-bottom: 1px solid var(--border);
-    padding: 18px 28px;
+    padding: var(--sp-4) var(--sp-6);
     display: flex;
     align-items: baseline;
-    gap: 14px;
+    gap: var(--sp-3);
     flex-wrap: wrap;
   }
-  header h1 { font-size: 19px; font-weight: 800; }
-  header p { font-size: 13px; color: var(--text-secondary); }
+  header h1 { font-size: var(--fs-lg); font-weight: 800; letter-spacing: -0.01em; }
+  header p { font-size: var(--fs-md); color: var(--text-secondary); }
   header a { color: var(--brand); font-weight: 600; text-decoration: none; }
   header a:hover { text-decoration: underline; }
 
   .layout {
     display: grid;
-    grid-template-columns: 400px minmax(0, 1fr);
-    gap: 20px;
-    padding: 24px 28px;
-    max-width: 1400px;
+    grid-template-columns: 408px minmax(0, 1fr);
+    gap: var(--sp-5);
+    padding: var(--sp-6);
+    max-width: 1440px;
     margin: 0 auto;
     align-items: start;
   }
-  @media (max-width: 960px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+  /* On desktop the page itself never scrolls: the header stays put and each
+     column scrolls independently, so the preview is always on screen and both
+     columns can be read to the end. Sticky can't do this, because before the
+     page has scrolled a sticky column sits below the header and its own
+     bottom falls off the viewport. */
+  @media (min-width: 1061px) {
+    body { height: 100vh; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+    header { flex: none; }
+    .layout { flex: 1; min-height: 0; width: 100%; overflow: hidden; align-items: stretch; }
+    .col { overflow-y: auto; overscroll-behavior: contain; max-height: 100%; padding-right: 6px; }
+    .col::after { content: ""; display: block; height: var(--sp-1); }
+  }
+  @media (max-width: 1060px) { .layout { grid-template-columns: minmax(0, 1fr); } }
 
   .card {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--r);
-    padding: 20px;
+    padding: var(--sp-5);
   }
-  .card + .card { margin-top: 16px; }
+  .card + .card, .panel > .card:first-child { margin-top: var(--sp-4); }
   .card h2 {
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-secondary);
-    margin-bottom: 14px;
+    font-size: var(--fs-sm); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--text-secondary); margin-bottom: var(--sp-4);
+    display: flex; align-items: center; gap: var(--sp-2);
   }
-  .hint { font-size: 12.5px; color: var(--text-secondary); margin-top: 10px; line-height: 1.5; }
+  .num {
+    flex: none; width: 18px; height: 18px; border-radius: 50%;
+    background: var(--brand-light); color: var(--brand-dark);
+    font-size: 10px; font-weight: 800; line-height: 18px; text-align: center; letter-spacing: 0;
+  }
+  .hint { font-size: var(--fs-sm); color: var(--text-secondary); margin-top: var(--sp-2); line-height: 1.55; }
+  .hint + .hint { margin-top: var(--sp-2); }
+  .hint code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: var(--fs-micro); background: var(--bg); padding: 1px 5px; border-radius: 4px;
+  }
+  .divider { border: 0; border-top: 1px solid var(--border); margin: var(--sp-4) 0 var(--sp-3); }
 
   /* widget type list */
-  .wtype { display: flex; flex-direction: column; gap: 8px; }
+  .wtype { display: flex; flex-direction: column; gap: var(--sp-2); }
   .wtype button {
-    display: flex; align-items: center; gap: 10px;
-    font: inherit; font-size: 14px; font-weight: 600;
-    padding: 11px 14px;
-    min-height: 44px;
-    border: 1px solid var(--border);
+    display: flex; align-items: center; gap: var(--sp-3);
+    font: inherit; font-size: var(--fs-base); font-weight: 600;
+    padding: 11px var(--sp-4);
+    min-height: 46px;
+    border: 1px solid var(--border-strong);
     border-radius: var(--r-sm);
     background: var(--card);
     color: var(--text-primary);
     cursor: pointer;
     text-align: left;
     touch-action: manipulation;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
   }
+  .wtype button:hover:not(:disabled) { border-color: var(--text-muted); }
   .wtype button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-  .wtype button svg { flex: none; color: var(--text-secondary); }
-  .wtype button.active svg { color: var(--brand-dark); }
-  .wtype button.active { border-color: var(--brand); background: var(--brand-light); color: var(--brand-dark); }
+  .wtype button svg { flex: none; color: var(--text-muted); }
+  .wtype button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-light); color: var(--brand-dark); }
+  .wtype button[aria-pressed="true"] svg { color: var(--brand-dark); }
   .wtype button:disabled { color: var(--text-muted); cursor: default; background: var(--bg); }
   .wtype .soon {
     margin-left: auto; font-size: 10.5px; font-weight: 700;
@@ -92,92 +121,199 @@
     padding: 2px 8px; border-radius: 999px;
   }
 
-  /* prompts */
-  .prompt-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
-  .prompt-row input[type="text"] {
-    flex: 1; min-width: 0;
-    font: inherit; font-size: 14px;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
+  /* fields */
+  .field { margin-bottom: var(--sp-4); }
+  .field:last-child { margin-bottom: 0; }
+  .field > label { display: block; font-size: var(--fs-md); font-weight: 700; margin-bottom: 6px; }
+  .field .row { display: flex; gap: var(--sp-2); align-items: center; }
+  input[type="text"], input[type="url"], textarea {
+    font: inherit; font-size: var(--fs-base); width: 100%; min-width: 0;
+    padding: 10px var(--sp-3);
+    border: 1px solid var(--border-strong);
     border-radius: var(--r-sm);
+    background: var(--card);
     color: var(--text-primary);
   }
-  .prompt-row input[type="text"]:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; border-color: var(--brand); }
-  .count { font-size: 11.5px; color: var(--text-secondary); min-width: 42px; text-align: right; font-variant-numeric: tabular-nums; }
+  textarea { resize: vertical; min-height: 84px; line-height: 1.5; }
+  input:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--brand); outline-offset: 1px; border-color: var(--brand);
+  }
+  input[aria-invalid="true"] { border-color: #f0a3a3; }
+  .count {
+    font-size: var(--fs-micro); color: var(--text-secondary); min-width: 44px;
+    text-align: right; font-variant-numeric: tabular-nums;
+  }
   .count.warn { color: var(--amber); font-weight: 700; }
+
+  /* prompts */
+  .prompt-row { display: flex; gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-3); }
   .remove {
     font: inherit; font-size: 16px; line-height: 1;
-    width: 41px; height: 41px; flex: none;
-    border: 1px solid var(--border); border-radius: var(--r-sm);
+    width: 42px; height: 42px; flex: none;
+    border: 1px solid var(--border-strong); border-radius: var(--r-sm);
     background: var(--card); color: var(--text-secondary); cursor: pointer;
     touch-action: manipulation;
-    transition: color 0.15s ease, border-color 0.15s ease;
+    transition: color 0.18s ease, border-color 0.18s ease;
   }
-  .remove:hover { color: #b91c1c; border-color: #fca5a5; }
+  .remove:hover { color: var(--red); border-color: #fca5a5; }
   .remove:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
   .remove:disabled { opacity: 0.4; cursor: default; }
   .add {
-    font: inherit; font-size: 13.5px; font-weight: 700;
-    padding: 11px 16px;
+    font: inherit; font-size: var(--fs-md); font-weight: 700;
+    padding: 11px var(--sp-4);
     min-height: 44px;
     border: 1px dashed var(--brand);
     border-radius: var(--r-sm);
     background: var(--card); color: var(--brand); cursor: pointer;
     touch-action: manipulation;
-    transition: background-color 0.15s ease;
+    transition: background-color 0.18s ease;
   }
   .add:hover { background: var(--brand-light); }
   .add:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
   .add:disabled { opacity: 0.4; cursor: default; }
 
-  /* preview */
-  .preview-stage {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--r-sm);
-    padding: 22px;
+  /* segmented control */
+  .seg { display: flex; gap: 6px; flex-wrap: wrap; }
+  .seg button {
+    font: inherit; font-size: var(--fs-md); font-weight: 600;
+    padding: 9px var(--sp-3); min-height: 42px;
+    border: 1px solid var(--border-strong); border-radius: var(--r-sm);
+    background: var(--card); color: var(--text-primary);
+    cursor: pointer; touch-action: manipulation;
+    display: flex; align-items: center; gap: var(--sp-2);
+    transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
   }
-  .preview-frame-wrap { margin: 0 auto; background: var(--card); border: 1px dashed var(--border); border-radius: var(--r-sm); padding: 4px 10px; }
-  .preview-frame-wrap iframe { border: none; width: 100%; height: 56px; display: block; background: transparent; }
+  .seg button:hover { border-color: var(--text-muted); }
+  .seg button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .seg button[aria-pressed="true"] {
+    border-color: var(--brand); background: var(--brand-light); color: var(--brand-dark);
+  }
+  .seg svg { flex: none; color: var(--text-muted); }
+  .seg button[aria-pressed="true"] svg { color: var(--brand-dark); }
+  .seg.stack { flex-direction: column; }
+  .seg.stack button { width: 100%; text-align: left; }
+  .pill {
+    font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+    background: var(--green-bg); color: var(--green); padding: 2px 6px; border-radius: 999px;
+  }
+
+  /* colours */
+  .presets { display: grid; grid-template-columns: repeat(auto-fill, minmax(94px, 1fr)); gap: var(--sp-2); }
+  .preset {
+    font: inherit; font-size: var(--fs-sm); font-weight: 600;
+    border: 1px solid var(--border-strong); border-radius: var(--r-sm);
+    background: var(--card); color: var(--text-secondary);
+    padding: 7px; cursor: pointer; text-align: left;
+    transition: border-color 0.18s ease;
+  }
+  .preset:hover { border-color: var(--text-muted); }
+  .preset[aria-pressed="true"] { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); color: var(--brand-dark); }
+  .preset:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .swatches { display: flex; height: 22px; border-radius: 5px; overflow: hidden; margin-bottom: 6px; border: 1px solid rgba(0,0,0,0.08); }
+  .swatches span { flex: 1; }
+
+  .disclose {
+    font: inherit; font-size: var(--fs-md); font-weight: 700;
+    display: flex; align-items: center; gap: var(--sp-2);
+    padding: 8px 0; min-height: 40px;
+    background: none; border: 0; color: var(--brand-dark); cursor: pointer;
+  }
+  .disclose:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-sm); }
+  .disclose svg { transition: transform 0.18s ease; }
+  .disclose[aria-expanded="true"] svg { transform: rotate(90deg); }
+  .reset { margin-top: var(--sp-3); font-size: var(--fs-md); padding: 9px var(--sp-4); min-height: 40px; }
+  .colors { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); margin-top: var(--sp-3); }
+  .cfield > label { font-size: var(--fs-micro); font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 5px; }
+  .cfield .row { display: flex; gap: 6px; align-items: center; }
+  .cfield input[type="color"] {
+    -webkit-appearance: none; appearance: none;
+    width: 38px; height: 38px; flex: none; padding: 0;
+    border: 1px solid var(--border-strong); border-radius: var(--r-sm);
+    background: none; cursor: pointer;
+  }
+  .cfield input[type="color"]::-webkit-color-swatch-wrapper { padding: 3px; }
+  .cfield input[type="color"]::-webkit-color-swatch { border: none; border-radius: 5px; }
+  .cfield input[type="text"] { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--fs-sm); padding: 9px var(--sp-2); }
+
+  /* status messages: never colour alone, always a glyph too */
+  .notes { margin-top: var(--sp-3); font-size: var(--fs-sm); line-height: 1.5; }
+  .notes:empty { margin-top: 0; }
+  .notes p { display: flex; gap: 6px; align-items: flex-start; }
+  .notes p + p { margin-top: 6px; }
+  .notes p::before {
+    flex: none; width: 15px; height: 15px; border-radius: 50%;
+    font-size: 10px; font-weight: 800; text-align: center; line-height: 15px; margin-top: 1px;
+    color: #fff;
+  }
+  .notes p.warn { color: var(--amber); }
+  .notes p.warn::before { content: "!"; background: var(--amber); }
+  .notes p.ok { color: var(--green); font-weight: 600; }
+  .notes p.ok::before { content: "\2713"; background: var(--green); font-size: 9px; }
+  .ratio {
+    margin-left: auto; padding-left: var(--sp-2); flex: none;
+    color: var(--text-muted); font-weight: 600; font-size: var(--fs-micro);
+    font-variant-numeric: tabular-nums;
+  }
+  .err { font-size: var(--fs-sm); color: var(--red); font-weight: 600; margin-top: var(--sp-2); }
+  .warn-inline { font-size: var(--fs-sm); color: var(--amber); font-weight: 600; margin-top: var(--sp-3); }
+
+  /* dropzone */
+  .drop {
+    border: 1px dashed var(--border-strong); border-radius: var(--r-sm);
+    padding: var(--sp-5) var(--sp-4); text-align: center; cursor: pointer;
+    background: var(--bg); transition: border-color 0.18s ease, background-color 0.18s ease;
+  }
+  .drop:hover, .drop.over { border-color: var(--brand); background: var(--brand-light); }
+  .drop:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .drop strong { display: block; font-size: var(--fs-md); margin-bottom: 3px; }
+  .drop span { font-size: var(--fs-sm); color: var(--text-secondary); }
+  .thumb { display: flex; gap: var(--sp-3); align-items: center; margin-top: var(--sp-3); }
+  .thumb img { width: 62px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
+  .thumb div { min-width: 0; font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.45; }
+  .thumb .weight { font-weight: 700; color: var(--text-primary); }
+  .thumb .weight.heavy { color: var(--amber); }
+
+  /* preview */
+  .preview-head { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-4); }
+  .preview-head h2 { margin: 0; }
+  .preview-stage { background: #ffffff; border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--sp-5); overflow-x: auto; }
+  .preview-frame-wrap { margin: 0 auto; }
+  .preview-frame-wrap iframe { border: none; width: 100%; height: 80px; display: block; background: transparent; }
 
   /* output */
   .code-box {
-    background: #101322;
-    color: #dbe2f0;
-    border-radius: var(--r-sm);
-    padding: 16px;
+    background: #101322; color: #dbe2f0;
+    border-radius: var(--r-sm); padding: var(--sp-4);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 11.5px;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    word-break: break-all;
-    max-height: 260px;
-    overflow: auto;
+    font-size: var(--fs-micro); line-height: 1.55;
+    white-space: pre-wrap; word-break: break-all;
+    max-height: 240px; overflow: auto;
   }
-  .out-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; align-items: center; }
+  .code-box:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .out-actions { display: flex; gap: var(--sp-3); margin-top: var(--sp-4); flex-wrap: wrap; align-items: center; }
   .btn {
-    font: inherit; font-size: 13.5px; font-weight: 700;
-    padding: 11px 18px; min-height: 44px;
+    font: inherit; font-size: var(--fs-base); font-weight: 700;
+    padding: 11px var(--sp-5); min-height: 44px;
     border-radius: var(--r-sm); border: 1px solid transparent;
-    cursor: pointer;
-    touch-action: manipulation;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+    cursor: pointer; touch-action: manipulation;
+    transition: background-color 0.18s ease, border-color 0.18s ease;
   }
   .btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
   .btn-primary { background: var(--brand); color: #fff; }
   .btn-primary:hover { background: var(--brand-dark); }
-  .btn-secondary { background: var(--card); color: var(--text-primary); border-color: var(--border); }
+  .btn-secondary { background: var(--card); color: var(--text-primary); border-color: var(--border-strong); }
   .btn-secondary:hover { border-color: var(--text-muted); }
-  .size-note { font-size: 12px; color: var(--text-secondary); }
-  @media (max-width: 640px) {
-    .prompt-row input[type="text"] { font-size: 16px; }
-    .layout { padding: 16px; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    * { transition-duration: 0.01ms !important; }
-  }
-  .steps { font-size: 13px; color: var(--text-secondary); line-height: 1.7; margin-top: 14px; padding-left: 18px; }
+  .size-note { font-size: var(--fs-sm); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+  .size-note.heavy { color: var(--amber); font-weight: 700; }
+  .steps { font-size: var(--fs-md); color: var(--text-secondary); line-height: 1.7; margin-top: var(--sp-4); padding-left: 18px; }
   .steps a { color: var(--brand); font-weight: 600; }
+  .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+
+  @media (max-width: 640px) {
+    input[type="text"], input[type="url"], textarea { font-size: 16px; }
+    .layout { padding: var(--sp-4); }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms !important; } }
 </style>
 </head>
 <body>
@@ -187,17 +323,17 @@
 </header>
 
 <div class="layout">
-  <div>
+  <div class="col">
     <section class="card">
       <h2>Widget</h2>
-      <div class="wtype">
-        <button type="button" class="active">
+      <div class="wtype" id="wtype" role="group" aria-label="Widget type">
+        <button type="button" data-w="companion" aria-pressed="true">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.7a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-2a2 2 0 0 0 1.3-1.2z"/></svg>
           AI Companion prompt banner
         </button>
-        <button type="button" disabled>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>
-          Hero banner <span class="soon">Soon</span>
+        <button type="button" data-w="hero" aria-pressed="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M14 4v16"/><path d="M5 10h5"/><path d="M5 14h3"/></svg>
+          Hero banner
         </button>
         <button type="button" disabled>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 13v4"/><path d="M12 9v8"/><path d="M17 5v12"/></svg>
@@ -206,23 +342,173 @@
       </div>
     </section>
 
-    <section class="card">
-      <h2>Prompts</h2>
-      <div id="prompts"></div>
-      <button type="button" class="add" id="addPrompt">+ Add prompt</button>
-      <p class="hint">Up to 5 prompts, max <strong>50 characters</strong> each so they always fit on one line inside the 360Learning content column. The widget cycles through them with a typing animation.</p>
-    </section>
+    <!-- ===== AI Companion ===== -->
+    <div class="panel" id="panelCompanion">
+      <section class="card">
+        <h2>Prompts</h2>
+        <div id="prompts"></div>
+        <button type="button" class="add" id="addPrompt">+ Add prompt</button>
+        <p class="hint">Up to 5 prompts, max <strong>50 characters</strong> each so they always fit on one line inside the 360Learning content column. The widget cycles through them with a typing animation.</p>
+      </section>
+    </div>
+
+    <!-- ===== Hero banner ===== -->
+    <div class="panel" id="panelHero" hidden>
+      <section class="card">
+        <h2><span class="num" aria-hidden="true">1</span> Layout</h2>
+        <div class="seg stack" id="layoutSeg" role="group" aria-label="Hero layout">
+          <button type="button" data-layout="textFirst" aria-pressed="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M14 4v16"/><path d="M5 10h5"/><path d="M5 14h3"/></svg>
+            Text left, image right
+          </button>
+          <button type="button" data-layout="imageFirst" aria-pressed="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 4v16"/><path d="M14 10h5"/><path d="M14 14h3"/></svg>
+            Image left, text right
+          </button>
+          <button type="button" data-layout="overlay" aria-pressed="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="17.5" cy="8.5" r="1.5"/><path d="M5 15h9"/><path d="M5 11.5h6"/></svg>
+            Text over full-width image
+          </button>
+        </div>
+        <p class="hint" id="layoutHint"></p>
+      </section>
+
+      <section class="card">
+        <h2><span class="num" aria-hidden="true">2</span> Content</h2>
+        <div class="field">
+          <label for="h1">Heading</label>
+          <div class="row">
+            <input type="text" id="h1" maxlength="45" placeholder="Welcome to your">
+            <span class="count" id="h1c"></span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="h2i">Second line, in the accent colour</label>
+          <div class="row">
+            <input type="text" id="h2i" maxlength="45" placeholder="Digital Academy">
+            <span class="count" id="h2c"></span>
+          </div>
+          <p class="hint">Leave empty for a single-line heading.</p>
+        </div>
+        <div class="field">
+          <label for="body">Body text</label>
+          <textarea id="body" maxlength="260" placeholder="One or two sentences on what this space is for."></textarea>
+          <div class="row" style="justify-content:flex-end"><span class="count" id="bodyc"></span></div>
+          <p class="hint">This is what drives the height of the banner. Shorter copy gives a shorter hero.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2><span class="num" aria-hidden="true">3</span> Image</h2>
+        <div class="field">
+          <div class="seg" id="imgSeg" role="group" aria-label="Image source">
+            <button type="button" data-img="url" aria-pressed="true">Hosted URL <span class="pill">Best</span></button>
+            <button type="button" data-img="upload" aria-pressed="false">Upload and embed</button>
+          </div>
+        </div>
+
+        <div class="field" id="imgUrlField">
+          <label for="imgUrl">Image URL</label>
+          <input type="url" id="imgUrl" placeholder="https://example.com/academy-hero.jpg" aria-describedby="imgUrlHelp">
+          <p class="hint" id="imgUrlHelp">Must be <code>https://</code>. Use an image already hosted on your marketing site, a CDN, or an asset URL you can copy from inside 360Learning.</p>
+          <p class="hint"><strong>Why this is the better option:</strong> the browser downloads a hosted image once and reuses it on every later visit. Embedded images can't be cached, so they're re-downloaded in full on every page load, by every learner, every time.</p>
+        </div>
+
+        <div class="field" id="imgUploadField" hidden>
+          <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose or drop an image to embed">
+            <strong>Drop an image, or click to choose</strong>
+            <span>Resized to 1000px wide and written into the code as text. Nothing is uploaded anywhere.</span>
+          </div>
+          <input type="file" id="file" accept="image/*" class="sr">
+          <div id="thumbWrap"></div>
+          <p class="err" id="imgErr" hidden role="alert"></p>
+          <p class="hint">Use this when you have no hosting. The photo becomes part of the widget code, so it can never break, but it also can't be cached: its full weight is re-downloaded on every page load. Prefer a hosted URL for a homepage with daily traffic.</p>
+        </div>
+
+        <div class="field">
+          <label for="alt">Image description, for screen readers</label>
+          <input type="text" id="alt" maxlength="120" placeholder="Three colleagues learning together at a laptop" aria-describedby="altHelp">
+          <p class="hint" id="altHelp">Leave empty if the image is purely decorative.</p>
+        </div>
+
+        <hr class="divider">
+        <p class="hint" id="cropHint"></p>
+      </section>
+
+      <section class="card">
+        <h2><span class="num" aria-hidden="true">4</span> Button</h2>
+        <div class="field">
+          <div class="seg" id="btnSeg" role="group" aria-label="Show a button">
+            <button type="button" data-btn="on" aria-pressed="true">Show button</button>
+            <button type="button" data-btn="off" aria-pressed="false">No button</button>
+          </div>
+        </div>
+        <div id="btnFields">
+          <div class="field">
+            <label for="btnText">Button text</label>
+            <div class="row">
+              <input type="text" id="btnText" maxlength="30" placeholder="Explore training courses">
+              <span class="count" id="btnc"></span>
+            </div>
+          </div>
+          <div class="field">
+            <label id="linkLabel">Where it goes</label>
+            <div class="seg" id="linkSeg" role="group" aria-labelledby="linkLabel">
+              <button type="button" data-link="internal" aria-pressed="true">Page in 360Learning</button>
+              <button type="button" data-link="external" aria-pressed="false">External site</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="href" id="hrefLabel">Relative path</label>
+            <input type="text" id="href" aria-describedby="hrefHint">
+            <p class="err" id="hrefErr" hidden role="alert"></p>
+            <p class="hint" id="hrefHint"></p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2><span class="num" aria-hidden="true">5</span> Colours</h2>
+        <div class="presets" id="presets" role="group" aria-label="Colour palette"></div>
+
+        <div class="field" style="margin-top:var(--sp-4)">
+          <div class="seg" id="fillSeg" role="group" aria-label="Panel fill">
+            <button type="button" data-fill="solid" aria-pressed="true">Solid panel</button>
+            <button type="button" data-fill="gradient" aria-pressed="false">Gradient panel</button>
+          </div>
+        </div>
+
+        <hr class="divider">
+        <button type="button" class="disclose" id="customToggle" aria-expanded="false" aria-controls="customPanel">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          Match your brand colours
+        </button>
+        <div id="customPanel" hidden>
+          <p class="hint">Every palette above is already checked for contrast. Only change these if you have brand colours to match, and watch the check at the bottom as you go.</p>
+          <div class="colors" id="colors"></div>
+          <button type="button" class="btn btn-secondary reset" id="resetColors" hidden></button>
+        </div>
+
+        <p class="warn-inline" id="overlayNote" hidden></p>
+        <div class="notes" id="contrast" role="status" aria-live="polite"></div>
+        <p class="hint">This checks how far apart your text and background are in lightness. Too close together and the words get hard to read on a dim screen, in sunlight, or for anyone with low vision. The seven palettes above already pass.</p>
+      </section>
+    </div>
   </div>
 
-  <div>
+  <div class="col">
     <section class="card">
-      <h2>Live preview</h2>
+      <div class="preview-head">
+        <h2>Live preview</h2>
+        <span class="size-note" id="heightNote"></span>
+      </div>
       <div class="preview-stage">
-        <div class="preview-frame-wrap">
-          <iframe id="preview" title="AI Companion widget preview" scrolling="no"></iframe>
+        <div class="preview-frame-wrap" id="frameWrap">
+          <iframe id="preview" title="Widget preview" scrolling="no"></iframe>
         </div>
       </div>
-      <p class="hint">Exactly the code you'll paste, rendered live. Hover it to pause the animation.</p>
+      <div class="notes" id="previewNotes" role="status" aria-live="polite"></div>
+      <p class="hint" id="previewHint"></p>
     </section>
 
     <section class="card">
@@ -231,7 +517,7 @@
       <div class="out-actions">
         <button type="button" class="btn btn-primary" id="copy">Copy widget code</button>
         <button type="button" class="btn btn-secondary" id="download">Download .html</button>
-        <span class="size-note" id="sizeNote"></span>
+        <span class="size-note" id="sizeNote" role="status" aria-live="polite"></span>
       </div>
       <ol class="steps">
         <li>Copy the widget code above. It's self-contained HTML and CSS, no hosting or iframe needed.</li>
@@ -244,9 +530,27 @@
 
 <script>
 (function(){
+
+  var active = "companion";   // companion | hero
+
+  /* Class names are scoped per widget so two of them can sit on the same
+     360Learning page without one <style> block overriding the other. Digits
+     only: a random letter suffix can spell something unfortunate. */
+  function uid(p) { return p + Math.floor(1000 + Math.random() * 9000); }
+  var PC = uid("cw"), PH = uid("hw");
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function escAttr(s) { return esc(s).replace(/"/g, "&quot;"); }
+
+  /* ================================================================
+     AI Companion prompt banner
+     ================================================================ */
+
   var MAX_PROMPTS = 5, MAX_CHARS = 50, WARN_AT = 42;
 
-  var state = {
+  var companion = {
     prompts: [
       "How do our top reps handle objections?",
       "What are some ways I can use AI to save time?",
@@ -257,116 +561,823 @@
   // v1 fixed gradient (matches the original Companion widget)
   var C1 = "#6d28d9", CM = "#a21caf", C2 = "#ec4899";
 
-  /* ================= widget generator =================
-     Produces self-contained HTML+CSS (zero JavaScript) that can be pasted
-     directly into a 360Learning HTML widget. The typing animation is a
-     master timeline: every character gets its own keyframes with show/hide
-     points computed as percentages of the full cycle. All class and
-     keyframe names are prefixed cw- to avoid colliding with platform CSS. */
+  /* Zero-JavaScript HTML and CSS, pasted straight into a 360Learning HTML
+     block. The typing animation is a master timeline: every character gets
+     its own keyframes with show/hide points computed as percentages of the
+     full cycle. */
 
   var TYPE = 80, DEL = 42, HOLD = 3500, GAP = 500; // ms, matches the original JS widget
 
   function escChar(ch) {
-    return ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : ch;
+    return ch === "&" ? "&amp;" : ch === "<" ? "&lt;" : ch === ">" ? "&gt;" : ch;
   }
 
-  function buildWidget() {
-    var phrases = state.prompts
-      .map(function(p){ return p.trim().slice(0, MAX_CHARS); })
+  function buildCompanion() {
+    var phrases = companion.prompts
+      .map(function(p) { return p.trim().slice(0, MAX_CHARS); })
       .filter(Boolean);
     if (!phrases.length) phrases = ["Ask me anything about your training…"];
 
     // master timeline
-    var segs = phrases.map(function(p){ return p.length * TYPE + HOLD + p.length * DEL + GAP; });
-    var T = segs.reduce(function(a, b){ return a + b; }, 0);
+    var segs = phrases.map(function(p) { return p.length * TYPE + HOLD + p.length * DEL + GAP; });
+    var T = segs.reduce(function(a, b) { return a + b; }, 0);
     var EPS = 0.01;
     function pct(ms) { return +(ms / T * 100).toFixed(3); }
 
-    var keyframes = '', charRules = '', spansHtml = '';
-    var t0 = 0;
+    var keyframes = "", charRules = "", spansHtml = "", t0 = 0;
     phrases.forEach(function(p, i) {
-      var len = p.length;
-      var chars = '';
+      var len = p.length, chars = "";
       for (var j = 0; j < len; j++) {
         var show = pct(t0 + (j + 1) * TYPE);
         var hide = pct(t0 + len * TYPE + HOLD + (len - j) * DEL);
-        var name = 'cwk' + i + 'x' + j;
-        keyframes += '@keyframes ' + name +
-          '{0%,' + (show - EPS).toFixed(3) + '%{max-width:0}' +
-          show + '%,' + (hide - EPS).toFixed(3) + '%{max-width:2em}' +
-          hide + '%,100%{max-width:0}}\n';
-        charRules += '.cw-ph' + i + ' .cw-c:nth-child(' + (j + 1) + '){animation-name:' + name + '}\n';
-        chars += '<span class="cw-c">' + escChar(p[j]) + '</span>';
+        var name = "cw-k" + i + "x" + j;
+        keyframes += "@keyframes " + name +
+          "{0%," + (show - EPS).toFixed(3) + "%{max-width:0}" +
+          show + "%," + (hide - EPS).toFixed(3) + "%{max-width:2em}" +
+          hide + "%,100%{max-width:0}}\n";
+        charRules += ".cw-ph" + i + " .cw-c:nth-child(" + (j + 1) + "){animation-name:" + name + "}\n";
+        // built with the real prefix, never post-processed, so a prompt
+        // containing "cw-" can't be mangled by the scoping pass
+        chars += '<span class="' + PC + '-c">' + escChar(p[j]) + "</span>";
       }
-      spansHtml += '<span class="cw-ph cw-ph' + i + '">' + chars + '</span>';
+      spansHtml += '<span class="' + PC + "-ph " + PC + "-ph" + i + '">' + chars + "</span>";
       t0 += segs[i];
     });
 
     var css =
 "@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&display=swap');\n" +
 ".cw-wrap{container-type:inline-size;position:relative;width:100%;margin:0;overflow:hidden;background:transparent}\n" +
-".cw{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:20px;font-size:clamp(15px,2.5cqw,22px);font-weight:700;line-height:1.3;color:#18191D;white-space:nowrap;margin:0;padding:0}\n" +
+".cw-main{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:20px;font-size:clamp(15px,2.5cqw,22px);font-weight:700;line-height:1.3;color:#18191D;white-space:nowrap;margin:0;padding:0}\n" +
 ".cw-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);border:0}\n" +
 ".cw-ai{background:linear-gradient(100deg," + C1 + " 0%," + CM + " 55%," + C2 + " 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}\n" +
 ".cw-star{position:relative;display:inline-block}\n" +
 ".cw-star::before,.cw-star::after{content:'\\2726';position:absolute;pointer-events:none;opacity:0}\n" +
-".cw-star::before{color:" + CM + ";font-size:.4em;top:-.3em;right:-.5em;animation:cwspk 3s ease-in-out .3s infinite}\n" +
-".cw-star::after{color:" + C2 + ";font-size:.28em;bottom:-.1em;left:-.3em;animation:cwspk 3s ease-in-out 1.5s infinite}\n" +
-"@keyframes cwspk{0%,100%{opacity:0;transform:scale(.4) rotate(0deg)}50%{opacity:1;transform:scale(1) rotate(45deg)}}\n" +
+".cw-star::before{color:" + CM + ";font-size:.4em;top:-.3em;right:-.5em;animation:cw-spk 3s ease-in-out .3s infinite}\n" +
+".cw-star::after{color:" + C2 + ";font-size:.28em;bottom:-.1em;left:-.3em;animation:cw-spk 3s ease-in-out 1.5s infinite}\n" +
+"@keyframes cw-spk{0%,100%{opacity:0;transform:scale(.4) rotate(0deg)}50%{opacity:1;transform:scale(1) rotate(45deg)}}\n" +
 ".cw-c{display:inline-block;vertical-align:bottom;overflow:hidden;max-width:0;white-space:pre;animation-duration:" + T + "ms;animation-timing-function:linear;animation-iteration-count:infinite}\n" +
-".cw-cur{display:inline-block;color:#18191D;margin-left:1px;animation:cwblink .82s ease-in-out infinite alternate}\n" +
-"@keyframes cwblink{0%{opacity:1}100%{opacity:0}}\n" +
-".cw:hover .cw-c,.cw:hover .cw-cur,.cw:hover .cw-star::before,.cw:hover .cw-star::after{animation-play-state:paused}\n" +
+".cw-cur{display:inline-block;color:#18191D;margin-left:1px;animation:cw-blink .82s ease-in-out infinite alternate}\n" +
+"@keyframes cw-blink{0%{opacity:1}100%{opacity:0}}\n" +
+".cw-main:hover .cw-c,.cw-main:hover .cw-cur,.cw-main:hover .cw-star::before,.cw-main:hover .cw-star::after{animation-play-state:paused}\n" +
 "@media (prefers-reduced-motion:reduce){.cw-c{animation:none;max-width:none}.cw-ph~.cw-ph{display:none}.cw-cur{display:none}.cw-star::before,.cw-star::after{display:none}}\n" +
 keyframes + charRules;
 
-    var srText = ('Ask AI Companion: ' + phrases.join(' \u00b7 '))
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    var srText = esc("Ask AI Companion: " + phrases.join(" \u00b7 "));
 
-    return '<!-- AI Companion widget \u00b7 generated with Academy Widget Builder \u00b7 edit in the builder, not by hand -->\n' +
-      '<div class="cw-wrap">' +
-      '<span class="cw-sr">' + srText + '</span>' +
-      '<div class="cw" aria-hidden="true">' +
-      '<span>Ask&nbsp;<span class="cw-star"><span class="cw-ai">\u2726</span></span><span class="cw-ai"> Companion</span>:&nbsp;</span>' +
+    return "<!-- AI Companion widget \u00b7 generated with Academy Widget Builder \u00b7 edit in the builder, not by hand -->\n" +
+      '<div class="' + PC + '-wrap">' +
+      '<span class="' + PC + '-sr">' + srText + "</span>" +
+      '<div class="' + PC + '-main" aria-hidden="true">' +
+      '<span>Ask&nbsp;<span class="' + PC + '-star"><span class="' + PC + '-ai">\u2726</span></span>' +
+      '<span class="' + PC + '-ai"> Companion</span>:&nbsp;</span>' +
       spansHtml +
-      '<span class="cw-cur">|</span>' +
-      '</div></div>\n<style>\n' + css + '</style>';
+      '<span class="' + PC + '-cur">|</span>' +
+      "</div></div>\n<style>\n" + css.replace(/cw-/g, PC + "-") + "</style>";
   }
 
-  function previewDoc(snippet, center) {
-    var bodyCss = center
-      ? 'margin:0;padding:0 2px;background:transparent;display:flex;align-items:center;min-height:100vh'
-      : 'margin:0;padding:6px 2px;background:transparent';
-    return '<!doctype html><html><head><meta charset="utf-8"><style>body{' + bodyCss + '}</style></head><body>' +
-      snippet + '</body></html>';
+  /* ================================================================
+     Hero banner
+     ================================================================ */
+
+  var hero = {
+    layout: "textFirst",          // textFirst | imageFirst | overlay
+    h1: "Welcome to your",
+    h2: "Digital Academy",
+    body: "The Learning Academy reimagines professional training to make every moment a promise of growth, knowledge-sharing and excellence. Learn at your own pace and build your skills every day.",
+    showBtn: true,
+    btnText: "Explore training courses",
+    linkMode: "internal",         // internal | external
+    hrefInternal: "/paths/:pathID/home",
+    hrefExternal: "",             // kept apart so switching mode doesn't strand
+    imgMode: "url",               // a relative path in a field that rejects it
+    imgUrl: "",
+    imgData: "",
+    alt: "",
+    fill: "solid",                // solid | gradient
+    preset: "ocean",
+    c: {}
+  };
+
+  /* Every preset clears WCAG AA in all three layouts. On the two split
+     layouts: all text at 4.5:1 against the panel start *and* the gradient
+     end, button text at 4.5:1 on its fill, and button fill at 3:1 on the
+     panel so its shape is visible (1.4.11). On the overlay layout the same
+     bars are met against the worst case a photo can produce, which is a pure
+     white image behind the lightest part of the scrim. Panels are tinted
+     toward the accent hue rather than neutral grey, and gradient ends stay
+     in a narrow luminance band so nothing degrades halfway across. */
+  var PRESETS = [
+    { id: "ocean",    name: "Ocean",    c: { panel: "#eef2f8", panel2: "#dce7f6", heading: "#0f1b2e", accent: "#1546c4", body: "#465468", btnBg: "#1546c4", btnFg: "#ffffff" } },
+    { id: "indigo",   name: "Indigo",   c: { panel: "#f1f1fd", panel2: "#e4e4fb", heading: "#17172e", accent: "#4a3fc4", body: "#4d4d63", btnBg: "#4a3fc4", btnFg: "#ffffff" } },
+    { id: "teal",     name: "Teal",     c: { panel: "#e9f4f4", panel2: "#d4eaea", heading: "#0c2626", accent: "#0b615e", body: "#44585a", btnBg: "#0b615e", btnFg: "#ffffff" } },
+    { id: "forest",   name: "Forest",   c: { panel: "#ebf3ee", panel2: "#d7e9de", heading: "#0f2419", accent: "#116336", body: "#46584e", btnBg: "#116336", btnFg: "#ffffff" } },
+    { id: "sand",     name: "Sand",     c: { panel: "#f7f0e7", panel2: "#eee0cd", heading: "#2a2118", accent: "#8f4310", body: "#5b5044", btnBg: "#2a2118", btnFg: "#fdf9f4" } },
+    { id: "plum",     name: "Plum",     c: { panel: "#fbeef6", panel2: "#f4dfed", heading: "#2b1024", accent: "#9d1f6d", body: "#5f4356", btnBg: "#9d1f6d", btnFg: "#ffffff" } },
+    { id: "midnight", name: "Midnight", c: { panel: "#15182b", panel2: "#26204a", heading: "#ffffff", accent: "#a9b6ff", body: "#c6cbdb", btnBg: "#ffffff", btnFg: "#15182b" } }
+  ];
+
+  var COLOR_FIELDS = [
+    { key: "panel",   label: "Panel background" },
+    { key: "panel2",  label: "Gradient end" },
+    { key: "heading", label: "Heading" },
+    { key: "accent",  label: "Accent line" },
+    { key: "body",    label: "Body text" },
+    { key: "btnBg",   label: "Button fill" },
+    { key: "btnFg",   label: "Button text" }
+  ];
+
+  var LAYOUT_HINTS = {
+    textFirst: "The default. Reading order matches reading direction, so the message lands before the picture.",
+    imageFirst: "The same hero mirrored. Useful when the photo is the stronger hook, or to vary two academy pages without changing anything else.",
+    overlay: "Text sits on the photo behind a scrim. The most striking option, and the most demanding: it needs a photo with a calm area for the words to sit on."
+  };
+
+  var CROP_HINTS = {
+    split: "<strong>Choosing a photo:</strong> it's cropped to fill a 16:10 frame, and a wider 21:9 in a narrow column. Anything near the top or bottom edge gets trimmed, so keep faces, logos and text away from them.",
+    overlay: "<strong>Choosing a photo:</strong> the text sits over the left of the image, so pick a shot whose left side is calm. Busy detail there fights the words even through the scrim. It's cropped hard, so keep the subject off-centre to the right."
+  };
+
+  function clone(o) { var n = {}; for (var k in o) n[k] = o[k]; return n; }
+  hero.c = clone(PRESETS[0].c);
+
+  function href() { return hero.linkMode === "internal" ? hero.hrefInternal : hero.hrefExternal; }
+  function isOverlay() { return hero.layout === "overlay"; }
+
+  /* ---- colour maths ---- */
+
+  function rgbOf(h) {
+    var s = String(h).replace("#", "");
+    if (s.length === 3) s = s[0] + s[0] + s[1] + s[1] + s[2] + s[2];
+    return [0, 2, 4].map(function(i) { return parseInt(s.substr(i, 2), 16); });
   }
+  function lum(h) {
+    var ch = rgbOf(h).map(function(v) {
+      v = v / 255;
+      return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+  }
+  function ratio(a, b) {
+    var x = lum(a), y = lum(b);
+    return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05);
+  }
+  function isHex(v) { return /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v); }
+  function toHex(rgb) {
+    return "#" + rgb.map(function(v) {
+      return ("0" + Math.max(0, Math.min(255, Math.round(v))).toString(16)).slice(-2);
+    }).join("");
+  }
+  // `a` drawn at alpha over `b`, the way a browser composites it
+  function blend(a, b, alpha) {
+    var x = rgbOf(a), y = rgbOf(b);
+    return toHex([0, 1, 2].map(function(i) { return alpha * x[i] + (1 - alpha) * y[i]; }));
+  }
+  function rgba(h, a) { return "rgba(" + rgbOf(h).join(",") + "," + a + ")"; }
 
-  /* ================= builder UI ================= */
+  /* The overlay layout can't be checked against a known background, because
+     the background is somebody's photograph. So it's built to survive the
+     worst case instead: a pure white image sitting behind the lightest part
+     of the scrim that any text crosses. Every colour below is verified
+     against that, which means every real photo is better. */
+  var SCRIM_MIN = 0.75;
 
-  var promptsEl = document.getElementById("prompts");
-  var addBtn = document.getElementById("addPrompt");
-  var codeEl = document.getElementById("code");
-  var previewEl = document.getElementById("preview");
-  var sizeNote = document.getElementById("sizeNote");
-
-  var currentSnippet = "";
-  var previewTimer = null;
-  function render(refreshPreview) {
-    currentSnippet = buildWidget();
-    codeEl.textContent = currentSnippet;
-    sizeNote.textContent = (currentSnippet.length / 1024).toFixed(1) + " KB";
-    if (refreshPreview) {
-      clearTimeout(previewTimer);
-      previewTimer = setTimeout(function(){
-        previewEl.srcdoc = previewDoc(currentSnippet, true);
-      }, 400);
+  function overlayColors() {
+    var c = hero.c;
+    var base = lum(c.heading) <= lum(c.panel) ? c.heading : c.panel;
+    var worst = blend(base, "#ffffff", SCRIM_MIN);
+    // walk the accent toward white until it clears AA on that worst case,
+    // so custom brand colours stay usable here too
+    var accent = "#ffffff";
+    for (var t = 0; t <= 1.0001; t += 0.05) {
+      var cand = toHex(rgbOf(c.accent).map(function(v) { return v + (255 - v) * t; }));
+      if (ratio(cand, worst) >= 4.6) { accent = cand; break; }
     }
+    // the button is white here, so its label needs a dark colour. Palettes
+    // built for a dark panel already have a light accent, which would be
+    // unreadable, so fall back to the scrim base in that case.
+    var label = ratio(c.accent, "#ffffff") >= 4.5 ? c.accent : base;
+    return {
+      base: base, worst: worst, accent: accent,
+      heading: "#ffffff", body: "#e9edf4", btnBg: "#ffffff", btnFg: label
+    };
   }
 
-  /* ---- prompts ---- */
+  /* ---- generator ---- */
+
+  // Only ever emit a link we've proven is safe: a relative path, or https.
+  function safeHref() {
+    var h = String(href() || "").trim();
+    if (!h) return null;
+    if (/^\s*(javascript|data|vbscript):/i.test(h)) return null;
+    if (hero.linkMode === "internal") {
+      if (h.charAt(0) !== "/") return null;
+      if (h.charAt(1) === "/") return null;   // //evil.com is protocol-relative
+      return h;
+    }
+    return /^https:\/\/.+/i.test(h) ? h : null;
+  }
+
+  function imgSrc() {
+    if (hero.imgMode === "upload") return hero.imgData || null;
+    var u = String(hero.imgUrl || "").trim();
+    return /^https:\/\/.+/i.test(u) ? u : null;
+  }
+
+  function panelBg() {
+    return hero.fill === "gradient"
+      ? "linear-gradient(115deg," + hero.c.panel + " 0%," + hero.c.panel2 + " 100%)"
+      : hero.c.panel;
+  }
+
+  // `preview` swaps in a placeholder tile when there's no image yet, so the
+  // real shape is visible while you work. The copyable code never contains it.
+  function buildHero(preview) {
+    var c = hero.c;
+    var src = imgSrc();
+    var ghost = preview && !src;
+    var hasImg = !!src || ghost;
+    var overlay = isOverlay() && hasImg;
+    var split = !overlay && hasImg;
+    var oc = overlayColors();
+
+    var head = "";
+    if (String(hero.h1 || "").trim()) head += esc(hero.h1.trim());
+    if (String(hero.h2 || "").trim()) {
+      head += (head ? " " : "") + '<span class="' + PH + '-accent">' + esc(hero.h2.trim()) + "</span>";
+    }
+    if (!head) head = "Welcome";
+
+    var inner = '<h2 class="' + PH + '-title">' + head + "</h2>";
+    if (String(hero.body || "").trim()) {
+      inner += '<p class="' + PH + '-body">' + esc(hero.body.trim()) + "</p>";
+    }
+    var link = hero.showBtn ? safeHref() : null;
+    var btnText = String(hero.btnText || "").trim();
+    var hasBtn = !!(link && btnText);
+    if (hasBtn) {
+      var ext = hero.linkMode === "external";
+      inner += '<a class="' + PH + '-btn" href="' + escAttr(link) + '"' +
+        (ext ? ' target="_blank" rel="noopener noreferrer"' : "") + ">" +
+        esc(btnText) +
+        '<span class="' + PH + '-arrow" aria-hidden="true">&#8594;</span>' +
+        (ext ? '<span class="' + PH + '-sr"> (opens in a new tab)</span>' : "") +
+        "</a>";
+    }
+
+    var media = "";
+    if (ghost) {
+      media = '<div class="' + PH + '-media"><div class="' + PH + '-ph">Your image goes here</div></div>';
+    } else if (hasImg) {
+      media = '<div class="' + PH + '-media"><img class="' + PH + '-img" src="' + escAttr(src) +
+        '" alt="' + escAttr(String(hero.alt || "").trim()) + '" loading="lazy"></div>';
+    }
+
+    // media before text in the DOM would put the picture ahead of the heading
+    // for screen readers, so the mirror is done with grid placement
+    var cols = split
+      ? (hero.layout === "imageFirst" ? "grid-template-columns:4fr 5fr;" : "grid-template-columns:5fr 4fr;")
+      : "grid-template-columns:minmax(0,1fr);";
+
+    var css =
+// Plus Jakarta Sans is 360Learning's own typeface, so the widget matches the
+// page. The import stays: it guarantees weights 400/700/800 are loaded rather
+// than assuming the platform already fetched them.
+"@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');\n" +
+".hw-wrap{container-type:inline-size;width:100%;margin:0}\n" +
+".hw-wrap *{box-sizing:border-box}\n" +
+".hw-panel{display:grid;" + cols + "gap:30px;align-items:center;padding:" +
+  (overlay ? "38px" : "34px") + ";border-radius:12px;" +
+  // a floor, not a fixed height: a full-bleed photo needs some depth to read
+  // as a photo rather than a stripe, but short copy should still give a short
+  // hero. Set too high, this is what makes an overlay hero feel oversized.
+  (overlay ? "position:relative;overflow:hidden;background:" + c.panel + ";min-height:260px;"
+           : "background:" + panelBg() + ";") +
+  "font-family:'Plus Jakarta Sans',system-ui,sans-serif}\n" +
+".hw-text,.hw-media{min-width:0}\n" +
+
+(split && hero.layout === "imageFirst"
+  ? ".hw-text{grid-column:2;grid-row:1}\n.hw-media{grid-column:1;grid-row:1}\n"
+  : "") +
+
+(overlay
+  ? ".hw-media{position:absolute;inset:0;z-index:0}\n" +
+    ".hw-media::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg," +
+      rgba(oc.base, 0.92) + " 0%," + rgba(oc.base, 0.84) + " 38%," + rgba(oc.base, SCRIM_MIN) + " 56%," +
+      rgba(oc.base, 0.34) + " 82%," + rgba(oc.base, 0.16) + " 100%)}\n" +
+    ".hw-text{position:relative;z-index:1;max-width:56%}\n"
+  : "") +
+
+".hw-title{margin:0;font-size:clamp(23px,3.6cqw,34px);font-weight:800;line-height:1.16;letter-spacing:-0.01em;color:" +
+  (overlay ? oc.heading : c.heading) + "}\n" +
+".hw-accent{display:block;color:" + (overlay ? oc.accent : c.accent) + "}\n" +
+".hw-body{margin:14px 0 0;font-size:clamp(13.5px,1.5cqw,15px);font-weight:400;line-height:1.6;color:" +
+  (overlay ? oc.body : c.body) + ";max-width:52ch}\n" +
+
+(hasBtn
+  ? ".hw-btn{display:inline-flex;align-items:center;gap:9px;margin-top:24px;min-height:44px;padding:12px 24px;" +
+    "border-radius:999px;background:" + (overlay ? oc.btnBg : c.btnBg) + ";color:" + (overlay ? oc.btnFg : c.btnFg) + ";" +
+    "font-size:14.5px;font-weight:700;line-height:1.2;text-decoration:none;transition:filter .15s ease}\n" +
+    ".hw-btn:hover{filter:brightness(1.12);text-decoration:none;color:" + (overlay ? oc.btnFg : c.btnFg) + "}\n" +
+    ".hw-btn:focus-visible{outline:2px solid " + (overlay ? oc.btnBg : c.btnBg) + ";outline-offset:3px}\n" +
+    ".hw-arrow{transition:transform .15s ease}\n" +
+    ".hw-btn:hover .hw-arrow{transform:translateX(3px)}\n" +
+    ".hw-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);border:0}\n"
+  : "") +
+
+(hasImg
+  ? ".hw-img{display:block;width:100%;" +
+    (overlay ? "height:100%;object-fit:cover" : "height:auto;aspect-ratio:16/10;object-fit:cover;border-radius:10px") + "}\n"
+  : "") +
+(ghost
+  ? ".hw-ph{display:flex;align-items:center;justify-content:center;" +
+    (overlay ? "height:100%;background:" + oc.base + ";color:#fff"
+             : "aspect-ratio:16/10;border-radius:10px;border:1px dashed " + c.body + ";color:" + c.body + ";opacity:.6") +
+    ";font-size:13px;font-weight:700}\n"
+  : "") +
+
+// Once the column is narrow the two columns stack, and a 16:10 photo would eat
+// the whole widget, so it flattens. The overlay scrim switches from a
+// horizontal sweep to a full cover, because the text now spans the width.
+"@container (max-width:620px){.hw-panel{grid-template-columns:minmax(0,1fr);gap:22px;padding:26px;" +
+  (overlay ? "min-height:0;" : "") + "}" +
+  (split ? ".hw-text,.hw-media{grid-column:1;grid-row:auto}.hw-img,.hw-ph{aspect-ratio:21/9}" : "") +
+  (overlay
+    ? ".hw-text{max-width:100%}.hw-media::after{background:linear-gradient(180deg," +
+      rgba(oc.base, 0.88) + " 0%," + rgba(oc.base, 0.8) + " 100%)}"
+    : "") +
+  "}\n" +
+"@container (max-width:400px){.hw-panel{padding:20px}" +
+  (hasBtn ? ".hw-btn{width:100%;justify-content:center}" : "") + "}\n" +
+(hasBtn ? "@media (prefers-reduced-motion:reduce){.hw-btn,.hw-arrow{transition:none}}\n" : "");
+
+    // Only the CSS is prefixed by search-and-replace. The markup is built with
+    // the prefix already in place, because it carries user text: a heading or
+    // an image URL containing "hw-" would otherwise be rewritten too.
+    return "<!-- Hero widget \u00b7 generated with Academy Widget Builder \u00b7 edit in the builder, not by hand -->\n" +
+      '<div class="' + PH + '-wrap"><div class="' + PH + '-panel"><div class="' + PH + '-text">' +
+      inner + "</div>" + media + "</div></div>\n<style>\n" +
+      css.replace(/hw-/g, PH + "-") + "</style>";
+  }
+
+  /* ================================================================
+     Shared builder shell
+     ================================================================ */
+
+  var $ = function(id) { return document.getElementById(id); };
+  var codeEl = $("code"), previewEl = $("preview"), sizeNote = $("sizeNote"),
+      contrastEl = $("contrast"), previewNotes = $("previewNotes"), heightNote = $("heightNote");
+
+  var snippet = "", previewSnippet = "", previewTimer = null;
+
+  function build(preview) { return active === "hero" ? buildHero(preview) : buildCompanion(); }
+
+  function render(debounce) {
+    snippet = build(false);
+    previewSnippet = build(true);
+    codeEl.textContent = snippet;
+    var kb = snippet.length / 1024;
+    sizeNote.textContent = kb.toFixed(1) + " KB";
+    sizeNote.classList.toggle("heavy", kb > 120);
+    syncNotes();
+    checkContrast();
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(paint, debounce ? 350 : 0);
+  }
+
+  function paint() {
+    previewEl.srcdoc = '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
+      "<style>html,body{margin:0;padding:0;background:transparent}" +
+      (active === "hero" ? "" : "body{padding:8px 2px}") +
+      "</style></head><body>" + previewSnippet + "</body></html>";
+  }
+
+  function fitPreview() {
+    try {
+      var d = previewEl.contentDocument;
+      if (!d || !d.body) return;
+      previewEl.style.height = Math.ceil(d.body.scrollHeight) + "px";
+      if (active !== "hero") { heightNote.textContent = ""; return; }
+      // A hero much past ~340px starts pushing real page content below the
+      // fold, and the copy length is usually what's driving it.
+      var panel = d.querySelector("[class*='-panel']");
+      if (!panel) { heightNote.textContent = ""; return; }
+      var h = Math.round(panel.getBoundingClientRect().height);
+      heightNote.textContent = h + "px tall";
+      heightNote.classList.toggle("heavy", h > 360);
+      heightNote.title = h > 360
+        ? "Taller than a hero usually wants to be. Shortening the body text is the quickest fix."
+        : "";
+    } catch (e) { /* keep the default height */ }
+  }
+  previewEl.addEventListener("load", fitPreview);
+
+  function note(target, cls, text) {
+    var p = document.createElement("p");
+    p.className = cls;
+    p.appendChild(document.createTextNode(text));
+    target.appendChild(p);
+    return p;
+  }
+
+  function syncNotes() {
+    previewNotes.innerHTML = "";
+    if (active === "hero" && !imgSrc()) {
+      note(previewNotes, "warn",
+        "Placeholder shown. Add an image and the widget becomes two columns. Without one the code falls back to a single column of text.");
+    }
+    $("overlayNote").hidden = !(active === "hero" && isOverlay());
+    if (active === "hero" && isOverlay()) {
+      $("overlayNote").textContent =
+        "The overlay layout puts text on the photo, so it uses white text and a white button over a scrim built from your darkest colour. Panel, heading, body and button colours don't apply here. The accent is lightened automatically until it's readable.";
+    }
+    $("previewHint").textContent = active === "hero"
+      ? "Exactly the code you'll paste, rendered live. The widget fills the full width of whatever column it lands in and rearranges itself automatically when that column gets narrow, so it works the same on a phone as on a wide screen."
+      : "Exactly the code you'll paste, rendered live. Hover it to pause the animation.";
+  }
+
+  /* Contrast warnings have to say what's wrong and what to change. A ratio on
+     its own ("3.2:1, needs 4.5:1") is a number most people can't act on, so
+     the ratio is kept as a quiet aside and the sentence does the work. */
+  function checkContrast() {
+    contrastEl.innerHTML = "";
+    if (active !== "hero") return;
+
+    var c = hero.c, grad = hero.fill === "gradient", out = [];
+
+    // `subject` is what to change, `surface` is what it sits on
+    function test(fg, bg, need, subject, surface, shape) {
+      if (!isHex(fg) || !isHex(bg)) return;
+      var r = ratio(fg, bg);
+      if (r >= need) return;
+      var lighter = lum(fg) > lum(bg);
+      var fgDir = lighter ? "lighter" : "darker";
+      var bgDir = lighter ? "darker" : "lighter";
+      // "make white lighter" is not advice. If the foreground has nowhere
+      // left to go, only offer the change that's actually possible.
+      var stuck = (lighter && lum(fg) > 0.82) || (!lighter && lum(fg) < 0.03);
+      var problem = shape
+        ? "The button doesn't stand out from " + surface + "."
+        : "The " + subject + " is hard to read on " + surface + ".";
+      var thing = shape ? "the button fill" : "it";
+      var fix = stuck
+        ? " Try making " + surface + " " + bgDir + "."
+        : " Try making " + thing + " " + fgDir + ", or " + surface + " " + bgDir + ".";
+      out.push({ text: problem + fix, detail: r.toFixed(1) + ":1" });
+    }
+
+    if (isOverlay()) {
+      var oc = overlayColors(), scrim = "a very light photo";
+      test(oc.heading, oc.worst, 4.5, "heading", scrim);
+      test(oc.body, oc.worst, 4.5, "body text", scrim);
+      test(oc.accent, oc.worst, 4.5, "accent line", scrim);
+      if (hero.showBtn) {
+        test(oc.btnBg, oc.worst, 3, "button", scrim, true);
+        test(oc.btnFg, oc.btnBg, 4.5, "button text", "the button");
+      }
+    } else {
+      // every text colour has to survive both ends of a gradient panel
+      [["panel", "the panel"], ["panel2", "the far end of the gradient"]].forEach(function(b) {
+        if (b[0] === "panel2" && !grad) return;
+        var bg = c[b[0]];
+        test(c.heading, bg, 4.5, "heading", b[1]);
+        test(c.accent, bg, 4.5, "accent line", b[1]);
+        test(c.body, bg, 4.5, "body text", b[1]);
+        // 1.4.11: the button's shape must be distinguishable from the panel
+        if (hero.showBtn) test(c.btnBg, bg, 3, "button", b[1], true);
+      });
+      if (hero.showBtn) test(c.btnFg, c.btnBg, 4.5, "button text", "the button");
+    }
+
+    if (!out.length) {
+      note(contrastEl, "ok", isOverlay()
+        ? "Easy to read on any photo, even a very light one."
+        : "Easy to read. These colours are safe to use.");
+      return;
+    }
+    out.forEach(function(o) {
+      var p = note(contrastEl, "warn", o.text);
+      var span = document.createElement("span");
+      span.className = "ratio";
+      span.textContent = o.detail;
+      p.appendChild(span);
+    });
+  }
+
+  /* ---- widget type ---- */
+  $("wtype").addEventListener("click", function(e) {
+    var btn = e.target.closest("button[data-w]");
+    if (!btn) return;
+    Array.prototype.forEach.call(this.querySelectorAll("button[data-w]"), function(b) {
+      b.setAttribute("aria-pressed", String(b === btn));
+    });
+    active = btn.getAttribute("data-w");
+    $("panelCompanion").hidden = active !== "companion";
+    $("panelHero").hidden = active !== "hero";
+    previewEl.style.height = "80px";   // let it re-measure from a small base
+    render(false);
+  });
+
+  /* ---- segmented controls ---- */
+  function segment(id, attr, onPick) {
+    var wrap = $(id);
+    wrap.addEventListener("click", function(e) {
+      var btn = e.target.closest("button[data-" + attr + "]");
+      if (!btn) return;
+      Array.prototype.forEach.call(wrap.querySelectorAll("button[data-" + attr + "]"), function(b) {
+        b.setAttribute("aria-pressed", String(b === btn));
+      });
+      onPick(btn.getAttribute("data-" + attr));
+    });
+  }
+
+  segment("layoutSeg", "layout", function(v) {
+    hero.layout = v;
+    $("layoutHint").textContent = LAYOUT_HINTS[v];
+    $("cropHint").innerHTML = CROP_HINTS[v === "overlay" ? "overlay" : "split"];
+    render(false);
+  });
+
+  segment("btnSeg", "btn", function(v) {
+    hero.showBtn = v === "on";
+    $("btnFields").hidden = !hero.showBtn;
+    validateHref();
+    render(false);
+  });
+
+  segment("linkSeg", "link", function(v) { hero.linkMode = v; syncLinkField(); render(false); });
+
+  segment("imgSeg", "img", function(v) {
+    hero.imgMode = v;
+    $("imgUrlField").hidden = v !== "url";
+    $("imgUploadField").hidden = v !== "upload";
+    render(false);
+  });
+
+  segment("fillSeg", "fill", function(v) { hero.fill = v; render(false); });
+
+  /* ---- hero text fields ---- */
+  function text(id, key, countId, max) {
+    var el = $(id);
+    el.value = hero[key];
+    var count = countId ? $(countId) : null;
+    function tick() {
+      if (!count) return;
+      count.textContent = el.value.length + "/" + max;
+      count.classList.toggle("warn", el.value.length > max - 6);
+    }
+    tick();
+    el.addEventListener("input", function() {
+      hero[key] = el.value;
+      tick();
+      render(true);
+    });
+  }
+
+  text("h1", "h1", "h1c", 45);
+  text("h2i", "h2", "h2c", 45);
+  text("body", "body", "bodyc", 260);
+  text("btnText", "btnText", "btnc", 30);
+  text("alt", "alt", null, 120);
+
+  /* ---- link ---- */
+  var hrefEl = $("href"), hrefErr = $("hrefErr"), hrefTouched = false;
+
+  function syncLinkField() {
+    var internal = hero.linkMode === "internal";
+    $("hrefLabel").textContent = internal ? "Relative path" : "Full URL";
+    hrefEl.placeholder = internal ? "/paths/:pathID/home" : "https://example.com/academy";
+    // each mode keeps its own value, so switching shows the right placeholder
+    // instead of stranding a relative path in a field that only takes https
+    hrefEl.value = href();
+    hrefTouched = false;
+    $("hrefHint").innerHTML = internal
+      ? "Open the destination in 360Learning and copy everything after the domain, starting with <code>/</code>. Relative paths keep the link working across environments and don't force a full page reload out of the platform."
+      : "External links must start with <code>https://</code> and will open in a new tab.";
+    validateHref();
+  }
+
+  // Validate on blur, not on every keystroke: flagging "h" as an invalid URL
+  // while somebody is still typing "https://" is noise, not help.
+  function validateHref() {
+    var bad = null;
+    if (hero.showBtn && hrefTouched) {
+      var raw = String(href() || "").trim();
+      if (!raw) bad = "Add a link, or the button won't be included.";
+      else if (!safeHref()) {
+        bad = hero.linkMode === "internal"
+          ? "Relative paths must start with a single /. Example: /paths/abc123/home"
+          : "External links must start with https://";
+      }
+    }
+    hrefErr.hidden = !bad;
+    if (bad) hrefErr.textContent = bad;
+    hrefEl.setAttribute("aria-invalid", bad ? "true" : "false");
+  }
+
+  hrefEl.addEventListener("input", function() {
+    hero[hero.linkMode === "internal" ? "hrefInternal" : "hrefExternal"] = hrefEl.value;
+    if (hrefTouched) validateHref();
+    render(true);
+  });
+  hrefEl.addEventListener("blur", function() { hrefTouched = true; validateHref(); });
+
+  $("imgUrl").addEventListener("input", function() { hero.imgUrl = this.value; render(true); });
+
+  /* ---- upload: downscale in-browser, then embed as a data URI ---- */
+  var drop = $("drop"), fileInput = $("file"), thumbWrap = $("thumbWrap"), imgErr = $("imgErr");
+  var MAX_W = 1000, QUALITY = 0.75;
+
+  drop.addEventListener("click", function() { fileInput.click(); });
+  drop.addEventListener("keydown", function(e) {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); }
+  });
+  ["dragenter", "dragover"].forEach(function(t) {
+    drop.addEventListener(t, function(e) { e.preventDefault(); drop.classList.add("over"); });
+  });
+  ["dragleave", "drop"].forEach(function(t) {
+    drop.addEventListener(t, function(e) { e.preventDefault(); drop.classList.remove("over"); });
+  });
+  drop.addEventListener("drop", function(e) {
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) takeFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener("change", function() {
+    if (this.files && this.files[0]) takeFile(this.files[0]);
+  });
+
+  function takeFile(file) {
+    imgErr.hidden = true;
+    if (file.type.indexOf("image/") !== 0) {
+      imgErr.textContent = "That's not an image file. Try a JPG, PNG or WebP.";
+      imgErr.hidden = false;
+      return;
+    }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function() {
+      var scale = Math.min(1, MAX_W / img.naturalWidth);
+      var w = Math.round(img.naturalWidth * scale), h = Math.round(img.naturalHeight * scale);
+      var cv = document.createElement("canvas");
+      cv.width = w; cv.height = h;
+      var ctx = cv.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+
+      // keep a PNG only if it beats the JPEG: flat graphics, logos, transparency
+      var png = file.type === "image/png" ? cv.toDataURL("image/png") : null;
+      ctx.globalCompositeOperation = "destination-over";   // white behind transparency
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, w, h);
+      var jpg = cv.toDataURL("image/jpeg", QUALITY);
+
+      hero.imgData = (png && png.length < jpg.length) ? png : jpg;
+      URL.revokeObjectURL(url);
+      showThumb(file.name, w, h);
+      render(false);
+    };
+    img.onerror = function() {
+      URL.revokeObjectURL(url);
+      imgErr.textContent = "Couldn't read that image.";
+      imgErr.hidden = false;
+    };
+    img.src = url;
+  }
+
+  function showThumb(name, w, h) {
+    var kb = hero.imgData.length / 1024;
+    thumbWrap.innerHTML = "";
+    var box = document.createElement("div");
+    box.className = "thumb";
+    var im = document.createElement("img");
+    im.src = hero.imgData;
+    im.alt = "";
+    var info = document.createElement("div");
+    var weight = document.createElement("span");
+    weight.className = "weight" + (kb > 120 ? " heavy" : "");
+    weight.textContent = kb.toFixed(0) + " KB embedded";
+    info.appendChild(weight);
+    info.appendChild(document.createTextNode(" \u00b7 " + w + "\u00d7" + h + " \u00b7 " + name));
+    if (kb > 120) {
+      var warn = document.createElement("div");
+      warn.style.marginTop = "3px";
+      warn.style.color = "var(--amber)";
+      warn.textContent = "That's a lot of code to paste. A hosted URL would be far lighter.";
+      info.appendChild(warn);
+    }
+    box.appendChild(im);
+    box.appendChild(info);
+    thumbWrap.appendChild(box);
+  }
+
+  /* ---- colours ---- */
+  var presetsEl = $("presets"), colorsEl = $("colors"), colorInputs = {};
+  var customToggle = $("customToggle"), customPanel = $("customPanel"), resetBtn = $("resetColors");
+  var lastPreset = PRESETS[0];
+
+  PRESETS.forEach(function(p) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "preset";
+    b.setAttribute("data-preset", p.id);
+    b.setAttribute("aria-pressed", String(p.id === hero.preset));
+    var sw = document.createElement("div");
+    sw.className = "swatches";
+    [p.c.panel, p.c.accent, p.c.btnBg].forEach(function(col) {
+      var s = document.createElement("span");
+      s.style.background = col;
+      sw.appendChild(s);
+    });
+    b.appendChild(sw);
+    b.appendChild(document.createTextNode(p.name));
+    b.addEventListener("click", function() { applyPreset(p); resetBtn.hidden = true; });
+    presetsEl.appendChild(b);
+  });
+
+  COLOR_FIELDS.forEach(function(f) {
+    var wrap = document.createElement("div");
+    wrap.className = "cfield";
+    var lab = document.createElement("label");
+    lab.textContent = f.label;
+    lab.setAttribute("for", "c_" + f.key);
+    var row = document.createElement("div");
+    row.className = "row";
+
+    var swatch = document.createElement("input");
+    swatch.type = "color";
+    swatch.id = "c_" + f.key;
+    swatch.value = hero.c[f.key];
+
+    var hexIn = document.createElement("input");
+    hexIn.type = "text";
+    hexIn.value = hero.c[f.key];
+    hexIn.maxLength = 7;
+    hexIn.setAttribute("aria-label", f.label + " hex value");
+
+    swatch.addEventListener("input", function() {
+      hero.c[f.key] = swatch.value;
+      hexIn.value = swatch.value;
+      dropPreset();
+      render(true);
+    });
+    hexIn.addEventListener("input", function() {
+      var v = hexIn.value.trim();
+      if (v && v.charAt(0) !== "#") v = "#" + v;
+      if (!isHex(v)) return;
+      hero.c[f.key] = v;
+      swatch.value = v;
+      dropPreset();
+      render(true);
+    });
+
+    row.appendChild(swatch);
+    row.appendChild(hexIn);
+    wrap.appendChild(lab);
+    wrap.appendChild(row);
+    colorsEl.appendChild(wrap);
+    colorInputs[f.key] = { swatch: swatch, hex: hexIn };
+  });
+
+  /* Presets are the path almost everyone should take, so the seven hex fields
+     stay folded away until someone actually has brand colours to match. */
+  customToggle.addEventListener("click", function() {
+    var open = customToggle.getAttribute("aria-expanded") === "true";
+    customToggle.setAttribute("aria-expanded", String(!open));
+    customPanel.hidden = open;
+  });
+
+  resetBtn.addEventListener("click", function() { applyPreset(lastPreset); resetBtn.hidden = true; });
+
+  function applyPreset(p) {
+    hero.preset = p.id;
+    lastPreset = p;
+    hero.c = clone(p.c);
+    Array.prototype.forEach.call(presetsEl.children, function(el) {
+      el.setAttribute("aria-pressed", String(el.getAttribute("data-preset") === p.id));
+    });
+    syncColorInputs();
+    render(false);
+  }
+
+  function dropPreset() {
+    hero.preset = null;
+    Array.prototype.forEach.call(presetsEl.children, function(el) {
+      el.setAttribute("aria-pressed", "false");
+    });
+    resetBtn.textContent = "Reset to " + lastPreset.name;
+    resetBtn.hidden = false;
+  }
+
+  function syncColorInputs() {
+    COLOR_FIELDS.forEach(function(f) {
+      colorInputs[f.key].swatch.value = hero.c[f.key];
+      colorInputs[f.key].hex.value = hero.c[f.key];
+    });
+  }
+
+  /* ---- companion prompts ---- */
+  var promptsEl = $("prompts"), addBtn = $("addPrompt");
+
   function renderPrompts() {
     promptsEl.innerHTML = "";
-    state.prompts.forEach(function(p, i) {
+    companion.prompts.forEach(function(p, i) {
       var row = document.createElement("div");
       row.className = "prompt-row";
 
@@ -379,7 +1390,6 @@ keyframes + charRules;
 
       var count = document.createElement("span");
       count.className = "count";
-
       function updateCount() {
         count.textContent = input.value.length + "/" + MAX_CHARS;
         count.classList.toggle("warn", input.value.length > WARN_AT);
@@ -387,7 +1397,7 @@ keyframes + charRules;
       updateCount();
 
       input.addEventListener("input", function() {
-        state.prompts[i] = input.value;
+        companion.prompts[i] = input.value;
         updateCount();
         render(true);
       });
@@ -395,11 +1405,11 @@ keyframes + charRules;
       var rm = document.createElement("button");
       rm.type = "button";
       rm.className = "remove";
-      rm.textContent = "×";
+      rm.textContent = "\u00d7";
       rm.setAttribute("aria-label", "Remove prompt " + (i + 1));
-      rm.disabled = state.prompts.length <= 1;
+      rm.disabled = companion.prompts.length <= 1;
       rm.addEventListener("click", function() {
-        state.prompts.splice(i, 1);
+        companion.prompts.splice(i, 1);
         renderPrompts();
         render(true);
       });
@@ -409,47 +1419,54 @@ keyframes + charRules;
       row.appendChild(rm);
       promptsEl.appendChild(row);
     });
-    addBtn.disabled = state.prompts.length >= MAX_PROMPTS;
+    addBtn.disabled = companion.prompts.length >= MAX_PROMPTS;
   }
 
   addBtn.addEventListener("click", function() {
-    if (state.prompts.length >= MAX_PROMPTS) return;
-    state.prompts.push("");
+    if (companion.prompts.length >= MAX_PROMPTS) return;
+    companion.prompts.push("");
     renderPrompts();
     promptsEl.querySelector(".prompt-row:last-child input").focus();
     render(false);
   });
 
-  /* ---- copy ---- */
-  document.getElementById("copy").addEventListener("click", function() {
-    var btn = this, text = currentSnippet;
+  /* ---- copy and download ---- */
+  $("copy").addEventListener("click", function() {
+    var btn = this;
     function done(ok) {
-      btn.textContent = ok ? "Copied ✓" : "Copy failed. Select manually";
-      setTimeout(function(){ btn.textContent = "Copy widget code"; }, 2000);
+      btn.textContent = ok ? "Copied \u2713" : "Copy failed. Select manually";
+      setTimeout(function() { btn.textContent = "Copy widget code"; }, 2000);
     }
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function(){ done(true); }, function(){ done(false); });
+      navigator.clipboard.writeText(snippet).then(function() { done(true); }, function() { done(false); });
     } else {
       var ta = document.createElement("textarea");
-      ta.value = text; document.body.appendChild(ta); ta.select();
-      try { done(document.execCommand("copy")); } catch(e) { done(false); }
+      ta.value = snippet;
+      document.body.appendChild(ta);
+      ta.select();
+      try { done(document.execCommand("copy")); } catch (e) { done(false); }
       document.body.removeChild(ta);
     }
   });
 
-  /* ---- download ---- */
-  document.getElementById("download").addEventListener("click", function() {
-    var blob = new Blob([previewDoc(currentSnippet)], { type: "text/html" });
+  $("download").addEventListener("click", function() {
+    var doc = '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
+      "<style>html,body{margin:0;padding:0;background:transparent}</style></head><body>" +
+      snippet + "</body></html>";
+    var blob = new Blob([doc], { type: "text/html" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "ai-companion-widget.html";
+    a.download = active === "hero" ? "hero-widget.html" : "ai-companion-widget.html";
     a.click();
     URL.revokeObjectURL(a.href);
   });
 
+  /* ---- boot ---- */
+  $("layoutHint").textContent = LAYOUT_HINTS[hero.layout];
+  $("cropHint").innerHTML = CROP_HINTS.split;
+  syncLinkField();
   renderPrompts();
   render(false);
-  previewEl.srcdoc = previewDoc(currentSnippet, true);
 }());
 </script>
 </body>
