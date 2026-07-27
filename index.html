@@ -935,7 +935,7 @@ keyframes + charRules;
     snippet = build(false);
     previewSnippet = build(true);
     codeEl.textContent = snippet;
-    var kb = snippet.length / 1024;
+    var kb = new Blob([snippet]).size / 1024;   // bytes, not chars: user text can be non-ASCII
     sizeNote.textContent = kb.toFixed(1) + " KB";
     sizeNote.classList.toggle("heavy", kb > 120);
     syncNotes();
@@ -957,7 +957,7 @@ keyframes + charRules;
       if (!d || !d.body) return;
       previewEl.style.height = Math.ceil(d.body.scrollHeight) + "px";
       if (active !== "hero") { heightNote.textContent = ""; return; }
-      // A hero much past ~340px starts pushing real page content below the
+      // A hero much past ~360px starts pushing real page content below the
       // fold, and the copy length is usually what's driving it.
       var panel = d.querySelector("[class*='-panel']");
       if (!panel) { heightNote.textContent = ""; return; }
@@ -969,7 +969,15 @@ keyframes + charRules;
         : "";
     } catch (e) { /* keep the default height */ }
   }
-  previewEl.addEventListener("load", fitPreview);
+  previewEl.addEventListener("load", function() {
+    fitPreview();
+    // the Google Font inside the iframe arrives after the document does, and
+    // its metrics can change line wraps, so measure again once it's ready
+    try {
+      var fonts = previewEl.contentWindow.document.fonts;
+      if (fonts && fonts.ready) fonts.ready.then(fitPreview);
+    } catch (e) { /* first measurement stands */ }
+  });
 
   function note(target, cls, text) {
     var p = document.createElement("p");
@@ -1320,11 +1328,17 @@ keyframes + charRules;
     hexIn.addEventListener("input", function() {
       var v = hexIn.value.trim();
       if (v && v.charAt(0) !== "#") v = "#" + v;
-      if (!isHex(v)) return;
+      if (!isHex(v)) { hexIn.setAttribute("aria-invalid", "true"); return; }
+      hexIn.setAttribute("aria-invalid", "false");
       hero.c[f.key] = v;
       swatch.value = v;
       dropPreset();
       render(true);
+    });
+    // an invalid value left behind snaps back to the last colour that worked
+    hexIn.addEventListener("blur", function() {
+      hexIn.value = hero.c[f.key];
+      hexIn.setAttribute("aria-invalid", "false");
     });
 
     row.appendChild(swatch);
@@ -1369,6 +1383,7 @@ keyframes + charRules;
     COLOR_FIELDS.forEach(function(f) {
       colorInputs[f.key].swatch.value = hero.c[f.key];
       colorInputs[f.key].hex.value = hero.c[f.key];
+      colorInputs[f.key].hex.setAttribute("aria-invalid", "false");
     });
   }
 
