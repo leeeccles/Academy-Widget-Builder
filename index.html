@@ -520,7 +520,6 @@
     <section class="card">
       <div class="preview-head">
         <h2>Live preview</h2>
-        <span class="size-note" id="heightNote"></span>
       </div>
       <div class="preview-stage">
         <div class="preview-frame-wrap" id="frameWrap">
@@ -1055,7 +1054,7 @@ keyframes + charRules;
 
   var $ = function(id) { return document.getElementById(id); };
   var codeEl = $("code"), previewEl = $("preview"), sizeNote = $("sizeNote"),
-      contrastEl = $("contrast"), previewNotes = $("previewNotes"), heightNote = $("heightNote");
+      contrastEl = $("contrast"), previewNotes = $("previewNotes");
 
   var snippet = "", previewSnippet = "", previewTimer = null;
 
@@ -1086,17 +1085,6 @@ keyframes + charRules;
       var d = previewEl.contentDocument;
       if (!d || !d.body) return;
       previewEl.style.height = Math.ceil(d.body.scrollHeight) + "px";
-      if (active !== "hero") { heightNote.textContent = ""; return; }
-      // A hero much past ~360px starts pushing real page content below the
-      // fold, and the copy length is usually what's driving it.
-      var panel = d.querySelector("[class*='-panel']");
-      if (!panel) { heightNote.textContent = ""; return; }
-      var h = Math.round(panel.getBoundingClientRect().height);
-      heightNote.textContent = h + "px tall";
-      heightNote.classList.toggle("heavy", h > 360);
-      heightNote.title = h > 360
-        ? "Taller than a hero usually wants to be. Shortening the body text is the quickest fix."
-        : "";
     } catch (e) { /* keep the default height */ }
   }
   previewEl.addEventListener("load", function() {
