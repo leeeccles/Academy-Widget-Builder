@@ -348,7 +348,7 @@
         <h2>Prompts</h2>
         <div id="prompts"></div>
         <button type="button" class="add" id="addPrompt">+ Add prompt</button>
-        <p class="hint">Up to 5 prompts, max <strong>50 characters</strong> each so they always fit on one line inside the 360Learning content column. The widget cycles through them with a typing animation.</p>
+        <p class="hint">Up to 5 prompts, max <strong>50 characters</strong> each. The widget cycles through them with a typing animation. Shorter prompts are safer: in a very narrow column the end of a long prompt can be trimmed off.</p>
       </section>
     </div>
 
@@ -482,7 +482,7 @@
           <p class="hint">Every palette here passes the same readability checks as the ones above. Surprise me invents a brand-new one that passes too.</p>
         </div>
 
-        <div class="field" style="margin-top:var(--sp-4)">
+        <div class="field" id="fillField" style="margin-top:var(--sp-4)">
           <div class="seg" id="fillSeg" role="group" aria-label="Panel fill">
             <button type="button" data-fill="solid" aria-pressed="true">Solid panel</button>
             <button type="button" data-fill="gradient" aria-pressed="false">Gradient panel</button>
@@ -666,7 +666,7 @@ keyframes + charRules;
     showBtn: true,
     btnText: "Explore training courses",
     linkMode: "internal",         // internal | external
-    hrefInternal: "/paths/:pathID/home",
+    hrefInternal: "",
     hrefExternal: "",             // kept apart so switching mode doesn't strand
     imgMode: "url",               // a relative path in a field that rejects it
     imgUrl: "",
@@ -900,7 +900,10 @@ keyframes + charRules;
     if (/^\s*(javascript|data|vbscript):/i.test(h)) return null;
     if (hero.linkMode === "internal") {
       if (h.charAt(0) !== "/") return null;
-      if (h.charAt(1) === "/") return null;   // //evil.com is protocol-relative
+      // //evil.com is protocol-relative, and browsers treat \ as /, so
+      // /\evil.com is the same thing spelled differently
+      if (h.charAt(1) === "/" || h.charAt(1) === "\\") return null;
+      if (/\/:/.test(h)) return null;   // "/paths/:pathID/home" is a template, not a real path
       return h;
     }
     return /^https:\/\/.+/i.test(h) ? h : null;
@@ -1118,6 +1121,8 @@ keyframes + charRules;
         ? "Placeholder shown. Add an image and it fills the whole banner, sitting behind the text with a dark tint over its left side so the words stay readable. Without one the code falls back to a plain one-column panel."
         : "Placeholder shown. Add an image and the widget becomes two columns. Without one the code falls back to a single column of text.");
     }
+    // the overlay layout ignores the panel fill, so don't offer the choice
+    $("fillField").hidden = isOverlay();
     $("overlayNote").hidden = !(active === "hero" && isOverlay());
     if (active === "hero" && isOverlay()) {
       $("overlayNote").textContent =
@@ -1136,6 +1141,9 @@ keyframes + charRules;
     if (active !== "hero") return;
 
     var c = hero.c, grad = hero.fill === "gradient", out = [];
+    // the accent colour only appears on the second heading line, so an empty
+    // second line means there's nothing to warn about
+    var hasAccent = !!String(hero.h2 || "").trim();
 
     // `subject` is what to change, `surface` is what it sits on
     function test(fg, bg, need, subject, surface, shape) {
@@ -1162,7 +1170,7 @@ keyframes + charRules;
       var oc = overlayColors(), scrim = "a very light photo";
       test(oc.heading, oc.worst, 4.5, "heading", scrim);
       test(oc.body, oc.worst, 4.5, "body text", scrim);
-      test(oc.accent, oc.worst, 4.5, "accent line", scrim);
+      if (hasAccent) test(oc.accent, oc.worst, 4.5, "accent line", scrim);
       if (hero.showBtn) {
         test(oc.btnBg, oc.worst, 3, "button", scrim, true);
         test(oc.btnFg, oc.btnBg, 4.5, "button text", "the button");
@@ -1173,7 +1181,7 @@ keyframes + charRules;
         if (b[0] === "panel2" && !grad) return;
         var bg = c[b[0]];
         test(c.heading, bg, 4.5, "heading", b[1]);
-        test(c.accent, bg, 4.5, "accent line", b[1]);
+        if (hasAccent) test(c.accent, bg, 4.5, "accent line", b[1]);
         test(c.body, bg, 4.5, "body text", b[1]);
         // 1.4.11: the button's shape must be distinguishable from the panel
         if (hero.showBtn) test(c.btnBg, bg, 3, "button", b[1], true);
@@ -1289,16 +1297,20 @@ keyframes + charRules;
     validateHref();
   }
 
-  // Validate on blur, not on every keystroke: flagging "h" as an invalid URL
-  // while somebody is still typing "https://" is noise, not help.
+  // Format mistakes wait for blur: flagging "h" as an invalid URL while
+  // somebody is still typing "https://" is noise, not help. An empty link is
+  // flagged straight away, because the button silently drops out of the
+  // generated code and nothing else explains why.
   function validateHref() {
     var bad = null;
-    if (hero.showBtn && hrefTouched) {
+    if (hero.showBtn) {
       var raw = String(href() || "").trim();
       if (!raw) bad = "Add a link, or the button won't be included.";
-      else if (!safeHref()) {
+      else if (hrefTouched && !safeHref()) {
         bad = hero.linkMode === "internal"
-          ? "Relative paths must start with a single /. Example: /paths/abc123/home"
+          ? (/\/:/.test(raw)
+              ? "Replace the :placeholder parts with real values from the page's URL. Example: /paths/abc123/home"
+              : "Relative paths must start with a single /. Example: /paths/abc123/home")
           : "External links must start with https://";
       }
     }
@@ -1503,6 +1515,8 @@ keyframes + charRules;
       if (v && v.charAt(0) !== "#") v = "#" + v;
       if (!isHex(v)) { hexIn.setAttribute("aria-invalid", "true"); return; }
       hexIn.setAttribute("aria-invalid", "false");
+      // colour inputs only accept #rrggbb, so shorthand is expanded first
+      if (v.length === 4) v = "#" + v[1] + v[1] + v[2] + v[2] + v[3] + v[3];
       hero.c[f.key] = v;
       swatch.value = v;
       dropPreset();
