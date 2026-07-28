@@ -469,7 +469,18 @@
 
       <section class="card">
         <h2><span class="num" aria-hidden="true">5</span> Colours</h2>
-        <div class="presets" id="presets" role="group" aria-label="Colour palette"></div>
+        <div class="presets" id="presets" role="group" aria-label="Recommended colour palettes"></div>
+
+        <button type="button" class="disclose" id="moreToggle" aria-expanded="false" aria-controls="morePanel">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          More palettes
+        </button>
+        <div id="morePanel" hidden>
+          <div class="seg" id="moodSeg" role="group" aria-label="Palette mood"></div>
+          <div class="presets" id="morePresets" role="group" aria-label="More palettes" style="margin-top:var(--sp-3)"></div>
+          <button type="button" class="btn btn-secondary reset" id="shuffle">Surprise me</button>
+          <p class="hint">Every palette here passes the same readability checks as the ones above. Surprise me invents a brand-new one that passes too.</p>
+        </div>
 
         <div class="field" style="margin-top:var(--sp-4)">
           <div class="seg" id="fillSeg" role="group" aria-label="Panel fill">
@@ -484,6 +495,15 @@
           Match your brand colours
         </button>
         <div id="customPanel" hidden>
+          <div class="cfield" style="margin-top:var(--sp-3)">
+            <label for="seedColor">Build a palette from one colour</label>
+            <div class="row">
+              <input type="color" id="seedColor" value="#5d5fe3">
+              <button type="button" class="btn btn-secondary" id="buildFromSeed">Build palette</button>
+            </div>
+          </div>
+          <p class="hint">Pick your main brand colour and the other six are worked out for you, adjusted until every readability check passes. Then fine-tune any of them below.</p>
+          <hr class="divider">
           <p class="hint">Every palette above is already checked for contrast. Only change these if you have brand colours to match, and watch the check at the bottom as you go.</p>
           <div class="colors" id="colors"></div>
           <button type="button" class="btn btn-secondary reset" id="resetColors" hidden></button>
@@ -491,7 +511,7 @@
 
         <p class="warn-inline" id="overlayNote" hidden></p>
         <div class="notes" id="contrast" role="status" aria-live="polite"></div>
-        <p class="hint">This checks how far apart your text and background are in lightness. Too close together and the words get hard to read on a dim screen, in sunlight, or for anyone with low vision. The seven palettes above already pass.</p>
+        <p class="hint">This checks how far apart your text and background are in lightness. Too close together and the words get hard to read on a dim screen, in sunlight, or for anyone with low vision. Every palette the builder offers already passes.</p>
       </section>
     </div>
   </div>
@@ -733,6 +753,116 @@ keyframes + charRules;
     return toHex([0, 1, 2].map(function(i) { return alpha * x[i] + (1 - alpha) * y[i]; }));
   }
   function rgba(h, a) { return "rgba(" + rgbOf(h).join(",") + "," + a + ")"; }
+
+  function hslOf(hex) {
+    var c = rgbOf(hex).map(function(v) { return v / 255; });
+    var max = Math.max(c[0], c[1], c[2]), min = Math.min(c[0], c[1], c[2]);
+    var l = (max + min) / 2, d = max - min, h = 0, s = 0;
+    if (d) {
+      s = d / (1 - Math.abs(2 * l - 1));
+      if (max === c[0]) h = ((c[1] - c[2]) / d) % 6;
+      else if (max === c[1]) h = (c[2] - c[0]) / d + 2;
+      else h = (c[0] - c[1]) / d + 4;
+      h *= 60;
+      if (h < 0) h += 360;
+    }
+    return { h: h, s: s, l: l };
+  }
+  function hslToHex(h, s, l) {
+    h = ((h % 360) + 360) % 360;
+    var a = s * Math.min(l, 1 - l);
+    function f(n) {
+      var k = (n + h / 30) % 12;
+      return l - a * Math.max(-1, Math.min(k - 3, Math.min(9 - k, 1)));
+    }
+    return toHex([f(0) * 255, f(8) * 255, f(4) * 255]);
+  }
+
+  /* Nudges a colour's lightness one way until it clears `need` against every
+     background. Generated palettes go through this, so they obey the same
+     rules as the hand-made presets instead of hoping the seed was usable. */
+  function walkTo(hex, bgs, need, dir) {
+    var c = hslOf(hex);
+    for (var l = c.l; l >= 0 && l <= 1; l += dir * 0.02) {
+      var cand = hslToHex(c.h, c.s, l), pass = true;
+      for (var i = 0; i < bgs.length; i++) {
+        if (ratio(cand, bgs[i]) < need) { pass = false; break; }
+      }
+      if (pass) return cand;
+    }
+    return dir < 0 ? hslToHex(c.h, c.s, 0.06) : "#ffffff";
+  }
+
+  /* One seed colour in, a complete 7-role palette out, shaped like the
+     hand-made presets: tinted light panel, near-black tinted heading, muted
+     body, accent-coloured button. Dark mode mirrors Midnight. Every role is
+     walked until it passes AA, so the output is safe for any seed. */
+  function buildPalette(seed, dark) {
+    var s = hslOf(seed), h = s.h;
+    if (dark) {
+      var sat = Math.min(0.4, Math.max(0.12, s.s * 0.5));
+      var panel = hslToHex(h, sat, 0.12);
+      var panel2 = hslToHex(h + 14, Math.min(0.45, sat + 0.05), 0.19);
+      return {
+        panel: panel, panel2: panel2, heading: "#ffffff",
+        accent: walkTo(hslToHex(h, Math.max(0.45, s.s), 0.7), [panel, panel2], 4.6, 1),
+        body: walkTo(hslToHex(h, 0.16, 0.8), [panel, panel2], 4.6, 1),
+        btnBg: "#ffffff", btnFg: panel
+      };
+    }
+    var ps = Math.min(0.5, 0.2 + s.s * 0.3);
+    var panel = hslToHex(h, ps, 0.955);
+    var panel2 = hslToHex(h, Math.min(0.55, ps + 0.05), 0.905);
+    var accent = walkTo(hslToHex(h, Math.min(0.9, Math.max(0.5, s.s)), Math.min(0.45, s.l)), [panel, panel2], 4.6, -1);
+    return {
+      panel: panel, panel2: panel2,
+      heading: hslToHex(h, 0.38, 0.1),
+      accent: accent,
+      body: walkTo(hslToHex(h, 0.13, 0.34), [panel, panel2], 4.6, -1),
+      btnBg: walkTo(accent, ["#ffffff"], 4.6, -1),
+      btnFg: "#ffffff"
+    };
+  }
+
+  var MOODS = [
+    { id: "calm",   name: "Calm" },
+    { id: "warm",   name: "Warm" },
+    { id: "bold",   name: "Bold" },
+    { id: "earthy", name: "Earthy" },
+    { id: "dark",   name: "Dark" }
+  ];
+
+  /* Curated palettes, inspired by Figma's colour-combination moods. Each is
+     stored as one seed colour and expanded through buildPalette, so all of
+     them are checked by construction rather than trusted by hand. */
+  var CURATED = [
+    { id: "mist",      name: "Misty blue", mood: "calm",   seed: "#5b7fa6" },
+    { id: "sage",      name: "Sage",       mood: "calm",   seed: "#7a9a7e" },
+    { id: "seafoam",   name: "Seafoam",    mood: "calm",   seed: "#4fa08b" },
+    { id: "powder",    name: "Powder",     mood: "calm",   seed: "#8195c9" },
+    { id: "storm",     name: "Storm",      mood: "calm",   seed: "#64748b" },
+    { id: "blush",     name: "Blush",      mood: "warm",   seed: "#d16b8f" },
+    { id: "terracotta",name: "Terracotta", mood: "warm",   seed: "#c96f4a" },
+    { id: "apricot",   name: "Apricot",    mood: "warm",   seed: "#e0954f" },
+    { id: "rosewood",  name: "Rosewood",   mood: "warm",   seed: "#a45560" },
+    { id: "honey",     name: "Honey",      mood: "warm",   seed: "#c9972e" },
+    { id: "royal",     name: "Royal",      mood: "bold",   seed: "#2c4fd8" },
+    { id: "magenta",   name: "Magenta",    mood: "bold",   seed: "#c42a92" },
+    { id: "emerald",   name: "Emerald",    mood: "bold",   seed: "#0e9f6e" },
+    { id: "flame",     name: "Flame",      mood: "bold",   seed: "#e04e2e" },
+    { id: "violet",    name: "Violet",     mood: "bold",   seed: "#7b3fe4" },
+    { id: "olive",     name: "Olive",      mood: "earthy", seed: "#7a7a3d" },
+    { id: "clay",      name: "Clay",       mood: "earthy", seed: "#a56b52" },
+    { id: "taupe",     name: "Taupe",      mood: "earthy", seed: "#8a7a68" },
+    { id: "moss",      name: "Moss",       mood: "earthy", seed: "#667c50" },
+    { id: "stone",     name: "Stone",      mood: "earthy", seed: "#75808a" },
+    { id: "navy",      name: "Navy",       mood: "dark",   seed: "#3b5bdc" },
+    { id: "deepforest",name: "Deep forest",mood: "dark",   seed: "#2f9e63" },
+    { id: "aubergine", name: "Aubergine",  mood: "dark",   seed: "#a44bb0" },
+    { id: "espresso",  name: "Espresso",   mood: "dark",   seed: "#b0704a" },
+    { id: "charcoal",  name: "Charcoal",   mood: "dark",   seed: "#4a5568" }
+  ];
+  CURATED.forEach(function(p) { p.c = buildPalette(p.seed, p.mood === "dark"); });
 
   /* The overlay layout can't be checked against a known background, because
      the background is somebody's photograph. So it's built to survive the
@@ -1280,7 +1410,9 @@ keyframes + charRules;
   var customToggle = $("customToggle"), customPanel = $("customPanel"), resetBtn = $("resetColors");
   var lastPreset = PRESETS[0];
 
-  PRESETS.forEach(function(p) {
+  var morePresetsEl = $("morePresets"), moreToggle = $("moreToggle"), activeMood = MOODS[0].id;
+
+  function presetButton(p) {
     var b = document.createElement("button");
     b.type = "button";
     b.className = "preset";
@@ -1296,7 +1428,53 @@ keyframes + charRules;
     b.appendChild(sw);
     b.appendChild(document.createTextNode(p.name));
     b.addEventListener("click", function() { applyPreset(p); resetBtn.hidden = true; });
-    presetsEl.appendChild(b);
+    return b;
+  }
+
+  PRESETS.forEach(function(p) { presetsEl.appendChild(presetButton(p)); });
+
+  function renderMorePresets() {
+    morePresetsEl.innerHTML = "";
+    CURATED.forEach(function(p) {
+      if (p.mood === activeMood) morePresetsEl.appendChild(presetButton(p));
+    });
+  }
+
+  MOODS.forEach(function(m, i) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("data-mood", m.id);
+    b.setAttribute("aria-pressed", String(i === 0));
+    b.textContent = m.name;
+    $("moodSeg").appendChild(b);
+  });
+  segment("moodSeg", "mood", function(v) { activeMood = v; renderMorePresets(); });
+  renderMorePresets();
+
+  moreToggle.addEventListener("click", function() {
+    var open = moreToggle.getAttribute("aria-expanded") === "true";
+    moreToggle.setAttribute("aria-expanded", String(!open));
+    $("morePanel").hidden = open;
+  });
+
+  // curated palettes live in two grids, so selection state spans both
+  function eachPresetButton(fn) {
+    Array.prototype.forEach.call(
+      document.querySelectorAll("#presets [data-preset], #morePresets [data-preset]"), fn);
+  }
+
+  function applyGenerated(c) {
+    hero.c = c;
+    dropPreset();
+    syncColorInputs();
+    render(false);
+  }
+  $("shuffle").addEventListener("click", function() {
+    var seed = hslToHex(Math.random() * 360, 0.55 + Math.random() * 0.3, 0.35 + Math.random() * 0.25);
+    applyGenerated(buildPalette(seed, Math.random() < 0.25));
+  });
+  $("buildFromSeed").addEventListener("click", function() {
+    applyGenerated(buildPalette($("seedColor").value, false));
   });
 
   COLOR_FIELDS.forEach(function(f) {
@@ -1363,7 +1541,7 @@ keyframes + charRules;
     hero.preset = p.id;
     lastPreset = p;
     hero.c = clone(p.c);
-    Array.prototype.forEach.call(presetsEl.children, function(el) {
+    eachPresetButton(function(el) {
       el.setAttribute("aria-pressed", String(el.getAttribute("data-preset") === p.id));
     });
     syncColorInputs();
@@ -1372,7 +1550,7 @@ keyframes + charRules;
 
   function dropPreset() {
     hero.preset = null;
-    Array.prototype.forEach.call(presetsEl.children, function(el) {
+    eachPresetButton(function(el) {
       el.setAttribute("aria-pressed", "false");
     });
     resetBtn.textContent = "Reset to " + lastPreset.name;
