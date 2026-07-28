@@ -713,7 +713,7 @@ keyframes + charRules;
   };
 
   var CROP_HINTS = {
-    split: "<strong>Choosing a photo:</strong> it's cropped to fill a 16:10 frame, and a wider 21:9 in a narrow column. Anything near the top or bottom edge gets trimmed, so keep faces, logos and text away from them.",
+    split: "<strong>Choosing a photo:</strong> it's cropped to fill a 16:10 frame, and a wider letterbox shape in very narrow or very wide columns. Anything near the top or bottom edge gets trimmed, so keep faces, logos and text away from them.",
     overlay: "<strong>Choosing a photo:</strong> the text sits over the left of the image, so pick a shot whose left side is calm. Busy detail there fights the words even through the scrim. It's cropped hard, so keep the subject off-centre to the right."
   };
 
@@ -1018,9 +1018,13 @@ keyframes + charRules;
     ".hw-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);border:0}\n"
   : "") +
 
+// 16:10 is a shape, not a contract: in a full-width content column (newsfeed
+// collapsed) an uncapped 16:10 image drives the whole panel past 500px tall.
+// The max-height turns extra width into a wider crop instead of extra height,
+// the same trade the narrow breakpoint already makes with 21:9.
 (hasImg
   ? ".hw-img{display:block;width:100%;" +
-    (overlay ? "height:100%;object-fit:cover" : "height:auto;aspect-ratio:16/10;object-fit:cover;border-radius:10px") + "}\n"
+    (overlay ? "height:100%;object-fit:cover" : "height:auto;aspect-ratio:16/10;max-height:340px;object-fit:cover;border-radius:10px") + "}\n"
   : "") +
 (ghost
   ? (overlay
@@ -1029,7 +1033,7 @@ keyframes + charRules;
       ? ".hw-ph{display:flex;align-items:center;justify-content:flex-end;height:100%;background:" + oc.base + ";padding:0 26px}\n" +
         ".hw-phl{position:relative;z-index:1;border:1.5px dashed rgba(255,255,255,0.6);color:rgba(255,255,255,0.92);" +
         "padding:8px 14px;border-radius:999px;font-size:12.5px;font-weight:700}\n"
-      : ".hw-ph{display:flex;align-items:center;justify-content:center;aspect-ratio:16/10;border-radius:10px;" +
+      : ".hw-ph{display:flex;align-items:center;justify-content:center;aspect-ratio:16/10;max-height:340px;border-radius:10px;" +
         "border:1px dashed " + c.body + ";color:" + c.body + ";opacity:.6;font-size:13px;font-weight:700}\n")
   : "") +
 
