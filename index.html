@@ -53,21 +53,46 @@
     border: 1px solid var(--brand); text-decoration: none;
   }
   .skip:focus { top: var(--sp-3); }
+  /* The header is one line, always, at a height that cannot change. It used to
+     wrap, which meant the webfont arriving mid-load pushed the strapline onto
+     a second line and the whole page stepped down: the title visibly moved on
+     every refresh. Nothing in here is allowed to reflow now. The strapline
+     truncates rather than wraps, and drops out entirely when there is no room
+     for it, so the height is the same before and after the font lands. */
   header {
     background: var(--card);
     border-bottom: 1px solid var(--border);
-    padding: var(--sp-4) var(--sp-6);
+    padding: var(--sp-3) var(--sp-6);
     padding-left: max(var(--sp-6), env(safe-area-inset-left));
     padding-right: max(var(--sp-6), env(safe-area-inset-right));
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: var(--sp-3);
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    min-height: 64px;
   }
+  header h1 { flex: none; }
+  header p { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  @media (max-width: 900px) { header p { display: none; } }
   header h1 { font-size: var(--fs-lg); font-weight: 800; letter-spacing: -0.01em; }
   header p { font-size: var(--fs-md); color: var(--text-secondary); }
   header a { color: var(--brand); font-weight: 600; text-decoration: none; }
   header a:hover { text-decoration: underline; }
+  /* Global actions sit opposite the title. They wrap under it rather than
+     squeezing the strapline, which is why the header is already flex-wrap. */
+  .header-actions { margin-left: auto; flex: none; display: flex; gap: var(--sp-2); align-items: center; }
+  /* flex:none and nowrap together: in a nowrap header these would otherwise be
+     the first things squeezed, and a two-line "Copy share link" is taller than
+     the header it sits in */
+  .header-actions .btn {
+    flex: none; white-space: nowrap;
+    font-size: var(--fs-md); padding: 8px var(--sp-3); min-height: 38px;
+  }
+  .saved {
+    font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap;
+    opacity: 0; transition: opacity 0.3s ease;
+  }
+  .saved.on { opacity: 1; }
 
   .layout {
     display: grid;
@@ -93,8 +118,55 @@
     .layout { flex: 1; min-height: 0; width: 100%; overflow: hidden; align-items: stretch; }
     .col { overflow-y: auto; overscroll-behavior: contain; max-height: 100%; padding-right: 6px; }
     .col::after { content: ""; display: block; height: var(--sp-1); }
+
+    /* The preview card is the size of the widget in it and no other size.
+       Stretching it to fill the column put a single line of Companion text in
+       the middle of half a screen of white, which says the widget is enormous
+       when it is one line tall. So it hugs its content, the code card follows
+       directly underneath instead of floating a screen away, and whatever is
+       left over is page background rather than an inflated white box.
+
+       Nothing is capped: a tall widget grows and this column scrolls. */
+    .col--preview { display: flex; flex-direction: column; gap: var(--sp-4); }
+    .col--preview::after { display: none; }
+    .col--preview > .card { margin-top: 0; flex: 0 0 auto; }
   }
-  @media (max-width: 1060px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+
+  /* A floor, not a height. Small widgets get enough room around them to read
+     as a deliberate stage rather than a cramped strip; large ones ignore it. */
+  #previewCard .preview-stage {
+    min-height: 190px; display: flex; align-items: center; justify-content: center;
+  }
+
+  /* Below the two-column breakpoint the preview used to fall thousands of
+     pixels below the fold, so the whole form was filled in blind. Now the
+     layout is a flex column and the preview card is pulled to the very top
+     with `order`, where it is the first thing on screen, at full height and
+     never clipped. The code card stays last.
+
+     `display: contents` on the wrapper is what makes that possible: its two
+     cards become flex items of .layout, so each can be ordered on its own.
+
+     Hide is offered here and nowhere else. It is the answer to a long form on
+     a short screen, and it is the user's call rather than a height cap that
+     cuts the widget off whether they wanted it or not. */
+  @media (max-width: 1060px) {
+    /* stretch, not the start the two-column layout wants: as flex items these
+       cards would each shrink to their own content width and the page would
+       be a ragged stack of three different widths */
+    .layout { display: flex; flex-direction: column; align-items: stretch; }
+    .col--preview { display: contents; }
+    #previewCard { order: -1; }
+    #output { order: 1; }
+    /* two classes, because the `.pv-toggle { display: none }` that hides this
+       on desktop is declared further down the file and would otherwise win on
+       source order alone */
+    .preview-tools .pv-toggle { display: inline-flex; }
+    #previewCard.collapsed .preview-stage,
+    #previewCard.collapsed #previewNotes,
+    #previewCard.collapsed #previewHint { display: none; }
+    #previewCard.collapsed .preview-head { margin-bottom: 0; }
+  }
 
   .card {
     background: var(--card);
@@ -146,7 +218,12 @@
   .wtype button svg { flex: none; color: var(--text-muted); }
   .wtype button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-light); color: var(--brand-dark); }
   .wtype button[aria-pressed="true"] svg { color: var(--brand-dark); }
-  .wtype button:disabled { color: var(--text-muted); cursor: default; background: var(--bg); }
+  /* aria-disabled, not disabled: a disabled button is removed from the tab
+     order, so a keyboard or screen-reader user never finds out the fourth
+     widget is coming. This one is reachable and announced, and the click
+     handler ignores it. */
+  .wtype button[aria-disabled="true"] { color: var(--text-muted); cursor: default; background: var(--bg); }
+  .wtype button[aria-disabled="true"]:hover { border-color: var(--border-strong); }
   /* on the grey badge fill, --text-muted only reaches 3.9:1, so the badge
      steps down to the darker secondary to clear 4.5:1 at this size */
   .wtype .soon {
@@ -169,7 +246,9 @@
     background: var(--card);
     color: var(--text-primary);
   }
-  textarea { resize: vertical; min-height: 84px; line-height: 1.5; }
+  /* a whole number of 21px lines (14px at 1.5) plus the 20px of vertical
+     padding, so the box never slices a line of text in half */
+  textarea { resize: vertical; min-height: 104px; line-height: 1.5; }
   input:focus-visible, textarea:focus-visible {
     outline: 2px solid var(--brand); outline-offset: 1px; border-color: var(--brand);
   }
@@ -177,9 +256,11 @@
      could see. This clears 3:1, and the error sentence still carries the
      meaning so nothing depends on colour alone. */
   input[aria-invalid="true"] { border-color: #dc2626; }
+  /* sized for the longest form the counter takes, "240 of 240", so the field
+     beside it never shifts as the number grows */
   .count {
-    font-size: var(--fs-micro); color: var(--text-secondary); min-width: 44px;
-    text-align: right; font-variant-numeric: tabular-nums;
+    font-size: var(--fs-micro); color: var(--text-secondary); min-width: 62px;
+    text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums;
   }
   .count.warn { color: var(--amber); font-weight: 700; }
 
@@ -317,8 +398,14 @@
   /* preview */
   .preview-head { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-4); }
   .preview-head h2 { margin: 0; }
+  .preview-tools { margin-left: auto; display: flex; gap: var(--sp-2); align-items: center; }
+  .pv-toggle { display: none; min-height: 32px; padding: 5px 10px; font-size: var(--fs-sm); }
   .preview-stage { background: #ffffff; border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--sp-5); overflow-x: auto; }
-  .preview-frame-wrap { margin: 0 auto; }
+  /* The widget is shown at the full width of the block it will land in, and
+     at no other width. Nothing here ever caps its height either: the point of
+     the preview is to see the whole of what was generated, so when it gets
+     tall the column scrolls rather than the widget being clipped. */
+  .preview-frame-wrap { margin: 0 auto; width: 100%; }
   .preview-frame-wrap iframe { border: none; width: 100%; height: 80px; display: block; background: transparent; }
 
   /* output */
@@ -370,7 +457,13 @@
      selectors above outrank the browser’s own [hidden] { display: none }. */
   #panelClassroom { display: flex; flex-direction: column; gap: var(--sp-4); }
   #ctPanel1, #ctPanel2 { display: flex; flex-direction: column; gap: var(--sp-4); }
-  #ctPanel1[hidden], #ctPanel2[hidden] { display: none; }
+  /* Every one of these [hidden] rules is load-bearing, including the one on
+     #panelClassroom itself. An id selector in this stylesheet outranks the
+     browser’s own [hidden] { display: none }, so without it the panel stays
+     laid out while `hidden` is true: 3,700px of the wrong widget’s controls
+     rendered under whichever widget you actually picked, all of it still in
+     the tab order. The boot check in the script catches a repeat of this. */
+  #panelClassroom[hidden], #ctPanel1[hidden], #ctPanel2[hidden] { display: none; }
   #panelClassroom .card + .card { margin-top: 0; }
 
   /* a secondary line under a field label, for the sentence that explains it */
@@ -425,6 +518,39 @@
   .chk .r { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--text-muted); font-size: var(--fs-micro); white-space: nowrap; }
   .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
 
+  /* Undo. Removing a prompt, a path or a slide is the one destructive action
+     in the builder and it used to be final. One shared bar serves all three
+     lists; it is the last thing in the DOM, so Tab reaches it immediately
+     after the click that raised it. */
+  .undo {
+    position: fixed; left: 50%; bottom: var(--sp-5); transform: translateX(-50%);
+    z-index: 60; display: flex; align-items: center; gap: var(--sp-3);
+    background: var(--text-primary); color: #fff;
+    padding: 10px 10px 10px var(--sp-5); border-radius: 999px;
+    font-size: var(--fs-md); font-weight: 600; max-width: calc(100vw - var(--sp-6));
+    box-shadow: 0 12px 32px rgba(16, 19, 34, 0.28);
+  }
+  /* after .undo, or the display above would outrank [hidden] */
+  .undo[hidden] { display: none; }
+  .undo button {
+    font: inherit; font-size: var(--fs-md); font-weight: 700;
+    background: rgba(255, 255, 255, 0.14); color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 999px;
+    padding: 7px var(--sp-4); min-height: 36px; cursor: pointer; white-space: nowrap;
+    touch-action: manipulation; transition: background-color 0.18s ease;
+  }
+  .undo button:hover { background: rgba(255, 255, 255, 0.26); }
+  .undo button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  .undo kbd {
+    font: inherit; font-size: var(--fs-micro); font-weight: 600;
+    color: rgba(255, 255, 255, 0.62); white-space: nowrap;
+  }
+
+  @media (max-width: 640px) {
+    .undo { left: var(--sp-3); right: var(--sp-3); transform: none; max-width: none; justify-content: space-between; }
+    .undo kbd { display: none; }
+  }
+
   @media (max-width: 640px) {
     input[type="text"], input[type="url"], input[type="number"], textarea, select { font-size: 16px; }
     .layout {
@@ -442,6 +568,11 @@
 <header>
   <h1>Academy Widget Builder</h1>
   <p>Generate copy-paste widgets for your 360Learning homepage and academy spaces &middot; <a href="https://support.360learning.com/hc/en-us/articles/38078313603092-Configure-an-HTML-widget" target="_blank" rel="noopener">HTML widget guide</a></p>
+  <div class="header-actions">
+    <span class="saved" id="savedNote" role="status" aria-live="polite"></span>
+    <button type="button" class="btn btn-secondary" id="share">Copy share link</button>
+    <button type="button" class="btn btn-secondary" id="startOver">Start over</button>
+  </div>
 </header>
 
 <main class="layout">
@@ -461,7 +592,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 2v3M16 2v3"/></svg>
           Live training
         </button>
-        <button type="button" disabled>
+        <button type="button" aria-disabled="true">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 13v4"/><path d="M12 9v8"/><path d="M17 5v12"/></svg>
           Learning dashboard <span class="soon">Soon</span>
         </button>
@@ -471,7 +602,7 @@
     <!-- ===== AI Companion ===== -->
     <div class="panel" id="panelCompanion">
       <section class="card">
-        <h2>Prompts</h2>
+        <h2><span class="num" aria-hidden="true">1</span> Prompts</h2>
         <div id="prompts"></div>
         <button type="button" class="add" id="addPrompt">+ Add prompt</button>
         <p class="hint">Up to 5 prompts, max <strong>50&nbsp;characters</strong> each. The widget cycles through them with a typing animation. Shorter prompts are safer: in a very narrow column the end of a long prompt can be trimmed off.</p>
@@ -503,24 +634,20 @@
         <h2><span class="num" aria-hidden="true">2</span> Content</h2>
         <div class="field">
           <label for="h1">Heading</label>
-          <div class="row">
-            <input type="text" id="h1" maxlength="45" placeholder="Welcome to your">
-            <span class="count" id="h1c"></span>
-          </div>
+          <input type="text" id="h1" maxlength="45" placeholder="Welcome to your">
+          <span class="count" id="h1c"></span>
         </div>
         <div class="field">
-          <label for="h2i">Second line, in the accent colour</label>
-          <div class="row">
-            <input type="text" id="h2i" maxlength="45" placeholder="Digital Academy">
-            <span class="count" id="h2c"></span>
-          </div>
-          <p class="hint">Leave empty for a single-line heading.</p>
+          <label for="h2i">Second line</label>
+          <span class="sub">Shown in the accent colour. Leave it empty for a single-line heading.</span>
+          <input type="text" id="h2i" maxlength="45" placeholder="Digital Academy">
+          <span class="count" id="h2c"></span>
         </div>
         <div class="field">
           <label for="body">Body text</label>
+          <span class="sub">This is what drives the height of the banner. Shorter copy gives a shorter hero.</span>
           <textarea id="body" maxlength="260" placeholder="One or two sentences on what this space is for."></textarea>
-          <div class="row" style="justify-content:flex-end"><span class="count" id="bodyc"></span></div>
-          <p class="hint">This is what drives the height of the banner. Shorter copy gives a shorter hero.</p>
+          <span class="count" id="bodyc"></span>
         </div>
       </section>
 
@@ -557,8 +684,8 @@
 
         <div class="field">
           <label for="alt">Image description, for screen readers</label>
-          <input type="text" id="alt" maxlength="120" placeholder="Three colleagues learning together at a laptop" aria-describedby="altHelp">
-          <p class="hint" id="altHelp">Leave empty if the image is purely decorative.</p>
+          <span class="sub">Leave it empty if the image is purely decorative.</span>
+          <input type="text" id="alt" maxlength="120" placeholder="Three colleagues learning together at a laptop">
         </div>
 
         <hr class="divider">
@@ -576,10 +703,8 @@
         <div id="btnFields">
           <div class="field">
             <label for="btnText">Button text</label>
-            <div class="row">
-              <input type="text" id="btnText" maxlength="30" placeholder="Explore training courses">
-              <span class="count" id="btnc"></span>
-            </div>
+            <input type="text" id="btnText" maxlength="30" placeholder="Explore training courses">
+            <span class="count" id="btnc"></span>
           </div>
           <div class="field">
             <!-- a <label> has to name one control; this names a group of
@@ -716,10 +841,13 @@
     </div>
   </div>
 
-  <div class="col">
-    <section class="card">
+  <div class="col col--preview">
+    <section class="card" id="previewCard">
       <div class="preview-head">
         <h2>Live preview</h2>
+        <div class="preview-tools">
+          <button type="button" class="btn btn-secondary pv-toggle" id="pvToggle" aria-expanded="true" aria-controls="stage">Hide</button>
+        </div>
       </div>
       <div class="preview-stage" id="stage">
         <div class="preview-frame-wrap" id="frameWrap">
@@ -747,9 +875,18 @@
         <li>In 360Learning, edit either your homepage or the group page layout and select the <strong>HTML block</strong> (<a href="https://support.360learning.com/hc/en-us/articles/38078313603092-Configure-an-HTML-widget" target="_blank" rel="noopener">how to</a>).</li>
         <li>Paste the code and click apply. Done.</li>
       </ol>
+      <p class="hint">The widget makes no external requests of any kind. It asks for Plus Jakarta Sans, uses it if 360Learning already serves it, and otherwise falls back to the reader’s own system font, which needs no download at all.</p>
     </section>
   </div>
 </main>
+
+<!-- Last in the DOM on purpose: Tab reaches Undo straight after the remove
+     that raised it, without a focus trap or a roving tabindex. -->
+<div class="undo" id="undoBar" hidden role="status" aria-live="polite">
+  <span id="undoText"></span>
+  <kbd id="undoKey"></kbd>
+  <button type="button" id="undoBtn">Undo</button>
+</div>
 
 <script>
 (function(){
@@ -766,6 +903,30 @@
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
   function escAttr(s) { return esc(s).replace(/"/g, "&quot;"); }
+
+  /* ---- the font the generated widgets ask for ----
+     These used to open with @import url(fonts.googleapis.com…), which was
+     wrong in three separate ways for code that gets pasted into somebody
+     else’s homepage. An @import inside a <style> block is serialised: the
+     browser has to fetch and parse that sheet before it can even discover
+     the font, so every learner watched the widget render in a fallback and
+     then reflow. Plenty of customer content-security policies block
+     fonts.googleapis.com outright. And hotlinking Google Fonts from an EU
+     learning platform is a live GDPR question, which is not a thing a
+     copy-paste widget should quietly hand its customers.
+
+     A plain stack costs nothing and behaves better: if 360Learning already
+     serves Plus Jakarta Sans the widget matches the platform exactly, and
+     if it doesn’t, the reader’s own system font is already installed and
+     renders on the first frame. No request, no reflow, no CSP surprise.
+
+     The preview iframe loads the webfont separately, in paint(), so the
+     builder still shows the best case rather than the tester’s desktop. */
+  var FONT_STACK = "'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont," +
+    "'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif";
+  var PREVIEW_FONT_LINK =
+    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?' +
+    'family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">';
 
   /* ================================================================
      AI Companion prompt banner
@@ -828,9 +989,8 @@
     });
 
     var css =
-"@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&display=swap');\n" +
 ".cw-wrap{container-type:inline-size;position:relative;width:100%;margin:0;overflow:hidden;background:transparent}\n" +
-".cw-main{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:20px;font-size:clamp(15px,2.5cqw,22px);font-weight:700;line-height:1.3;color:#18191D;white-space:nowrap;margin:0;padding:0}\n" +
+".cw-main{font-family:" + FONT_STACK + ";font-size:20px;font-size:clamp(15px,2.5cqw,22px);font-weight:700;line-height:1.3;color:#18191D;white-space:nowrap;margin:0;padding:0}\n" +
 ".cw-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);border:0}\n" +
 ".cw-ai{background:linear-gradient(100deg," + C1 + " 0%," + CM + " 55%," + C2 + " 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}\n" +
 ".cw-star{position:relative;display:inline-block}\n" +
@@ -1179,10 +1339,9 @@ keyframes + charRules;
       : "grid-template-columns:minmax(0,1fr);";
 
     var css =
-// Plus Jakarta Sans is 360Learning’s own typeface, so the widget matches the
-// page. The import stays: it guarantees weights 400/700/800 are loaded rather
-// than assuming the platform already fetched them.
-"@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');\n" +
+// Plus Jakarta Sans is 360Learning’s own typeface, so asking for it by name
+// is how the widget matches the page around it. Asking is all it does: see
+// FONT_STACK for why the @import that used to sit here had to go.
 ".hw-wrap{container-type:inline-size;width:100%;margin:0}\n" +
 ".hw-wrap *{box-sizing:border-box}\n" +
 ".hw-panel{display:grid;" + cols + "gap:30px;align-items:center;padding:" +
@@ -1192,7 +1351,7 @@ keyframes + charRules;
   // hero. Set too high, this is what makes an overlay hero feel oversized.
   (overlay ? "position:relative;overflow:hidden;background:" + c.panel + ";min-height:260px;"
            : "background:" + panelBg() + ";") +
-  "font-family:'Plus Jakarta Sans',system-ui,sans-serif}\n" +
+  "font-family:" + FONT_STACK + "}\n" +
 ".hw-text,.hw-media{min-width:0}\n" +
 
 (split && hero.layout === "imageFirst"
@@ -1301,6 +1460,54 @@ keyframes + charRules;
       el.setAttribute("autocorrect", "off");
     }
   }
+  /* ---- undo ----
+     Removing a prompt, a featured path or a slide is the only destructive
+     action in the builder, and it used to be final: three fields of typing
+     gone to one mis-aimed click. One bar serves all three lists. Each caller
+     hands over a closure that puts its own item back at its own index, so
+     nothing here needs to know what it is restoring. */
+  var UNDO_MS = 9000;
+  var undoTimer = null, undoAction = null;
+  var undoBar = $("undoBar"), undoText = $("undoText"), undoBtn = $("undoBtn");
+
+  $("undoKey").textContent =
+    /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent || "") ? "⌘Z" : "Ctrl+Z";
+
+  function clearUndo() {
+    clearTimeout(undoTimer);
+    undoTimer = null;
+    undoAction = null;
+    undoBar.hidden = true;
+  }
+
+  function offerUndo(what, restore) {
+    undoAction = restore;
+    undoText.textContent = what + " removed.";
+    undoBar.hidden = false;
+    clearTimeout(undoTimer);
+    undoTimer = setTimeout(clearUndo, UNDO_MS);
+  }
+
+  function runUndo() {
+    if (!undoAction) return;
+    var fn = undoAction;
+    clearUndo();       // cleared first, so a restore that itself removes
+    fn();              // something can offer its own undo
+  }
+
+  undoBtn.addEventListener("click", runUndo);
+  document.addEventListener("keydown", function(e) {
+    if (!undoAction) return;
+    if (!(e.metaKey || e.ctrlKey) || e.shiftKey) return;
+    if (e.key !== "z" && e.key !== "Z") return;
+    // inside a text field the browser’s own undo stack is the one the user
+    // means, and it is the better one. Leave it alone.
+    var t = e.target, tag = t && t.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || (t && t.isContentEditable)) return;
+    e.preventDefault();
+    runUndo();
+  });
+
   var codeEl = $("code"), previewEl = $("preview"), sizeNote = $("sizeNote"),
       contrastEl = $("contrast"), previewNotes = $("previewNotes");
 
@@ -1329,6 +1536,8 @@ keyframes + charRules;
     checkContrast();
     ctContrastReport();
     paint();
+    saveSoon();   // every change already comes through here
+    roveGroups();  // and so does every change of which button is pressed
   }
 
   function render(debounce) {
@@ -1346,29 +1555,54 @@ keyframes + charRules;
 
   function paint() {
     $("stage").style.background = previewBg();
+    // PREVIEW_FONT_LINK is the one place the webfont is still fetched, and it
+    // is fetched into the preview only, never into the code anyone pastes.
+    // 360Learning serves Plus Jakarta Sans, so this is what a learner sees;
+    // showing the tester’s system font instead would be the misleading one.
     previewEl.srcdoc = '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
+      PREVIEW_FONT_LINK +
       "<style>html,body{margin:0;padding:0;background:" +
       (active === "classroom" ? previewBg() : "transparent") + "}" +
       (active === "companion" ? "body{padding:8px 2px}" : "") +
       "</style></head><body>" + previewSnippet + "</body></html>";
   }
 
+  /* The frame is sized from out here, so every re-measure moves whatever sits
+     below it. Writing the same number back still counts as a layout change to
+     the browser, so it is only written when it has actually moved. */
   function fitPreview() {
     try {
       var d = previewEl.contentDocument;
       if (!d || !d.body) return;
-      previewEl.style.height = Math.ceil(d.body.scrollHeight) + "px";
-    } catch (e) { /* keep the default height */ }
+      var h = Math.ceil(d.body.scrollHeight) + "px";
+      if (previewEl.style.height !== h) previewEl.style.height = h;
+    } catch (e) { /* keep the current height */ }
   }
+
   previewEl.addEventListener("load", function() {
-    fitPreview();
-    // the Google Font inside the iframe arrives after the document does, and
-    // its metrics can change line wraps, so measure again once it’s ready
+    var w, d;
+    try { w = previewEl.contentWindow; d = w.document; } catch (e) { fitPreview(); return; }
+
+    /* Measuring straight away measures the fallback font, and measuring again
+       when the webfont lands changes the answer, so the preview visibly
+       settled twice on every load. One measurement, taken once the font that
+       will actually be used is ready. The timer is the escape hatch for a
+       blocked or slow font: a late preview beats a stuck one. */
+    var done = false;
+    function settle() {
+      if (done) return;
+      done = true;
+      fitPreview();
+      // and from here on, anything that reflows the widget re-measures it
+      try { if (w.ResizeObserver) new w.ResizeObserver(fitPreview).observe(d.body); } catch (e) { /* no observer */ }
+    }
+    setTimeout(settle, 400);
     try {
-      var fonts = previewEl.contentWindow.document.fonts;
-      if (fonts && fonts.ready) fonts.ready.then(fitPreview);
-    } catch (e) { /* first measurement stands */ }
+      if (d.fonts && d.fonts.ready) d.fonts.ready.then(settle);
+      else settle();
+    } catch (e) { settle(); }
   });
+
 
   function note(target, cls, text) {
     var p = document.createElement("p");
@@ -1488,17 +1722,25 @@ keyframes + charRules;
   }
 
   /* ---- widget type ---- */
-  $("wtype").addEventListener("click", function(e) {
-    var btn = e.target.closest("button[data-w]");
-    if (!btn) return;
-    Array.prototype.forEach.call(this.querySelectorAll("button[data-w]"), function(b) {
-      b.setAttribute("aria-pressed", String(b === btn));
-    });
-    active = btn.getAttribute("data-w");
+  function showPanels() {
     $("panelCompanion").hidden = active !== "companion";
     $("panelHero").hidden = active !== "hero";
     $("panelClassroom").hidden = active !== "classroom";
-    previewEl.style.height = "80px";   // let it re-measure from a small base
+    Array.prototype.forEach.call($("wtype").querySelectorAll("button[data-w]"), function(b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-w") === active));
+    });
+    // deliberately not reset to a small height first: collapsing the frame and
+    // then growing it back is two movements where the new widget needs one
+  }
+
+  $("wtype").addEventListener("click", function(e) {
+    var btn = e.target.closest("button");
+    // the Soon entry is aria-disabled rather than disabled, so that a keyboard
+    // user can reach it and hear it. Reachable is not the same as clickable.
+    if (!btn || btn.getAttribute("aria-disabled") === "true") return;
+    if (!btn.getAttribute("data-w")) return;
+    active = btn.getAttribute("data-w");
+    showPanels();
     render(false);
   });
 
@@ -1540,14 +1782,38 @@ keyframes + charRules;
 
   segment("fillSeg", "fill", function(v) { hero.fill = v; render(false); });
 
-  /* ---- hero text fields ---- */
+  /* ---- preview controls ----
+     Only offered below the two-column breakpoint, where the preview sits at
+     the top of a single column and someone working through a long form may
+     want the room back for a moment. */
+  $("pvToggle").addEventListener("click", function() {
+    var card = $("previewCard"), open = card.classList.toggle("collapsed") === false;
+    this.textContent = open ? "Hide" : "Show";
+    this.setAttribute("aria-expanded", String(open));
+    if (open) requestAnimationFrame(fitPreview);
+  });
+
+  // the frame is a percentage of the stage, so a window resize changes what
+  // the widget has to lay itself out in
+  var resizeTimer = null;
+  window.addEventListener("resize", function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(fitPreview, 120);
+  });
+
+  /* ---- hero text fields ----
+     Each one registers a syncer, so restoring saved work or starting over can
+     push new values back into the DOM without knowing which fields exist. */
+  var heroSyncers = [];
   function text(id, key, countId, max) {
     var el = $(id);
     el.value = hero[key];
     var count = countId ? $(countId) : null;
     function tick() {
       if (!count) return;
-      count.textContent = el.value.length + "/" + max;
+      // "38 of 50", the same wording the Live training panel uses. Two
+      // counter formats in one builder made it read as two different tools.
+      count.textContent = el.value.length + " of " + max;
       count.classList.toggle("warn", el.value.length > max - 6);
     }
     tick();
@@ -1556,6 +1822,7 @@ keyframes + charRules;
       tick();
       render(true);
     });
+    heroSyncers.push(function() { el.value = hero[key] || ""; tick(); });
   }
 
   text("h1", "h1", "h1c", 45);
@@ -1708,7 +1975,10 @@ keyframes + charRules;
     weight.className = "weight" + (kb > 120 ? " heavy" : "");
     weight.textContent = kb.toFixed(0) + " KB embedded";
     info.appendChild(weight);
-    info.appendChild(document.createTextNode(" \u00b7 " + w + "\u00d7" + h + " \u00b7 " + name));
+    // a photo restored from saved work has no File and no natural size behind
+    // it any more, only the data URI, so those parts are simply left out
+    info.appendChild(document.createTextNode(
+      (w && h ? " \u00b7 " + w + "\u00d7" + h : "") + (name ? " \u00b7 " + name : "")));
     if (kb > 120) {
       var warn = document.createElement("div");
       warn.style.marginTop = "3px";
@@ -1904,7 +2174,7 @@ keyframes + charRules;
       var count = document.createElement("span");
       count.className = "count";
       function updateCount() {
-        count.textContent = input.value.length + "/" + MAX_CHARS;
+        count.textContent = input.value.length + " of " + MAX_CHARS;
         count.classList.toggle("warn", input.value.length > WARN_AT);
       }
       updateCount();
@@ -1922,9 +2192,17 @@ keyframes + charRules;
       rm.setAttribute("aria-label", "Remove prompt " + (i + 1));
       rm.disabled = companion.prompts.length <= 1;
       rm.addEventListener("click", function() {
+        var removed = companion.prompts[i], at = i;
         companion.prompts.splice(i, 1);
         renderPrompts();
         render(true);
+        offerUndo("Prompt " + (at + 1), function() {
+          companion.prompts.splice(at, 0, removed);
+          renderPrompts();
+          render(false);
+          var rows = promptsEl.querySelectorAll(".prompt-row input");
+          if (rows[at]) rows[at].focus();
+        });
       });
 
       row.appendChild(input);
@@ -2241,11 +2519,10 @@ keyframes + charRules;
   }
 
   function ctBaseCss(c, fill, pad) {
-    return "@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');\n" +
-      ".ct-wrap{container-type:inline-size;width:100%;margin:0}\n" +
+    return ".ct-wrap{container-type:inline-size;width:100%;margin:0}\n" +
       ".ct-wrap *{box-sizing:border-box}\n" +
       ".ct-panel{padding:" + pad + "px;border-radius:12px;background:" + ctPanelBg(c, fill) +
-        ";font-family:'Plus Jakarta Sans',system-ui,sans-serif}\n" +
+        ";font-family:" + FONT_STACK + "}\n" +
       ".ct-i{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}\n" +
       ".ct-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);border:0}\n";
   }
@@ -2951,10 +3228,16 @@ keyframes + charRules;
       onStructural();
     });
     var del = mk("remove", "Remove", "×", list.length > 1, function() {
+      var removed = list[i], at = i;
       list.splice(i, 1);
       // the row that slid up into this slot, or the last one if this was it
       ctPending = base + "." + Math.min(i, list.length - 1) + ".remove";
       onStructural();
+      offerUndo(title, function() {
+        list.splice(at, 0, removed);
+        ctPending = base + "." + at + ".remove";   // land back on the row it was
+        onStructural();
+      });
     });
     del.classList.add("danger");
     host.appendChild(head);
@@ -3216,7 +3499,6 @@ keyframes + charRules;
     $("ctLayoutHint").textContent = CT_LAYOUT_HINTS[v];
     $("ctPanel1").hidden = v !== "signpost";
     $("ctPanel2").hidden = v !== "deck";
-    previewEl.style.height = "80px";   // let it re-measure from a small base
     render(false);
   });
   segment("ctFillSeg", "ctfill", function(v) { ct.fill = v; render(false); });
@@ -3382,21 +3664,265 @@ keyframes + charRules;
     });
   }
 
-  /* ---- unsaved work ----
-     Nothing is stored anywhere, so a stray reload or a closed tab throws away
-     a fully configured widget. Typing, ticking, choosing a colour, and any
-     click in the settings column all count as work worth keeping; the copy,
-     download and disclosure controls in the right-hand column do not. */
-  var touched = false;
-  function markTouched() { touched = true; }
-  ["input", "change"].forEach(function(t) {
-    document.addEventListener(t, markTouched, true);
+  /* ================================================================
+     Saved work, shared work, and starting over
+
+     Nothing used to be stored anywhere. A stray reload or a closed tab threw
+     away a fully configured widget, and the only defence was a beforeunload
+     dialog that nobody reads. All three widgets keep their state in plain
+     objects that are already JSON all the way down, so saving them is honest
+     and cheap. What costs something is putting a restored state back into
+     several hundred controls, which is what syncUI does.
+     ================================================================ */
+
+  var STORE_KEY = "awb.state.v1";
+  var WIDGET_STATE = { companion: companion, hero: hero, classroom: ct };
+
+  /* Copies src over target in place. Nested plain objects are merged rather
+     than replaced, so the references held by the classroom panels (ct.w1,
+     ct.w2, hero.c) survive a restore and keep pointing at live state. Arrays
+     are replaced whole: merging a 2-item list into a 3-item one leaves a
+     stray third item that belongs to nobody. */
+  function absorb(target, src) {
+    if (!src || typeof src !== "object" || !target) return;
+    for (var k in src) {
+      if (!Object.prototype.hasOwnProperty.call(src, k)) continue;
+      var v = src[k];
+      if (v && typeof v === "object" && !Array.isArray(v) &&
+          target[k] && typeof target[k] === "object" && !Array.isArray(target[k])) {
+        absorb(target[k], v);
+      } else if (v !== undefined) {
+        target[k] = v;
+      }
+    }
+  }
+
+  function snapshot(only) {
+    var s = { v: 1, active: active };
+    for (var k in WIDGET_STATE) {
+      if (!only || only === k) s[k] = WIDGET_STATE[k];
+    }
+    return s;
+  }
+
+  /* An embedded photo is a data URI weighing anything up to a megabyte, and
+     it is the only thing here big enough to fill the quota. If it does, the
+     rest of the configuration is worth far more than the photo, so it is
+     dropped and the user is told rather than losing everything silently. */
+  var saveTimer = null, imgTooBig = false;
+
+  function saveNow() {
+    var s = snapshot();
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(s));
+      if (imgTooBig) { imgTooBig = false; flagSaved("Saved"); }
+      return;
+    } catch (e) { /* quota, or storage disabled entirely */ }
+    try {
+      var lean = JSON.parse(JSON.stringify(s));
+      if (lean.hero) lean.hero.imgData = "";
+      localStorage.setItem(STORE_KEY, JSON.stringify(lean));
+      imgTooBig = true;
+      flagSaved("Saved without the photo, it is too big to store");
+    } catch (e2) {
+      flagSaved("");   // private mode, or storage is off. Nothing to promise.
+    }
+  }
+
+  // `booted` keeps the first render of the session from flashing "Saved" at
+  // somebody who has not typed anything yet
+  var booted = false;
+
+  function saveSoon() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function() {
+      saveNow();
+      if (booted) flagSaved(imgTooBig ? null : "Saved");
+    }, 600);
+  }
+
+  var savedTimer = null;
+  function flagSaved(msg) {
+    var el = $("savedNote");
+    if (msg === null) return;
+    if (!msg) { el.classList.remove("on"); setText(el, ""); return; }
+    setText(el, msg);
+    el.classList.add("on");
+    clearTimeout(savedTimer);
+    savedTimer = setTimeout(function() { el.classList.remove("on"); }, 1600);
+  }
+
+  /* ---- putting a restored state back on screen ---- */
+
+  function pressSeg(id, attr, value) {
+    var wrap = $(id);
+    if (!wrap) return;
+    Array.prototype.forEach.call(wrap.querySelectorAll("button[data-" + attr + "]"), function(b) {
+      b.setAttribute("aria-pressed", String(b.getAttribute("data-" + attr) === value));
+    });
+  }
+
+  function findPreset(list, id) {
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+
+  function syncUI() {
+    showPanels();
+
+    /* companion */
+    renderPrompts();
+
+    /* hero */
+    heroSyncers.forEach(function(fn) { fn(); });
+    pressSeg("layoutSeg", "layout", hero.layout);
+    pressSeg("btnSeg", "btn", hero.showBtn ? "on" : "off");
+    pressSeg("linkSeg", "link", hero.linkMode);
+    pressSeg("imgSeg", "img", hero.imgMode);
+    pressSeg("fillSeg", "fill", hero.fill);
+    $("layoutHint").textContent = LAYOUT_HINTS[hero.layout] || "";
+    $("cropHint").innerHTML = CROP_HINTS[hero.layout === "overlay" ? "overlay" : "split"];
+    $("btnFields").hidden = !hero.showBtn;
+    $("imgUrlField").hidden = hero.imgMode !== "url";
+    $("imgUploadField").hidden = hero.imgMode !== "upload";
+    imgUrlEl.value = hero.imgUrl || "";
+    syncLinkField();
+    // a restored photo has no File behind it any more, so the thumbnail is
+    // rebuilt from the data URI itself rather than from the original upload
+    thumbWrap.innerHTML = "";
+    if (hero.imgData) showThumb("Saved image", "", "");
+    var hp = findPreset(PRESETS, hero.preset) || findPreset(CURATED, hero.preset);
+    if (hp) lastPreset = hp;
+    eachPresetButton(function(el) {
+      el.setAttribute("aria-pressed", String(el.getAttribute("data-preset") === hero.preset));
+    });
+    resetBtn.textContent = "Reset to " + lastPreset.name;
+    resetBtn.hidden = !!hero.preset;
+    syncColorInputs();
+
+    /* live training */
+    pressSeg("ctLayoutSeg", "ctlayout", ct.layout);
+    pressSeg("ctFillSeg", "ctfill", ct.fill);
+    $("ctLayoutHint").textContent = CT_LAYOUT_HINTS[ct.layout] || "";
+    $("ctPanel1").hidden = ct.layout !== "signpost";
+    $("ctPanel2").hidden = ct.layout !== "deck";
+    var cp = findPreset(CT_CURATED, ct.presetId);
+    if (cp) ctLastPreset = cp;
+    ctEachPreset(function(el) {
+      el.setAttribute("aria-pressed", String(el.getAttribute("data-ctpreset") === ct.presetId));
+    });
+    ctResetBtn.textContent = "Reset to " + ctLastPreset.name;
+    ctResetBtn.hidden = !!ct.presetId;
+    ctSyncColorInputs();
+    ctPanel1();
+    ctPanel2();
+
+    clearUndo();   // the closures held in there point at lists that just went
+  }
+
+  /* ---- reading a saved or shared state ---- */
+
+  var WIDGETS = { companion: 1, hero: 1, classroom: 1 };
+
+  function adopt(data) {
+    if (!data || typeof data !== "object") return false;
+    if (data.active && WIDGETS[data.active]) active = data.active;
+    for (var k in WIDGET_STATE) {
+      if (data[k] && typeof data[k] === "object") absorb(WIDGET_STATE[k], data[k]);
+    }
+    // a stored list can be empty or missing; every renderer assumes at least one
+    if (!companion.prompts || !companion.prompts.length) companion.prompts = [""];
+    if (!ct.w1.items || !ct.w1.items.length) ct.w1.items = [DEFAULTS.classroom.w1.items[0]];
+    if (!ct.w2.slides || !ct.w2.slides.length) ct.w2.slides = [DEFAULTS.classroom.w2.slides[0]];
+    return true;
+  }
+
+  /* ---- share links ----
+     Only the widget being looked at travels, which keeps the link short and
+     matches what someone means by "here is the widget I built". An embedded
+     photo never travels: it would push the URL past what a mail client will
+     carry, and the person receiving it can re-add their own. */
+  function toB64(str) {
+    return btoa(unescape(encodeURIComponent(str)))
+      .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function fromB64(s) {
+    var t = s.replace(/-/g, "+").replace(/_/g, "/");
+    while (t.length % 4) t += "=";
+    return decodeURIComponent(escape(atob(t)));
+  }
+
+  function shareUrl() {
+    var s = JSON.parse(JSON.stringify(snapshot(active)));
+    if (s.hero) s.hero.imgData = "";
+    // href minus any existing hash, rather than origin + pathname: origin is
+    // the string "null" on a file:// URL, which is how this gets opened while
+    // it is being worked on
+    return location.href.split("#")[0] + "#s=" + toB64(JSON.stringify(s));
+  }
+
+  $("share").addEventListener("click", function() {
+    var btn = this, url;
+    try { url = shareUrl(); } catch (e) { btn.textContent = "Couldn’t build a link"; return; }
+    function done(ok) {
+      btn.textContent = ok ? "Link copied ✓" : "Copy failed";
+      setTimeout(function() { btn.textContent = "Copy share link"; }, 2000);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function() { done(true); }, function() { done(false); });
+    } else {
+      location.hash = url.slice(url.indexOf("#"));
+      done(false);
+    }
   });
-  document.querySelector(".layout > .col").addEventListener("click", markTouched);
-  window.addEventListener("beforeunload", function(e) {
-    if (!touched) return;
+
+  /* ---- start over ---- */
+  $("startOver").addEventListener("click", function() {
+    if (!window.confirm("Clear this widget and start again? Everything you have configured will be lost.")) return;
+    adopt(JSON.parse(JSON.stringify(DEFAULTS)));
+    active = DEFAULTS.active;
+    try { localStorage.removeItem(STORE_KEY); } catch (e) { /* nothing to clear */ }
+    syncUI();
+    render(false);
+    flagSaved("Cleared");
+    $("wtype").querySelector('button[data-w="' + active + '"]').focus();
+  });
+
+  /* ---- one tab stop per group ----
+     Every segmented control, the widget list and both palette grids were a
+     separate tab stop per button: 25 stops to cross the palettes. They are
+     single-choice groups, so they get the keyboard behaviour of one: Tab in
+     and out, arrows to move within, Home and End for the ends. */
+  function roveGroups() {
+    Array.prototype.forEach.call(document.querySelectorAll(".wtype, .seg, .presets"), function(g) {
+      var btns = g.querySelectorAll("button");
+      if (btns.length < 2) return;
+      var cur = 0;
+      for (var i = 0; i < btns.length; i++) {
+        if (btns[i].getAttribute("aria-pressed") === "true") { cur = i; break; }
+      }
+      for (var j = 0; j < btns.length; j++) btns[j].tabIndex = j === cur ? 0 : -1;
+    });
+  }
+
+  document.addEventListener("keydown", function(e) {
+    var k = e.key, back = k === "ArrowLeft" || k === "ArrowUp", fwd = k === "ArrowRight" || k === "ArrowDown";
+    if (!back && !fwd && k !== "Home" && k !== "End") return;
+    var btn = e.target && e.target.closest && e.target.closest("button");
+    if (!btn) return;
+    var g = btn.closest(".wtype, .seg, .presets");
+    if (!g) return;
+    var btns = Array.prototype.slice.call(g.querySelectorAll("button"));
+    var i = btns.indexOf(btn);
+    if (i < 0) return;
+    var n = k === "Home" ? 0 : k === "End" ? btns.length - 1 : back ? i - 1 : i + 1;
+    if (n < 0) n = btns.length - 1;
+    if (n >= btns.length) n = 0;
     e.preventDefault();
-    e.returnValue = "";   // older browsers need the assignment as well
+    btns[n].focus();
+    // arrowing through the palettes previews each one, which is the whole
+    // point of arrowing through the palettes
+    btns[n].click();
   });
 
   /* ---- boot ---- */
@@ -3404,20 +3930,73 @@ keyframes + charRules;
     document.querySelectorAll('input[type="text"], input[type="url"], textarea'),
     function(el) { noAutofill(el, el.type === "url" || el.id === "href"); });
 
-  $("layoutHint").textContent = LAYOUT_HINTS[hero.layout];
-  $("cropHint").innerHTML = CROP_HINTS.split;
-  syncLinkField();
-  renderPrompts();
+  /* Captured before anything can be restored over the top, which makes this
+     both the fallback for a corrupt save and the thing Start over returns to.
+     Every widget’s literal state is fully constructed by this point. */
+  var DEFAULTS = JSON.parse(JSON.stringify(snapshot()));
 
-  $("ctLayoutHint").textContent = CT_LAYOUT_HINTS[ct.layout];
-  ctEachPreset(function(e) {
-    e.setAttribute("aria-pressed", String(e.getAttribute("data-ctpreset") === ct.presetId));
-  });
-  ctSyncColorInputs();
-  ctPanel1();
-  ctPanel2();
+  /* A shared link wins over saved work, because following one is a deliberate
+     act and reloading is not. The hash is then stripped: leaving it in place
+     means a refresh silently throws away everything done since arriving. */
+  var fromLink = false;
+  if (location.hash.indexOf("#s=") === 0) {
+    try {
+      fromLink = adopt(JSON.parse(fromB64(location.hash.slice(3))));
+    } catch (e) { fromLink = false; }
+    if (fromLink && window.history && history.replaceState) {
+      history.replaceState(null, "", location.pathname + location.search);
+    }
+  }
+
+  if (!fromLink) {
+    try {
+      var saved = localStorage.getItem(STORE_KEY);
+      if (saved) adopt(JSON.parse(saved));
+    } catch (e) { /* unreadable or unparseable: the defaults are still intact */ }
+  }
+
+  syncUI();
+
+  /* A restored state comes from outside this session, so it is the one input
+     the builder cannot vouch for. If it cannot be turned into a widget, the
+     honest response is to throw it away and start clean rather than leave
+     somebody on a page that half works. */
+  try {
+    build(false);
+  } catch (e) {
+    adopt(JSON.parse(JSON.stringify(DEFAULTS)));
+    active = DEFAULTS.active;
+    try { localStorage.removeItem(STORE_KEY); } catch (e2) { /* already gone */ }
+    syncUI();
+  }
 
   render(false);
+  if (fromLink) {
+    flagSaved("Loaded from a shared link");
+    // the first autosave lands 600ms from now and would replace that message
+    // with "Saved" before anyone has read it
+    setTimeout(function() { booted = true; }, 2600);
+  } else {
+    booted = true;
+  }
+
+  roveGroups();
+
+  /* The panels are hidden with the `hidden` attribute, and an id selector in
+     this file’s stylesheet outranks the browser’s own [hidden] rule. That is
+     not hypothetical: #panelClassroom carried a display rule and no matching
+     [hidden] rule, so 3,700px of Live training controls rendered underneath
+     whichever widget was actually selected, all of it still in the tab order.
+     Cheap to check on every load, and it fails loudly the next time somebody
+     gives a panel a display rule without the [hidden] pair. */
+  if (window.console && console.warn) {
+    Array.prototype.forEach.call(document.querySelectorAll(".panel"), function(p) {
+      if (p.hidden && getComputedStyle(p).display !== "none") {
+        console.warn("Academy Widget Builder: #" + p.id + " is [hidden] but still laid out. " +
+          "Add #" + p.id + "[hidden]{display:none} next to its display rule.");
+      }
+    });
+  }
 }());
 </script>
 </body>
