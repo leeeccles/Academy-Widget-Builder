@@ -12,14 +12,20 @@
     --brand: #5d5fe3; --brand-dark: #4a4ccc; --brand-light: #eeeeff;
     --text-primary: #1a1a2e; --text-secondary: #5b6472; --text-muted: #8b93a1;
     --border: #e5e7eb; --border-strong: #d1d5db; --bg: #f7f8fa; --card: #ffffff;
-    --amber: #a15c07; --amber-bg: #fef3c7; --green: #15803d; --green-bg: #dcfce7; --red: #b91c1c;
+    --amber: #a15c07; --amber-bg: #fef3c7; --green: #15803d; --green-bg: #dcfce7;
+    --red: #b91c1c; --red-bg: #fee2e2;
 
     /* type scale */
     --fs-micro: 11px; --fs-sm: 12px; --fs-md: 13px; --fs-base: 14px; --fs-lg: 19px;
     /* 4px spacing rhythm */
     --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
     --r: 12px; --r-sm: 8px;
+    /* one token, because the row-icon buttons and the grid column that has to
+       leave room for them must never disagree */
+    --icon-btn: 36px;
   }
+  /* a mouse can hit 36px; a finger needs the full 44 */
+  @media (pointer: coarse) { :root { --icon-btn: 44px; } }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -316,10 +322,76 @@
   .size-note.heavy { color: var(--amber); font-weight: 700; }
   .steps { font-size: var(--fs-md); color: var(--text-secondary); line-height: 1.7; margin-top: var(--sp-4); padding-left: 18px; }
   .steps a { color: var(--brand); font-weight: 600; }
+
+  /* ===== Live training widget only =====================================
+     Everything below serves the third widget type. It reuses .field, .hint,
+     .err, .btn, .seg, .presets, .cfield and .notes rather than restating
+     them; these are the shapes the first two widgets never needed. */
+
+  /* The #ctPanel1 / #ctPanel2 wrappers sit between the Layout card and the
+     Colours card, which breaks the `.card + .card` adjacency the other two
+     widgets rely on. Flex gap spaces them instead, and a hidden wrapper then
+     contributes no stray gap. The [hidden] rules are not redundant: the id
+     selectors above outrank the browser's own [hidden] { display: none }. */
+  #panelClassroom { display: flex; flex-direction: column; gap: var(--sp-4); }
+  #ctPanel1, #ctPanel2 { display: flex; flex-direction: column; gap: var(--sp-4); }
+  #ctPanel1[hidden], #ctPanel2[hidden] { display: none; }
+  #panelClassroom .card + .card { margin-top: 0; }
+
+  /* a secondary line under a field label, for the sentence that explains it */
+  .sub { display: block; font-size: var(--fs-sm); font-weight: 400; color: var(--text-secondary); margin: -2px 0 6px; line-height: 1.45; }
+
+  /* the first two widgets put the counter beside the input inside a .row.
+     These fields are full width, so the counter sits under them instead. */
+  .field > .count { display: block; margin-top: 3px; }
+
+  /* label.tick, not .tick: .field > label { display:block } outranks a bare
+     class and silently kills the flex gap */
+  label.tick { display: flex; align-items: flex-start; gap: var(--sp-3); font-size: var(--fs-base); font-weight: 700; cursor: pointer; padding: 2px 0; margin-bottom: 0; }
+  .tick input { width: 18px; height: 18px; margin-top: 1px; accent-color: var(--brand); cursor: pointer; flex: none; }
+  .tick input:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  .tick .sub { font-weight: 400; margin: 3px 0 0; }
+
+  /* one repeatable thing: a featured path, or a slide */
+  .item { border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--sp-4); margin-bottom: var(--sp-3); background: var(--bg); }
+  .item-head { display: flex; align-items: center; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+  .item-head b { font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); flex: 1; }
+  .icon-btn {
+    width: var(--icon-btn); height: var(--icon-btn); flex: none;
+    border-radius: 6px; border: 1px solid var(--border-strong);
+    background: var(--card); color: var(--text-secondary); cursor: pointer; font-size: 13px; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center; touch-action: manipulation;
+  }
+  .icon-btn:hover:not(:disabled) { border-color: var(--text-muted); color: var(--text-primary); }
+  .icon-btn:disabled { opacity: 0.4; cursor: default; }
+  .icon-btn.danger:hover { border-color: var(--red); color: var(--red); }
+  .icon-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+
+  .add.block { width: 100%; text-align: center; }
+  .obj-row { display: grid; grid-template-columns: minmax(0, 1fr) var(--icon-btn); gap: var(--sp-2); margin-bottom: var(--sp-2); align-items: start; }
+  .dur { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--sp-2); }
+  input[type="number"], select {
+    font: inherit; font-size: var(--fs-base); width: 100%; min-width: 0;
+    padding: 10px var(--sp-3);
+    border: 1px solid var(--border-strong); border-radius: var(--r-sm);
+    background: var(--card); color: var(--text-primary);
+  }
+  select { cursor: pointer; }
+  input[type="number"]:focus-visible, select:focus-visible {
+    outline: 2px solid var(--brand); outline-offset: 1px; border-color: var(--brand);
+  }
+
+  /* the pair-by-pair readability report */
+  .checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--sp-2) var(--sp-4); }
+  .chk { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--text-secondary); }
+  .chk b { flex: none; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.03em; }
+  .chk.ok b { color: var(--green); background: var(--green-bg); }
+  .chk.bad b { color: var(--red); background: var(--red-bg); }
+  .chk .r { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--text-muted); font-size: var(--fs-micro); white-space: nowrap; }
   .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
 
   @media (max-width: 640px) {
-    input[type="text"], input[type="url"], textarea { font-size: 16px; }
+    input[type="text"], input[type="url"], input[type="number"], textarea, select { font-size: 16px; }
     .layout { padding: var(--sp-4); }
   }
   @media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms !important; } }
@@ -343,6 +415,10 @@
         <button type="button" data-w="hero" aria-pressed="false">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M14 4v16"/><path d="M5 10h5"/><path d="M5 14h3"/></svg>
           Hero banner
+        </button>
+        <button type="button" data-w="classroom" aria-pressed="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 2v3M16 2v3"/></svg>
+          Live training
         </button>
         <button type="button" disabled>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 13v4"/><path d="M12 9v8"/><path d="M17 5v12"/></svg>
@@ -524,6 +600,74 @@
         <p class="hint">This checks how far apart your text and background are in lightness. Too close together and the words get hard to read on a dim screen, in sunlight, or for anyone with low vision. Every palette the builder offers already passes.</p>
       </section>
     </div>
+
+    <!-- ===== Live training ===== -->
+    <div class="panel" id="panelClassroom" hidden>
+      <section class="card">
+        <h2><span class="num" aria-hidden="true">1</span> Layout</h2>
+        <div class="seg stack" id="ctLayoutSeg" role="group" aria-label="Live training layout">
+          <button type="button" data-ctlayout="signpost" aria-pressed="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="15" width="5.6" height="6" rx="1"/><rect x="9.2" y="15" width="5.6" height="6" rx="1"/><rect x="16.4" y="15" width="5.6" height="6" rx="1"/></svg>
+            Signpost with featured paths
+          </button>
+          <button type="button" data-ctlayout="deck" aria-pressed="false">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h.01M12 21h.01M16 21h.01"/></svg>
+            Path slides
+          </button>
+        </div>
+        <p class="hint" id="ctLayoutHint"></p>
+      </section>
+
+      <div id="ctPanel1"></div>
+      <div id="ctPanel2" hidden></div>
+
+      <section class="card">
+        <h2><span class="num" aria-hidden="true">5</span> Colours</h2>
+        <div class="presets" id="ctPresets" role="group" aria-label="Recommended colour palettes"></div>
+
+        <button type="button" class="disclose" id="ctMoreToggle" aria-expanded="false" aria-controls="ctMorePanel">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          More palettes
+        </button>
+        <div id="ctMorePanel" hidden>
+          <div class="seg" id="ctMoodSeg" role="group" aria-label="Palette mood"></div>
+          <div class="presets" id="ctMorePresets" role="group" aria-label="More palettes" style="margin-top:var(--sp-3)"></div>
+          <button type="button" class="btn btn-secondary reset" id="ctShuffle">Surprise me</button>
+          <p class="hint">Every palette here passes the same readability checks as the ones above. Surprise me invents a brand-new one that passes too.</p>
+        </div>
+
+        <div class="field" style="margin-top:var(--sp-4)">
+          <div class="seg" id="ctFillSeg" role="group" aria-label="Panel fill">
+            <button type="button" data-ctfill="flat" aria-pressed="true">Solid panel</button>
+            <button type="button" data-ctfill="gradient" aria-pressed="false">Gradient panel</button>
+          </div>
+        </div>
+
+        <hr class="divider">
+        <button type="button" class="disclose" id="ctCustomToggle" aria-expanded="false" aria-controls="ctCustomPanel">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          Match your brand colours
+        </button>
+        <div id="ctCustomPanel" hidden>
+          <div class="cfield" style="margin-top:var(--sp-3)">
+            <label for="ctSeedColor">Build a palette from one colour</label>
+            <div class="row">
+              <input type="color" id="ctSeedColor" value="#5b7fa6">
+              <button type="button" class="btn btn-secondary reset" id="ctBuildFromSeed" style="margin-top:0">Build palette</button>
+            </div>
+          </div>
+          <p class="hint">Pick your main brand colour and the rest are worked out for you, adjusted until every readability check passes. Then fine-tune any of them below.</p>
+          <hr class="divider">
+          <p class="hint">Every palette above is already checked. Only change these if you have exact brand colours to match, and watch the check underneath as you go.</p>
+          <div class="colors" id="ctColors"></div>
+          <button type="button" class="btn btn-secondary reset" id="ctResetColors" hidden></button>
+        </div>
+
+        <div class="notes" id="ctContrast" role="status" aria-live="polite"></div>
+        <details class="code"><summary>Show every colour pairing</summary><div class="checks" id="ctChecks" style="margin-top:var(--sp-3)"></div></details>
+        <p class="hint">Every pair of colours the widget actually uses, measured against the standard. Text needs 4.5 to 1, buttons and the slide dots need 3 to 1. Change anything above and this rechecks itself. Nothing here is judged by eye.</p>
+      </section>
+    </div>
   </div>
 
   <div class="col">
@@ -531,7 +675,7 @@
       <div class="preview-head">
         <h2>Live preview</h2>
       </div>
-      <div class="preview-stage">
+      <div class="preview-stage" id="stage">
         <div class="preview-frame-wrap" id="frameWrap">
           <iframe id="preview" title="Widget preview" scrolling="no"></iframe>
         </div>
@@ -1084,7 +1228,11 @@ keyframes + charRules;
 
   var snippet = "", previewSnippet = "", previewTimer = null;
 
-  function build(preview) { return active === "hero" ? buildHero(preview) : buildCompanion(); }
+  function build(preview) {
+    if (active === "hero") return buildHero(preview);
+    if (active === "classroom") return ctBuild();
+    return buildCompanion();
+  }
 
   function render(debounce) {
     snippet = build(false);
@@ -1095,14 +1243,24 @@ keyframes + charRules;
     sizeNote.classList.toggle("heavy", kb > 120);
     syncNotes();
     checkContrast();
+    ctContrastReport();
     clearTimeout(previewTimer);
     previewTimer = setTimeout(paint, debounce ? 350 : 0);
   }
 
+  /* The page behind the preview matches the space the widget will live in, so
+     a light widget is judged on a light page and a dark one on a dark page.
+     The stage matches too, or a dark widget sits in a white picture frame. */
+  function previewBg() {
+    return active === "classroom" && ct.c.dark ? "#12141c" : "#ffffff";
+  }
+
   function paint() {
+    $("stage").style.background = previewBg();
     previewEl.srcdoc = '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
-      "<style>html,body{margin:0;padding:0;background:transparent}" +
-      (active === "hero" ? "" : "body{padding:8px 2px}") +
+      "<style>html,body{margin:0;padding:0;background:" +
+      (active === "classroom" ? previewBg() : "transparent") + "}" +
+      (active === "companion" ? "body{padding:8px 2px}" : "") +
       "</style></head><body>" + previewSnippet + "</body></html>";
   }
 
@@ -1138,6 +1296,7 @@ keyframes + charRules;
         ? "Placeholder shown. Add an image and it fills the whole banner, sitting behind the text with a dark tint over its left side so the words stay readable. Without one the code falls back to a plain one-column panel."
         : "Placeholder shown. Add an image and the widget becomes two columns. Without one the code falls back to a single column of text.");
     }
+    if (active === "classroom") ctReadiness(previewNotes);
     // the overlay layout ignores the panel fill, so don't offer the choice
     $("fillField").hidden = isOverlay();
     $("overlayNote").hidden = !(active === "hero" && isOverlay());
@@ -1145,9 +1304,12 @@ keyframes + charRules;
       $("overlayNote").textContent =
         "The overlay layout puts text on the photo, so it uses white text and a white button over a scrim built from your darkest colour. Panel, heading, body and button colours don't apply here. The accent is lightened automatically until it's readable.";
     }
-    $("previewHint").textContent = active === "hero"
-      ? "Exactly the code you'll paste, rendered live. The widget fills the full width of whatever column it lands in and rearranges itself automatically when that column gets narrow."
-      : "Exactly the code you'll paste, rendered live. Hover it to pause the animation.";
+    $("previewHint").textContent =
+      active === "hero"
+        ? "Exactly the code you'll paste, rendered live. The widget fills the full width of whatever column it lands in and rearranges itself automatically when that column gets narrow."
+      : active === "classroom"
+        ? "Exactly the code you'll paste, rendered live. The widget spans the full width of wherever it lands, and reflows on a phone by itself."
+        : "Exactly the code you'll paste, rendered live. Hover it to pause the animation.";
   }
 
   /* Contrast warnings have to say what's wrong and what to change. A ratio on
@@ -1235,6 +1397,7 @@ keyframes + charRules;
     active = btn.getAttribute("data-w");
     $("panelCompanion").hidden = active !== "companion";
     $("panelHero").hidden = active !== "hero";
+    $("panelClassroom").hidden = active !== "classroom";
     previewEl.style.height = "80px";   // let it re-measure from a small base
     render(false);
   });
@@ -1698,21 +1861,1398 @@ keyframes + charRules;
 
   $("download").addEventListener("click", function() {
     var doc = '<!doctype html><html lang="en"><head><meta charset="utf-8">' +
-      "<style>html,body{margin:0;padding:0;background:transparent}</style></head><body>" +
+      "<style>html,body{margin:0;padding:0;background:" +
+      (active === "classroom" ? previewBg() : "transparent") + "}</style></head><body>" +
       snippet + "</body></html>";
     var blob = new Blob([doc], { type: "text/html" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = active === "hero" ? "hero-widget.html" : "ai-companion-widget.html";
+    a.download = active === "hero" ? "hero-widget.html"
+      : active === "classroom" ? (ct.layout === "deck" ? "path-slides-widget.html" : "signpost-widget.html")
+      : "ai-companion-widget.html";
     a.click();
     URL.revokeObjectURL(a.href);
   });
+
+  /* ================================================================
+     Live training
+
+     Two layouts sharing one set of content, one palette and one preview:
+     a Signpost that hands off to the classrooms tab, and Path slides that
+     page through a few programmes one at a time.
+
+     Everything here is prefixed `ct`, because it lives in the same closure
+     as the other two widgets and several of the names would otherwise
+     collide. It reuses this file's colour maths, esc/escAttr, uid, clone,
+     isHex and segment() rather than restating them; what it adds is a
+     palette with three more roles, and a builder for repeatable items.
+
+     The load-bearing content decision: these widgets carry programme
+     content and never a session date. One programme owns many sessions,
+     and the platform already lists them with their dates and free places,
+     so both layouts hand off to it rather than duplicating it into
+     something that goes stale the moment a date moves.
+     ================================================================ */
+
+  var PS = uid("cts"), PD = uid("ctd");
+
+  /* ---- palette ----
+     These widgets need three roles the hero banner never did: a card
+     surface sitting on the panel, a hairline between blocks, and a tinted
+     chip behind the format tag. Text is walked against the card as well as
+     the panel, because most of the words here sit on a card. */
+  function ctPalette(seed, dark) {
+    var s = hslOf(seed), h = s.h, card, line, bgs, accent;
+    if (dark) {
+      var sat = Math.min(0.4, Math.max(0.12, s.s * 0.5));
+      var dp = hslToHex(h, sat, 0.12);
+      var dp2 = hslToHex(h + 14, Math.min(0.45, sat + 0.05), 0.19);
+      card = hslToHex(h, Math.min(0.4, sat + 0.03), 0.175);
+      line = hslToHex(h, Math.min(0.4, sat + 0.03), 0.29);
+      bgs = [dp, dp2, card];
+      accent = walkTo(hslToHex(h, Math.max(0.45, s.s), 0.7), bgs, 4.6, 1);
+      return {
+        dark: true, panel: dp, panel2: dp2, card: card, line: line,
+        heading: "#ffffff", accent: accent,
+        body: walkTo(hslToHex(h, 0.16, 0.8), bgs, 4.6, 1),
+        btnBg: "#ffffff", btnFg: dp
+      };
+    }
+    var ps = Math.min(0.5, 0.2 + s.s * 0.3);
+    var lp = hslToHex(h, ps, 0.955);
+    var lp2 = hslToHex(h, Math.min(0.55, ps + 0.05), 0.905);
+    card = "#ffffff";
+    line = hslToHex(h, Math.min(0.32, ps), 0.885);
+    bgs = [lp, lp2, card];
+    accent = walkTo(hslToHex(h, Math.min(0.9, Math.max(0.5, s.s)), Math.min(0.45, s.l)), bgs, 4.6, -1);
+    return {
+      dark: false, panel: lp, panel2: lp2, card: card, line: line,
+      heading: hslToHex(h, 0.38, 0.1), accent: accent,
+      body: walkTo(hslToHex(h, 0.13, 0.34), bgs, 4.6, -1),
+      btnBg: walkTo(accent, ["#ffffff"], 4.6, -1),
+      btnFg: "#ffffff"
+    };
+  }
+
+  /* The format tag sits on a wash of the accent. A wash is lighter than the
+     card in dark mode and darker in light mode, so the accent has to be
+     re-walked against it or the label drifts under the line. */
+  function ctChip(c) {
+    var bg = blend(c.accent, c.card, c.dark ? 0.22 : 0.10);
+    return { bg: bg, fg: walkTo(c.accent, [bg], 4.6, c.dark ? 1 : -1) };
+  }
+
+  /* The quiet tone. A dot you have not reached and the edge of the Back and
+     Next buttons were both drawn in the hairline colour, which is tuned to
+     be almost invisible against the panel. That is right for a divider and
+     wrong for a control: it hid how many slides there were and left the two
+     buttons as floating text.
+
+     So this walks from the panel's own lightness toward the body text's and
+     stops at the first tone clearing 3:1 on the panel, the gradient end and
+     a card. That is the quietest colour still guaranteed to be visible,
+     whatever palette it is handed. The body colour is the floor and it
+     already clears 4.6:1, so there is no palette this can fail on. */
+  function ctEdge(c) {
+    var b = hslOf(c.body), p = hslOf(c.panel);
+    for (var t = 0; t <= 1.0001; t += 0.04) {
+      var cand = hslToHex(b.h, b.s * 0.75, p.l + (b.l - p.l) * t);
+      if (ratio(cand, c.panel) >= 3 && ratio(cand, c.panel2) >= 3 && ratio(cand, c.card) >= 3) return cand;
+    }
+    return c.body;
+  }
+
+  /* The same 25 seeds the hero banner offers, expanded through this
+     palette builder so each one also gains the card, hairline and chip
+     roles. Checked by construction rather than trusted by hand. */
+  var CT_CURATED = CURATED.map(function(p) {
+    return { id: p.id, name: p.name, mood: p.mood, c: ctPalette(p.seed, p.mood === "dark") };
+  });
+  var CT_RECOMMENDED = ["mist", "seafoam", "royal", "violet", "terracotta", "honey", "navy"];
+  function ctById(id) {
+    for (var i = 0; i < CT_CURATED.length; i++) if (CT_CURATED[i].id === id) return CT_CURATED[i];
+    return CT_CURATED[0];
+  }
+
+  /* ---- the vocabulary the builder writes for you ----
+     Duration and cadence are structured rather than free text, so "3 hours"
+     and "New dates every month" are spelled and pluralised the same way
+     across a page of widgets, and can be translated later without hunting
+     through everybody's typing. */
+
+  var CT_UNITS = [
+    { v: "minutes", one: "minute", many: "minutes" },
+    { v: "hours",   one: "hour",   many: "hours" },
+    { v: "days",    one: "day",    many: "days" },
+    { v: "weeks",   one: "week",   many: "weeks" }
+  ];
+  var CT_EVERY = ["week", "fortnight", "month", "quarter", "term"];
+  var CT_FORMATS = [
+    { v: "virtual",  t: "Virtual classroom" },
+    { v: "inperson", t: "In person" },
+    { v: "both",     t: "Virtual or in person" }
+  ];
+
+  function ctTrim(s) { return String(s == null ? "" : s).trim(); }
+  function ctDur(d) {
+    if (!d || !(d.n > 0)) return "";
+    if (d.unit === "days" && d.n === 0.5) return "Half day";
+    var u = null;
+    for (var i = 0; i < CT_UNITS.length; i++) if (CT_UNITS[i].v === d.unit) u = CT_UNITS[i];
+    if (!u) u = CT_UNITS[1];
+    var n = Math.round(d.n * 10) / 10;
+    return n + " " + (n === 1 ? u.one : u.many);
+  }
+  function ctFormat(f) {
+    for (var i = 0; i < CT_FORMATS.length; i++) if (CT_FORMATS[i].v === f) return CT_FORMATS[i].t;
+    return CT_FORMATS[0].t;
+  }
+  function ctCadence(c) { return c && c.on ? "New dates every " + c.every : ""; }
+  function ctHasRoom(f) { return f === "inperson" || f === "both"; }
+
+  var CT_LAYOUT_HINTS = {
+    signpost: "The everyday widget. One button to the classrooms tab, and up to three featured paths underneath, each linking straight to its page.",
+    deck: "The hero paths, one slide at a time, with Next to reach the rest. A link to the full calendar sits beside the heading, so the deck can market a few without hiding the rest."
+  };
+
+  /* Two separate content lists, because a customer may install only one of
+     the two layouts and their copy has no reason to match. */
+  var ct = {
+    c: clone(ctById("mist").c), presetId: "mist", layout: "signpost", fill: "flat",
+
+    w1: {
+      eyebrow: "Live and in person training",
+      title: "See what is coming up",
+      body: "Every session, with its dates, its trainer and the places still free, is on the classrooms tab. It updates itself as new sessions are added.",
+      btnText: "See all sessions",
+      btnHref: "/home/content/classrooms",
+      featOn: true,
+      featLabel: "Featured paths",
+      moreLabel: "Learn more",
+      items: [
+        { title: "Giving Great Feedback", format: "virtual", where: "", trainer: "Priya Raman",
+          dur: { n: 2, unit: "hours" }, href: "/paths/giving-great-feedback" },
+        { title: "Presenting with Confidence", format: "both", where: "Head office and online", trainer: "",
+          dur: { n: 0.5, unit: "days" }, href: "/paths/presenting-with-confidence" },
+        { title: "First Aid Essentials", format: "inperson", where: "Head office", trainer: "",
+          dur: { n: 3, unit: "hours" }, href: "/paths/first-aid-essentials" }
+      ]
+    },
+
+    w2: {
+      heading: "Workshops worth clearing your diary for",
+      allOn: true,
+      allText: "See all sessions",
+      allHref: "/home/content/classrooms",
+      ctaText: "See dates and enroll",
+      cols: { obj: true, who: true, why: true },
+      labels: { obj: "What you'll learn", who: "Who's it for", why: "Why you'll love it" },
+      slides: [
+        {
+          title: "Giving Great Feedback", format: "virtual", where: "", trainer: "Priya Raman",
+          dur: { n: 2, unit: "hours" }, cad: { on: true, every: "month" },
+          summary: "Practise feedback that actually lands, with live roleplay and coaching from your peers.",
+          obj: [
+            "Frame feedback so it gets heard rather than defended",
+            "Turn a vague concern into a specific, fair ask",
+            "Practise the conversation before you have it for real"
+          ],
+          who: "Anyone who gives feedback, from peers to direct reports.",
+          why: "You practise on real situations you bring along, not case studies.",
+          href: "/paths/giving-great-feedback"
+        },
+        {
+          title: "Presenting with Confidence", format: "both", where: "Head office and online", trainer: "",
+          dur: { n: 0.5, unit: "days" }, cad: { on: true, every: "quarter" },
+          summary: "Build a talk people remember, and deliver it without the nerves taking over.",
+          obj: [
+            "Open with something better than an agenda slide",
+            "Cut a rambling deck down to one clear message",
+            "Handle the questions you did not see coming"
+          ],
+          who: "Anyone who presents to colleagues or customers.",
+          why: "You leave with your next real presentation rebuilt, not just notes.",
+          href: "/paths/presenting-with-confidence"
+        },
+        {
+          title: "First Aid Essentials", format: "inperson", where: "Head office", trainer: "",
+          dur: { n: 3, unit: "hours" }, cad: { on: true, every: "month" },
+          summary: "Hands on practice in the basics that matter most in the first five minutes of an emergency.",
+          obj: [
+            "Know exactly what to do before help arrives",
+            "Practise CPR and the recovery position on real kit",
+            "Leave confident enough to act, not just aware"
+          ],
+          who: "Required for first aiders and floor wardens. Open to everyone.",
+          why: "Practical from the first ten minutes. Nobody sits through slides for three hours.",
+          href: "/paths/first-aid-essentials"
+        }
+      ]
+    }
+  };
+
+  var CT_MAX_ITEMS = 3, CT_MAX_SLIDES = 5, CT_MAX_OBJ = 4;
+
+  /* ---- snippet helpers ---- */
+
+  // Only ever emit a link we have proven is safe: a relative path, or https.
+  // Mirrors the hero widget, because the same paths get pasted in here.
+  function ctHrefOk(h) {
+    h = ctTrim(h);
+    if (!h) return false;
+    if (/^\s*(javascript|data|vbscript):/i.test(h)) return false;
+    if (/^https:\/\/.+/i.test(h)) return true;
+    if (h.charAt(0) !== "/") return false;
+    if (h.charAt(1) === "/" || h.charAt(1) === "\\") return false;
+    return true;
+  }
+  function ctSafe(h) { return ctHrefOk(h) ? ctTrim(h) : null; }
+  function ctExternal(h) { return /^https:/i.test(ctTrim(h)); }
+
+  /* Inline SVG rather than an icon font or a hosted image: 360Learning strips
+     scripts, and a font or a PNG is one more thing that can fail to load.
+     These inherit their colour from the text beside them. */
+  var CT_ICON = {
+    cal:    '<rect x="2.6" y="3.6" width="12.8" height="11.8" rx="2.2"/><path d="M2.6 7.4h12.8M6 2.2v2.8M12 2.2v2.8"/>',
+    clock:  '<circle cx="9" cy="9" r="6.4"/><path d="M9 5.3V9l2.6 1.6"/>',
+    pin:    '<path d="M9 15.8s4.9-4.5 4.9-8A4.9 4.9 0 0 0 4.1 7.8c0 3.5 4.9 8 4.9 8z"/><circle cx="9" cy="7.6" r="1.9"/>',
+    user:   '<circle cx="9" cy="6.2" r="2.7"/><path d="M3.8 15.1a5.2 5.2 0 0 1 10.4 0"/>',
+    repeat: '<path d="M3 8.2a6 6 0 0 1 10.2-3.4L15.4 7"/><path d="M15.4 3.6V7h-3.4"/><path d="M15 9.8a6 6 0 0 1-10.2 3.4L2.6 11"/><path d="M2.6 14.4V11H6"/>'
+  };
+  function ctSvg(P, name) {
+    return '<svg class="' + P + '-i" viewBox="0 0 18 18" aria-hidden="true" focusable="false">' + CT_ICON[name] + "</svg>";
+  }
+
+  function ctPanelBg(c, fill) {
+    return fill === "gradient"
+      ? "linear-gradient(115deg," + c.panel + " 0%," + c.panel2 + " 100%)"
+      : c.panel;
+  }
+
+  function ctBaseCss(c, fill, pad) {
+    return "@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');\n" +
+      ".ct-wrap{container-type:inline-size;width:100%;margin:0}\n" +
+      ".ct-wrap *{box-sizing:border-box}\n" +
+      ".ct-panel{padding:" + pad + "px;border-radius:12px;background:" + ctPanelBg(c, fill) +
+        ";font-family:'Plus Jakarta Sans',system-ui,sans-serif}\n" +
+      ".ct-i{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}\n" +
+      ".ct-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);border:0}\n";
+  }
+
+  function ctBtnCss(c) {
+    return ".ct-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 20px;" +
+      "border-radius:999px;background:" + c.btnBg + ";color:" + c.btnFg + ";font-size:13.5px;font-weight:700;line-height:1.2;" +
+      "text-decoration:none;transition:filter .15s ease}\n" +
+      ".ct-btn:hover{filter:brightness(1.12);text-decoration:none;color:" + c.btnFg + "}\n" +
+      ".ct-btn:focus-visible{outline:2px solid " + c.btnBg + ";outline-offset:3px}\n" +
+      ".ct-arrow{transition:transform .15s ease}\n" +
+      ".ct-btn:hover .ct-arrow{transform:translateX(3px)}\n" +
+      "@media (prefers-reduced-motion:reduce){.ct-btn,.ct-arrow{transition:none}}\n";
+  }
+
+  /* No link, no button. An <a href="#"> looks exactly like a working call to
+     action and does nothing at all when a learner clicks it, which is worse
+     than leaving it out. The builder says which button went missing, and
+     why, in the preview notes. */
+  function ctBtnHtml(P, txt, href) {
+    var h = ctSafe(href);
+    if (!h) return "";
+    var ext = ctExternal(h);
+    return '<a class="' + P + '-btn" href="' + escAttr(h) + '"' +
+      (ext ? ' target="_blank" rel="noopener noreferrer"' : "") + ">" + esc(txt) +
+      '<span class="' + P + '-arrow" aria-hidden="true">&#8594;</span>' +
+      (ext ? '<span class="' + P + '-sr"> (opens in a new tab)</span>' : "") + "</a>";
+  }
+
+  // How long it runs, how often, where, and who leads it. The format is
+  // deliberately absent: the tag above the title already says it. None of
+  // this goes stale, and the trainer's name is the one piece that sells.
+  function ctFactsHtml(P, p) {
+    var bits = [];
+    var d = ctDur(p.dur);
+    if (d) bits.push('<span class="' + P + '-f">' + ctSvg(P, "clock") + esc(d) + "</span>");
+    var cad = ctCadence(p.cad);
+    if (cad) bits.push('<span class="' + P + '-f">' + ctSvg(P, "repeat") + esc(cad) + "</span>");
+    if (ctHasRoom(p.format) && ctTrim(p.where)) {
+      bits.push('<span class="' + P + '-f">' + ctSvg(P, "pin") + esc(ctTrim(p.where)) + "</span>");
+    }
+    if (ctTrim(p.trainer)) {
+      bits.push('<span class="' + P + '-f">' + ctSvg(P, "user") + esc(ctTrim(p.trainer)) + "</span>");
+    }
+    return bits.length ? '<p class="' + P + '-facts">' + bits.join("") + "</p>" : "";
+  }
+  function ctFactsCss(c) {
+    return ".ct-facts{margin:8px 0 0;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;font-weight:600;line-height:1.4;color:" + c.body + "}\n" +
+      ".ct-f{display:inline-flex;align-items:center;gap:6px}\n";
+  }
+
+  /* A column renders only when it is ticked on, has content on this slide,
+     and has a title. Unticking a column drops it from every slide at once. */
+  function ctSectionsHtml(P, p, w) {
+    var out = "";
+    var objs = (p.obj || []).map(ctTrim).filter(Boolean);
+    if (w.cols.obj && objs.length && ctTrim(w.labels.obj)) {
+      out += '<div class="' + P + '-sec"><h4 class="' + P + '-sh">' + esc(ctTrim(w.labels.obj)) + '</h4><ul class="' + P + '-ul">' +
+        objs.map(function(t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul></div>";
+    }
+    if (w.cols.who && ctTrim(p.who) && ctTrim(w.labels.who)) {
+      out += '<div class="' + P + '-sec"><h4 class="' + P + '-sh">' + esc(ctTrim(w.labels.who)) + '</h4><p class="' + P + '-p">' + esc(ctTrim(p.who)) + "</p></div>";
+    }
+    if (w.cols.why && ctTrim(p.why) && ctTrim(w.labels.why)) {
+      out += '<div class="' + P + '-sec"><h4 class="' + P + '-sh">' + esc(ctTrim(w.labels.why)) + '</h4><p class="' + P + '-p">' + esc(ctTrim(p.why)) + "</p></div>";
+    }
+    return out;
+  }
+  function ctSectionsCss(c) {
+    // Block headings are labels, not actions. They used to be accent
+    // coloured, which spent the loudest colour in the palette on six words
+    // nobody clicks and left the call to action competing with them. The
+    // accent now means "you can act on this": links, arrows, the dots.
+    return ".ct-sec{margin-top:12px}\n" +
+      ".ct-sh{margin:0;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:" + c.body + "}\n" +
+      ".ct-p{margin:4px 0 0;font-size:13px;font-weight:400;line-height:1.45;color:" + c.body + "}\n" +
+      ".ct-ul{margin:5px 0 0;padding:0;list-style:none}\n" +
+      ".ct-ul li{position:relative;padding-left:15px;margin-top:3px;font-size:13px;font-weight:400;line-height:1.45;color:" + c.body + "}\n" +
+      // a drawn dot rather than a list marker, so its colour and size are ours
+      ".ct-ul li::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:" + c.accent + "}\n";
+  }
+
+  // Only the CSS is prefixed by search and replace, and it covers both class
+  // and id selectors. The markup is built with the prefix already in place,
+  // because it carries text somebody typed.
+  function ctWrap(name, P, markup, css) {
+    return "<!-- Live training widget · " + name + " · generated with Academy Widget Builder · edit in the builder, not by hand -->\n" +
+      markup + "\n<style>\n" + css.replace(/([.#])ct-/g, "$1" + P + "-") + "</style>";
+  }
+
+  /* ---- layout 1 · Signpost with featured paths ---- */
+
+  function ctBuildSignpost(c, fill, w) {
+    var P = PS, ch = ctChip(c);
+    var items = w.featOn ? w.items.filter(function(p) { return ctTrim(p.title); }) : [];
+    var more = ctTrim(w.moreLabel);
+
+    var featured = "";
+    if (items.length) {
+      featured = '<div class="' + P + '-feat">' +
+        (ctTrim(w.featLabel) ? '<h3 class="' + P + '-fh">' + esc(ctTrim(w.featLabel)) + "</h3>" : "") +
+        '<ul class="' + P + '-tiles">' + items.map(function(p) {
+          var meta = [ctDur(p.dur)];
+          if (ctHasRoom(p.format) && ctTrim(p.where)) meta.push(ctTrim(p.where));
+          if (ctTrim(p.trainer)) meta.push(ctTrim(p.trainer));
+          meta = meta.filter(Boolean).join(" · ");
+          var link = ctSafe(p.href), ext = link && ctExternal(link);
+          // a tile with nothing to link to still earns its place as a card:
+          // the format, the title and the facts are worth reading. It just
+          // loses the affordance that would promise a click and not deliver.
+          var inner =
+            '<span class="' + P + '-tag">' + esc(ctFormat(p.format)) + "</span>" +
+            '<span class="' + P + '-tt">' + esc(ctTrim(p.title)) + "</span>" +
+            (meta ? '<span class="' + P + '-tm">' + esc(meta) + "</span>" : "") +
+            (link && more ? '<span class="' + P + '-tgo">' + esc(more) +
+              '<span class="' + P + '-arrow" aria-hidden="true">&#8594;</span></span>' : "");
+          return link
+            ? '<li><a class="' + P + '-tile" href="' + escAttr(link) + '"' +
+              (ext ? ' target="_blank" rel="noopener noreferrer"' : "") + ">" + inner +
+              (ext ? '<span class="' + P + '-sr"> (opens in a new tab)</span>' : "") + "</a></li>"
+            : '<li><div class="' + P + '-tile">' + inner + "</div></li>";
+        }).join("") + "</ul></div>";
+    }
+
+    var btnMarkup = ctTrim(w.btnText) ? ctBtnHtml(P, ctTrim(w.btnText), w.btnHref) : "";
+    var btn = btnMarkup ? '<div class="' + P + '-act">' + btnMarkup + "</div>" : "";
+
+    var markup = '<div class="' + P + '-wrap"><div class="' + P + '-panel">' +
+      '<div class="' + P + '-top">' +
+        '<span class="' + P + '-badge">' + ctSvg(P, "cal") + "</span>" +
+        '<div class="' + P + '-main">' +
+          (ctTrim(w.eyebrow) ? '<p class="' + P + '-eyebrow">' + esc(ctTrim(w.eyebrow)) + "</p>" : "") +
+          '<h2 class="' + P + '-t">' + esc(ctTrim(w.title) || "Live training") + "</h2>" +
+          (ctTrim(w.body) ? '<p class="' + P + '-body">' + esc(ctTrim(w.body)) + "</p>" : "") +
+        "</div>" + btn +
+      "</div>" + featured + "</div></div>";
+
+    var css = ctBaseCss(c, fill, 22) + ctBtnCss(c) +
+      // no button means no third column, or its gap would sit on the right as
+      // an unexplained 18px of air
+      ".ct-top{display:grid;grid-template-columns:auto minmax(0,1fr)" + (btn ? " auto" : "") +
+        ";gap:18px;align-items:center}\n" +
+      ".ct-badge{flex:none;display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;" +
+        "border-radius:15px;background:" + ch.bg + ";color:" + ch.fg + "}\n" +
+      ".ct-badge .ct-i{width:26px;height:26px;stroke-width:1.5}\n" +
+      ".ct-main{min-width:0}\n" +
+      ".ct-eyebrow{margin:0;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:" + c.accent + "}\n" +
+      ".ct-t{margin:5px 0 0;font-size:clamp(18px,2.2cqw,22px);font-weight:800;line-height:1.2;letter-spacing:-0.015em;color:" + c.heading + "}\n" +
+      ".ct-body{margin:7px 0 0;font-size:13px;font-weight:400;line-height:1.5;color:" + c.body + ";max-width:60ch}\n" +
+      ".ct-act{flex:none}\n" +
+
+      (items.length
+        ? ".ct-feat{margin-top:20px;padding-top:18px;border-top:1px solid " + c.line + "}\n" +
+          ".ct-fh{margin:0 0 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:" + c.body + "}\n" +
+          ".ct-tiles{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}\n" +
+          // the whole tile is the link, so the target is the size of the card
+          // rather than the size of the words "learn more"
+          ".ct-tile{display:flex;flex-direction:column;height:100%;padding:16px;border-radius:12px;background:" + c.card +
+            ";border:1px solid " + c.line + ";text-decoration:none;transition:border-color .15s ease,transform .15s ease}\n" +
+          // only the linked tiles lift and highlight: a plain card that
+          // reacted to the pointer would be promising a click it cannot honour
+          "a.ct-tile:hover{border-color:" + c.accent + ";transform:translateY(-2px);text-decoration:none}\n" +
+          "a.ct-tile:focus-visible{outline:2px solid " + c.accent + ";outline-offset:2px}\n" +
+          ".ct-tag{align-self:flex-start;padding:3px 9px;border-radius:999px;background:" + ch.bg + ";color:" + ch.fg +
+            ";font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em}\n" +
+          ".ct-tt{margin-top:8px;font-size:15px;font-weight:800;line-height:1.3;letter-spacing:-0.01em;color:" + c.heading + "}\n" +
+          ".ct-tm{margin-top:5px;font-size:12.5px;font-weight:500;line-height:1.45;color:" + c.body + "}\n" +
+          ".ct-tgo{display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:12px;font-size:13px;font-weight:700;color:" + c.accent + "}\n" +
+          "a.ct-tile:hover .ct-arrow{transform:translateX(3px)}\n" +
+          "@media (prefers-reduced-motion:reduce){.ct-tile{transition:none}}\n"
+        : "") +
+
+      "@container (max-width:640px){.ct-top{grid-template-columns:auto minmax(0,1fr);gap:16px 18px}" +
+        ".ct-act{grid-column:1/-1}.ct-btn{width:100%}" +
+        (items.length ? ".ct-tiles{grid-template-columns:minmax(0,1fr);gap:12px}.ct-tile{padding:16px}" : "") + "}\n" +
+      "@container (max-width:400px){.ct-panel{padding:18px}.ct-top{grid-template-columns:minmax(0,1fr)}" +
+        ".ct-badge{width:42px;height:42px;border-radius:12px}.ct-badge .ct-i{width:20px;height:20px}}\n";
+
+    return ctWrap("Signpost with featured paths", P, markup, css);
+  }
+
+  /* ---- layout 2 · Path slides ----
+
+     Next has to work with no JavaScript at all. So each slide owns a hidden
+     radio button, and Next is a <label> that ticks the next one. The browser
+     does the state, CSS does the rest.
+
+     If a platform ever strips form inputs the way 360Learning strips
+     scripts, none of that exists and :has(:checked) never matches. The
+     default styles are therefore the fallback: every path stacked one under
+     another with the nav hidden. The deck only assembles itself once it has
+     proof the radios are alive. Confirmed working in a real 360Learning
+     space, 2026-07-28. */
+
+  function ctBuildDeck(c, fill, w) {
+    var P = PD, ch = ctChip(c), edge = ctEdge(c);
+    var picks = w.slides.filter(function(p) { return ctTrim(p.title); });
+    var n = picks.length;
+    var cta = ctTrim(w.ctaText);
+
+    var radios = "", slides = "", dots = "", arrows = "";
+    picks.forEach(function(p, i) {
+      var k = i + 1;
+      // naming the path in the label means a screen reader user hears where
+      // each dot goes, rather than counting to a number that means nothing
+      radios += '<input class="' + P + '-r" type="radio" name="' + P + '-deck" id="' + P + "-s" + k + '"' +
+        (i === 0 ? " checked" : "") + ' aria-label="' + escAttr(ctTrim(p.title)) + ", path " + k + " of " + n + '">';
+
+      slides +=
+        '<article class="' + P + "-slide " + P + "-sl" + k + '">' +
+          '<span class="' + P + '-tag">' + esc(ctFormat(p.format)) + "</span>" +
+          '<h3 class="' + P + '-t">' + esc(ctTrim(p.title)) + "</h3>" +
+          (ctTrim(p.summary) ? '<p class="' + P + '-lede">' + esc(ctTrim(p.summary)) + "</p>" : "") +
+          ctFactsHtml(P, p) +
+          (ctSectionsHtml(P, p, w) ? '<div class="' + P + '-cols">' + ctSectionsHtml(P, p, w) + "</div>" : "") +
+          (cta && ctBtnHtml(P, cta, p.href) ? '<div class="' + P + '-cta">' + ctBtnHtml(P, cta, p.href) + "</div>" : "") +
+        "</article>";
+
+      /* The dot is a child of the label rather than the label itself, so the
+         44px tap target and the 11px circle can be sized independently. */
+      // the sr text stays as well as the radio's aria-label: if anything ever
+      // strips aria-, the dot still has a name rather than none at all
+      dots += '<label class="' + P + "-dot " + P + "-dt" + k + '" for="' + P + "-s" + k + '">' +
+        '<span class="' + P + '-dc" aria-hidden="true"></span>' +
+        '<span class="' + P + '-sr">' + esc(ctTrim(p.title)) + ", path " + k + " of " + n + "</span></label>";
+
+      if (k > 1) {
+        arrows += '<label class="' + P + "-bk " + P + "-bk" + k + '" for="' + P + "-s" + (k - 1) + '">' +
+          '<span class="' + P + '-la" aria-hidden="true">&#8592;</span>Back</label>';
+      }
+      // the last slide gets Back only: the dots already say where you are,
+      // and anyone who wants slide 1 again can click its dot
+      if (k < n) {
+        arrows += '<label class="' + P + "-nx " + P + "-nx" + k + '" for="' + P + "-s" + (k + 1) + '">Next' +
+          '<span class="' + P + '-ra" aria-hidden="true">&#8594;</span></label>';
+      }
+    });
+
+    var allHref = ctSafe(w.allHref);
+    var allLink = (w.allOn && ctTrim(w.allText) && allHref)
+      ? '<a class="' + P + '-all" href="' + escAttr(allHref) + '"' +
+        (ctExternal(allHref) ? ' target="_blank" rel="noopener noreferrer"' : "") + ">" + esc(ctTrim(w.allText)) +
+        '<span class="' + P + '-arrow" aria-hidden="true">&#8594;</span>' +
+        (ctExternal(allHref) ? '<span class="' + P + '-sr"> (opens in a new tab)</span>' : "") + "</a>"
+      : "";
+
+    var head = (ctTrim(w.heading) || allLink)
+      ? '<div class="' + P + '-dhead">' +
+          (ctTrim(w.heading) ? '<h2 class="' + P + '-h">' + esc(ctTrim(w.heading)) + "</h2>" : "<span></span>") +
+          allLink + "</div>"
+      : "";
+
+    var markup = '<div class="' + P + '-wrap"><div class="' + P + '-panel">' + head +
+      '<div class="' + P + '-deck">' + radios +
+        '<div class="' + P + '-track">' + slides + "</div>" +
+        '<div class="' + P + '-nav"><div class="' + P + '-dots">' + dots + "</div>" +
+          '<div class="' + P + '-arrows">' + arrows + "</div></div>" +
+      "</div></div></div>";
+
+    var css = ctBaseCss(c, fill, 18) + ctBtnCss(c) + ctFactsCss(c) + ctSectionsCss(c) +
+      ".ct-dhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px}\n" +
+      // balance stops a marketing headline breaking one word onto its own
+      // last line. Same size as the slide title, so the two carry equal weight
+      ".ct-h{margin:0;font-size:clamp(18px,2.2cqw,22px);font-weight:800;letter-spacing:-0.01em;line-height:1.25;" +
+        "text-wrap:balance;color:" + c.heading + "}\n" +
+      // a text link, not a second button: the slide's own call to action has
+      // to stay the loudest thing in the widget. 44px of height on a link
+      // that draws 18px of text is hit area, and the negative margin keeps it
+      // from pushing the header taller or dropping off the heading's baseline
+      ".ct-all{display:inline-flex;align-items:center;gap:6px;min-height:44px;margin:-13px 0;font-size:13px;" +
+        "font-weight:700;color:" + c.accent + ";text-decoration:none}\n" +
+      ".ct-all:hover{text-decoration:underline;color:" + c.accent + "}\n" +
+      ".ct-all:focus-visible{outline:2px solid " + c.accent + ";outline-offset:3px;border-radius:4px}\n" +
+      ".ct-all:hover .ct-arrow{transform:translateX(3px)}\n" +
+
+      // the slide itself, which is also what a fallback list item looks like
+      ".ct-slide{padding:16px;border-radius:12px;background:" + c.card + ";border:1px solid " + c.line + "}\n" +
+      ".ct-slide + .ct-slide{margin-top:10px}\n" +
+      ".ct-tag{display:inline-block;padding:3px 10px;border-radius:999px;background:" + ch.bg + ";color:" + ch.fg +
+        ";font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em}\n" +
+      ".ct-t{margin:8px 0 0;font-size:clamp(18px,2.2cqw,22px);font-weight:800;line-height:1.16;letter-spacing:-0.02em;" +
+        "text-wrap:balance;color:" + c.heading + "}\n" +
+      ".ct-lede{margin:6px 0 0;font-size:13px;font-weight:400;line-height:1.5;color:" + c.body + ";max-width:75ch;text-wrap:pretty}\n" +
+      ".ct-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 22px;margin-top:4px;" +
+        "padding-top:4px;border-top:1px solid " + c.line + "}\n" +
+      ".ct-cols .ct-sec{margin-top:12px}\n" +
+      ".ct-cta{margin-top:14px}\n" +
+
+      // fallback state: radios missing, so this is a plain list and the
+      // controls are not shown at all
+      ".ct-r{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}\n" +
+      ".ct-nav{display:none}\n" +
+
+      (n > 1
+        ? // proof of life: a checked radio exists, so become a deck
+          ".ct-deck:has(.ct-r:checked) .ct-track{display:grid}\n" +
+          ".ct-deck:has(.ct-r:checked) .ct-slide{grid-area:1/1;margin-top:0;visibility:hidden;opacity:0;" +
+            "transition:opacity .25s ease,visibility .25s ease}\n" +
+          ".ct-deck:has(.ct-r:checked) .ct-nav{display:flex;align-items:center;justify-content:space-between;gap:14px;" +
+            "flex-wrap:wrap;margin-top:10px}\n" +
+
+          // one rule per slide. Ids beat the :has rule on specificity, so the
+          // checked slide always wins however the two are ordered.
+          picks.map(function(p, i) {
+            var k = i + 1;
+            return "#ct-s" + k + ":checked ~ .ct-track .ct-sl" + k + "{visibility:visible;opacity:1}\n" +
+              "#ct-s" + k + ":checked ~ .ct-nav .ct-dt" + k + " .ct-dc{background-color:" + c.accent + "}\n" +
+              "#ct-s" + k + ":checked ~ .ct-nav .ct-nx" + k + ",#ct-s" + k + ":checked ~ .ct-nav .ct-bk" + k +
+                "{display:inline-flex}\n" +
+              "#ct-s" + k + ":focus-visible ~ .ct-nav .ct-dt" + k + " .ct-dc{outline:2px solid " + c.accent +
+                ";outline-offset:3px}\n";
+          }).join("") +
+
+          /* Where you are is a filled dot; where you have not been is the
+             same dot as an outline. Both are the accent, so the row reads as
+             one set, and the state that matters is carried by fill rather
+             than by colour alone, which also means it survives being seen in
+             greyscale. An 11px circle is an 11px tap target, so the label
+             around it is 24 by 44 and the circle sits in the middle. */
+          ".ct-dots{display:flex;align-items:center;gap:0;margin-left:-6px}\n" +
+          ".ct-dot{display:inline-flex;align-items:center;justify-content:center;width:24px;height:44px;cursor:pointer}\n" +
+          ".ct-dc{box-sizing:border-box;width:11px;height:11px;border-radius:50%;border:2px solid " + c.accent +
+            ";background-color:transparent;transition:background-color .2s ease}\n" +
+          ".ct-dot:hover .ct-dc{background-color:" + c.accent + "}\n" +
+          ".ct-arrows{display:flex;align-items:center;gap:8px}\n" +
+          // the card these sit on is nearly the colour of the panel, so the
+          // edge has to be the quiet tone or they read as loose text
+          ".ct-bk,.ct-nx{display:none;align-items:center;gap:7px;min-height:44px;padding:10px 18px;border-radius:999px;" +
+            "border:1px solid " + edge + ";background:" + c.card + ";color:" + c.heading + ";font-size:13.5px;font-weight:700;" +
+            "cursor:pointer;user-select:none;transition:border-color .15s ease}\n" +
+          ".ct-bk:hover,.ct-nx:hover{border-color:" + c.accent + "}\n" +
+          ".ct-la,.ct-ra{color:" + c.accent + "}\n" +
+          "@media (prefers-reduced-motion:reduce){.ct-deck:has(.ct-r:checked) .ct-slide,.ct-dc,.ct-bk,.ct-nx{transition:none}}\n"
+        : "") +
+
+      "@container (max-width:620px){.ct-panel{padding:14px}.ct-slide{padding:14px}.ct-cols{gap:0 18px}}\n" +
+      "@container (max-width:400px){.ct-btn{width:100%}.ct-cta{width:100%}" +
+        (n > 1 ? ".ct-deck:has(.ct-r:checked) .ct-nav{justify-content:center}.ct-arrows{width:100%}" +
+                 ".ct-bk,.ct-nx{flex:1;justify-content:center}" : "") + "}\n";
+
+    return ctWrap("Path slides", P, markup, css);
+  }
+
+  function ctBuild() {
+    return ct.layout === "deck"
+      ? ctBuildDeck(ct.c, ct.fill, ct.w2)
+      : ctBuildSignpost(ct.c, ct.fill, ct.w1);
+  }
+
+  /* ---- what the pasted code will be missing ----
+     Anything the builder refuses to emit has to be explained, because the
+     preview is honest: it shows the widget without the button, and without
+     this the only clue is an absence. Each note names the thing, says what
+     is wrong, and says what to type. */
+
+  function ctReadiness(box) {
+    if (ct.layout === "signpost") {
+      var w = ct.w1;
+      if (ctTrim(w.btnText) && !ctSafe(w.btnHref)) {
+        note(box, "warn", "The main button has no working link, so it isn't in the code. Add a path starting with / or a full https address.");
+      }
+      if (w.featOn) {
+        var named = w.items.filter(function(p) { return ctTrim(p.title); });
+        if (!named.length) {
+          note(box, "warn", "Featured paths is on but no path has a title yet, so nothing is shown under the button.");
+        }
+        named.forEach(function(p) {
+          if (!ctSafe(p.href)) {
+            note(box, "warn", "“" + ctTrim(p.title) + "” has no link, so it's shown as a plain card rather than something to click.");
+          }
+        });
+      }
+      return;
+    }
+    var d = ct.w2;
+    var picks = d.slides.filter(function(p) { return ctTrim(p.title); });
+    if (!picks.length) {
+      note(box, "warn", "No slide has a title yet, so the deck is empty. Give at least one slide a title.");
+    }
+    if (d.allOn && ctTrim(d.allText) && !ctSafe(d.allHref)) {
+      note(box, "warn", "The link beside the heading has nowhere to go, so it isn't in the code.");
+    }
+    if (ctTrim(d.ctaText)) {
+      picks.forEach(function(p) {
+        if (!ctSafe(p.href)) {
+          note(box, "warn", "“" + ctTrim(p.title) + "” has no link, so its button isn't in the code.");
+        }
+      });
+    }
+    if (picks.length === 1) {
+      note(box, "warn", "With one slide there is nothing to page through, so Back, Next and the dots are left out. That is fine, it just renders as a single card.");
+    }
+  }
+
+  /* ---- readability report ----
+     Every pair the widget actually paints, measured. The hero banner states
+     its warnings as sentences because it has few pairs; this has fifteen, so
+     it is a list you can scan with the verdict summarised above it. */
+
+  function ctContrastReport() {
+    if (active !== "classroom") return;
+    var c = ct.c, ch = ctChip(c), edge = ctEdge(c);
+    var tests = [
+      ["Programme titles on a card", c.heading, c.card, 4.5],
+      ["Headings on the panel", c.heading, c.panel, 4.5],
+      ["Descriptions on a card", c.body, c.card, 4.5],
+      ["Descriptions on the panel", c.body, c.panel, 4.5],
+      ["Descriptions on the gradient end", c.body, c.panel2, 4.5],
+      ["Learn more links on a card", c.accent, c.card, 4.5],
+      ["Accent text on the panel", c.accent, c.panel, 4.5],
+      ["Format tags and the badge", ch.fg, ch.bg, 4.5],
+      ["Bullet dots on a card", c.accent, c.card, 3],
+      // one row covers both dot states: filled and outlined are the same colour
+      ["Slide dots, filled and outlined", c.accent, c.panel, 3],
+      ["Back and Next label text", c.heading, c.card, 4.5],
+      ["The edge of Back and Next", edge, c.panel, 3],
+      ["Button label on the button", c.btnFg, c.btnBg, 4.5],
+      ["Button shape against a card", c.btnBg, c.card, 3],
+      ["Button shape against the panel", c.btnBg, c.panel, 3]
+    ];
+    var box = $("ctChecks"), fails = 0;
+    box.innerHTML = "";
+    tests.forEach(function(t) {
+      var r = ratio(t[1], t[2]), ok = r >= t[3] - 0.02;
+      if (!ok) fails++;
+      var row = ctEl("div", "chk " + (ok ? "ok" : "bad"));
+      row.appendChild(ctEl("b", null, ok ? "PASS" : "FAIL"));
+      row.appendChild(ctEl("span", null, t[0]));
+      row.appendChild(ctEl("span", "r", r.toFixed(1) + " to 1"));
+      box.appendChild(row);
+    });
+    var notes = $("ctContrast");
+    notes.innerHTML = "";
+    note(notes, fails ? "warn" : "ok", fails
+      ? fails + (fails === 1 ? " pair of colours is" : " pairs of colours are") + " too close together. Open the list below to see which. They would be hard to read on a dim screen or in sunlight."
+      : "Every colour pairing in this widget is comfortable to read.");
+  }
+
+  /* ================================================================
+     Live training · builder controls
+
+     Typing only repaints the preview. Anything structural, which means
+     adding, removing, reordering or switching a format, rebuilds the panel
+     too, because the fields on screen change.
+     ================================================================ */
+
+  function ctEl(tag, cls, txt) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (txt != null) n.textContent = txt;
+    return n;
+  }
+
+  /* A rebuild throws the whole panel away, which without this would drop
+     focus to the top of the document every time somebody changed a format,
+     added a line or moved a slide. Keyboard users would be tabbed back to
+     the beginning on every one of those.
+
+     So each generated control carries a stable key naming the thing it
+     edits, rather than an element identity a rebuild destroys. The key is
+     looked up again afterwards and focus, and the caret, are put back.
+     `ctPending` lets an action ask for somewhere else instead, which is how
+     a newly added line gets the caret. */
+  var ctFocusKey = null, ctPending = null, ctCtx = "", ctFieldId = 1;
+
+  function ctK(name) { return ctCtx + "." + name; }
+
+  function ctKeyed(node, key) {
+    node.setAttribute("data-k", key);
+    node.addEventListener("focus", function() { ctFocusKey = key; });
+    return node;
+  }
+
+  function ctRestoreFocus() {
+    var key = ctPending || ctFocusKey;
+    ctPending = null;
+    if (!key) return;
+    var node = document.querySelector('[data-k="' + key.replace(/"/g, '\\"') + '"]');
+    if (!node) return;
+    node.focus();
+    // Put the caret at the end rather than leaving the whole value selected,
+    // which is what focus() alone does and makes the next keystroke wipe the
+    // field. Number and colour inputs throw on this, hence the catch.
+    try { node.setSelectionRange(node.value.length, node.value.length); } catch (e) { /* not a text field */ }
+  }
+
+  function ctCard(host, num, title) {
+    var c = ctEl("section", "card");
+    var h = ctEl("h2");
+    if (num) h.appendChild(ctEl("span", "num", String(num)));
+    h.appendChild(document.createTextNode(title));
+    c.appendChild(h);
+    host.appendChild(c);
+    return c;
+  }
+
+  function ctField(host, label, sub) {
+    var f = ctEl("div", "field");
+    if (label) {
+      var l = ctEl("label", null, label);
+      f.appendChild(l);
+      f.labelEl = l;
+    }
+    if (sub) f.appendChild(ctEl("span", "sub", sub));
+    host.appendChild(f);
+    return f;
+  }
+
+  // the field caps the length, so the count can never read over the maximum.
+  // It stays quiet until the last few characters, which is the only point at
+  // which anybody wants to know.
+  function ctCounted(f, input, max) {
+    var cnt = ctEl("span", "count");
+    f.appendChild(cnt);
+    function tick() {
+      var n = input.value.length;
+      cnt.textContent = n + " of " + max;
+      cnt.classList.toggle("warn", n > max - 6);
+    }
+    input.addEventListener("input", tick);
+    tick();
+  }
+
+  function ctTextField(host, label, obj, key, opts) {
+    opts = opts || {};
+    var f = ctField(host, label, opts.sub);
+    var input = ctEl(opts.area ? "textarea" : "input");
+    if (!opts.area) input.type = "text";
+    if (opts.max) input.maxLength = opts.max;
+    if (opts.placeholder) input.placeholder = opts.placeholder;
+    input.value = obj[key] || "";
+    input.id = "ctf" + (ctFieldId++);
+    ctKeyed(input, opts.k || ctK(key));
+    if (f.labelEl) f.labelEl.setAttribute("for", input.id);
+    input.addEventListener("input", function() {
+      obj[key] = input.value;
+      if (opts.onInput) opts.onInput();
+      render(true);
+    });
+    f.appendChild(input);
+    if (opts.max) ctCounted(f, input, opts.max);
+    f.input = input;
+    return f;
+  }
+
+  function ctLinkField(host, label, obj, key, sub) {
+    var f = ctTextField(host, label, obj, key, { sub: sub, placeholder: "/paths/your-programme" });
+    var err = ctEl("p", "err");
+    err.setAttribute("role", "alert");
+    err.hidden = true;
+    f.appendChild(err);
+    function check() {
+      var v = ctTrim(obj[key]);
+      var bad = v && !ctHrefOk(v);
+      err.hidden = !bad;
+      if (bad) {
+        err.textContent = /^https?:/i.test(v) && !/^https:/i.test(v)
+          ? "Links have to start with https, not http."
+          : "Start with a slash for a page inside 360Learning, like /home/content/classrooms, or paste a full https address.";
+      }
+      f.input.setAttribute("aria-invalid", bad ? "true" : "false");
+    }
+    f.input.addEventListener("input", check);
+    check();
+    return f;
+  }
+
+  function ctSelectField(host, label, options, obj, key, onChange) {
+    var f = ctField(host, label);
+    var sel = ctEl("select");
+    options.forEach(function(o) {
+      var op = ctEl("option", null, o.t);
+      op.value = o.v;
+      sel.appendChild(op);
+    });
+    sel.value = obj[key];
+    sel.id = "ctf" + (ctFieldId++);
+    ctKeyed(sel, ctK(key));
+    if (f.labelEl) f.labelEl.setAttribute("for", sel.id);
+    sel.addEventListener("change", function() {
+      obj[key] = sel.value;
+      if (onChange) onChange();
+      else render(true);
+    });
+    f.appendChild(sel);
+    return f;
+  }
+
+  // number plus unit, so "3 hours" and "Half day" are spelled by the builder
+  function ctDurationField(host, dur) {
+    var f = ctField(host, "How long it runs", "Half a day is 0.5 days.");
+    var wrap = ctEl("div", "dur");
+    var n = ctEl("input");
+    n.type = "number";
+    n.min = "0";
+    n.max = "999";
+    n.step = "0.5";
+    n.value = dur.n;
+    n.setAttribute("aria-label", "How many");
+    n.id = "ctf" + (ctFieldId++);
+    ctKeyed(n, ctK("dur.n"));
+    if (f.labelEl) f.labelEl.setAttribute("for", n.id);
+    var u = ctEl("select");
+    CT_UNITS.forEach(function(x) {
+      var op = ctEl("option", null, x.many);
+      op.value = x.v;
+      u.appendChild(op);
+    });
+    u.value = dur.unit;
+    u.setAttribute("aria-label", "Minutes, hours, days or weeks");
+    ctKeyed(u, ctK("dur.unit"));
+    function upd() {
+      dur.n = parseFloat(n.value) || 0;
+      dur.unit = u.value;
+      render(true);
+    }
+    n.addEventListener("input", upd);
+    u.addEventListener("change", upd);
+    wrap.appendChild(n);
+    wrap.appendChild(u);
+    f.appendChild(wrap);
+    return f;
+  }
+
+  function ctToggleField(host, label, obj, key, sub, onChange) {
+    var f = ctEl("div", "field");
+    var lab = ctEl("label", "tick");
+    var cb = ctEl("input");
+    cb.type = "checkbox";
+    cb.checked = !!obj[key];
+    ctKeyed(cb, ctK(key));
+    var txtWrap = ctEl("span");
+    txtWrap.appendChild(document.createTextNode(label));
+    if (sub) txtWrap.appendChild(ctEl("span", "sub", sub));
+    lab.appendChild(cb);
+    lab.appendChild(txtWrap);
+    f.appendChild(lab);
+    cb.addEventListener("change", function() {
+      obj[key] = cb.checked;
+      if (onChange) onChange();
+      else render(true);
+    });
+    host.appendChild(f);
+    f.input = cb;
+    return f;
+  }
+
+  /* The buttons name themselves against the row they will end up on, not the
+     one they started on, so pressing Move down twice moves the same item
+     twice instead of walking focus back up the list. */
+  function ctItemHead(host, title, i, list, onStructural, base) {
+    var head = ctEl("div", "item-head");
+    head.appendChild(ctEl("b", null, title));
+    function mk(slug, label, glyph, enabled, fn) {
+      var b = ctEl("button", "icon-btn", glyph);
+      b.type = "button";
+      b.title = label + " " + title.toLowerCase();
+      b.setAttribute("aria-label", label + " " + title.toLowerCase());
+      b.disabled = !enabled;
+      ctKeyed(b, base + "." + i + "." + slug);
+      b.addEventListener("click", fn);
+      head.appendChild(b);
+      return b;
+    }
+    mk("up", "Move up", "↑", i > 0, function() {
+      var t = list[i - 1]; list[i - 1] = list[i]; list[i] = t;
+      ctPending = base + "." + (i - 1) + ".up";
+      onStructural();
+    });
+    mk("down", "Move down", "↓", i < list.length - 1, function() {
+      var t = list[i + 1]; list[i + 1] = list[i]; list[i] = t;
+      ctPending = base + "." + (i + 1) + ".down";
+      onStructural();
+    });
+    var del = mk("remove", "Remove", "×", list.length > 1, function() {
+      list.splice(i, 1);
+      // the row that slid up into this slot, or the last one if this was it
+      ctPending = base + "." + Math.min(i, list.length - 1) + ".remove";
+      onStructural();
+    });
+    del.classList.add("danger");
+    host.appendChild(head);
+  }
+
+  /* ---- signpost panel ---- */
+
+  function ctPanel1() {
+    var host = $("ctPanel1");
+    host.innerHTML = "";
+    var w = ct.w1;
+    ctCtx = "w1";
+
+    var c1 = ctCard(host, 2, "Heading");
+    ctTextField(c1, "Small line above the title", w, "eyebrow", {
+      max: 42, sub: "Sets the scene in three or four words. Leave it empty to drop it.",
+      placeholder: "Live and in person training"
+    });
+    ctTextField(c1, "Title", w, "title", { max: 60, placeholder: "See what is coming up" });
+    ctTextField(c1, "Description", w, "body", {
+      area: true, max: 240,
+      sub: "Say what they will find when they get there. Two sentences is plenty."
+    });
+
+    var c2 = ctCard(host, 3, "Main button");
+    ctTextField(c2, "Button text", w, "btnText", {
+      max: 30, sub: "Leave empty to hide the button.", placeholder: "See all sessions"
+    });
+    ctLinkField(c2, "Where it goes", w, "btnHref",
+      "The classrooms tab lists every live session with its dates and free places.");
+
+    var c3 = ctCard(host, 4, "Featured paths");
+    ctToggleField(c3, "Show featured paths", w, "featOn",
+      "Up to three paths with a link straight to each one.", ctRebuild1);
+    if (w.featOn) {
+      ctTextField(c3, "Heading over them", w, "featLabel", {
+        max: 34, sub: "Call them whatever your learners call them. Workshops, classrooms, live learning.",
+        placeholder: "Featured paths"
+      });
+      ctTextField(c3, "Link text on each one", w, "moreLabel", { max: 24, placeholder: "Learn more" });
+
+      w.items.forEach(function(p, i) {
+        var box = ctEl("div", "item");
+        c3.appendChild(box);
+        ctCtx = "w1.items." + i;
+        ctItemHead(box, "Path " + (i + 1), i, w.items, ctRebuild1, "w1.items");
+        ctTextField(box, "Title", p, "title", { max: 60, placeholder: "Giving Great Feedback" });
+        ctSelectField(box, "Format", CT_FORMATS, p, "format", ctRebuild1);
+        if (ctHasRoom(p.format)) {
+          ctTextField(box, "Where", p, "where", {
+            max: 46, sub: "Only shown for in person training.", placeholder: "Head office, or a city"
+          });
+        }
+        ctDurationField(box, p.dur);
+        ctTextField(box, "Who leads it", p, "trainer", {
+          max: 40, sub: "Optional, and the one detail here that does any selling.",
+          placeholder: "Priya Raman"
+        });
+        ctLinkField(box, "Link to the path", p, "href");
+      });
+
+      ctCtx = "w1";
+      var add = ctEl("button", "add block", "+ Add a path");
+      add.type = "button";
+      add.disabled = w.items.length >= CT_MAX_ITEMS;
+      if (add.disabled) add.textContent = "Three is the most that fits on one row";
+      ctKeyed(add, "w1.addItem");
+      add.addEventListener("click", function() {
+        w.items.push({ title: "", format: "virtual", where: "", trainer: "", dur: { n: 1, unit: "hours" }, href: "" });
+        // land in the new card's first field, not back at the top of the panel
+        ctPending = "w1.items." + (w.items.length - 1) + ".title";
+        ctRebuild1();
+      });
+      c3.appendChild(add);
+    }
+  }
+
+  /* ---- path slides panel ---- */
+
+  function ctPanel2() {
+    var host = $("ctPanel2");
+    host.innerHTML = "";
+    var w = ct.w2;
+    ctCtx = "w2";
+
+    var c1 = ctCard(host, 2, "Heading");
+    ctTextField(c1, "Heading over the deck", w, "heading", {
+      max: 54, placeholder: "Workshops on offer",
+      sub: "This is the marketing line. It can be a claim, not just a label."
+    });
+    ctToggleField(c1, "Show a link to all sessions", w, "allOn",
+      "Sits beside the heading, so the deck can feature a few without hiding the rest.", ctRebuild2);
+    if (w.allOn) {
+      ctTextField(c1, "Link text", w, "allText", { max: 30, placeholder: "See all sessions" });
+      ctLinkField(c1, "Where it goes", w, "allHref");
+    }
+    ctTextField(c1, "Button on every slide", w, "ctaText", {
+      max: 30, sub: "Leave empty to hide it.", placeholder: "See dates and enroll"
+    });
+
+    var c2 = ctCard(host, 3, "What each slide shows");
+    var lhint = ctEl("p", "hint",
+      "Up to three columns, side by side on every slide. Give each its own title. A slide skips any column you leave empty on it.");
+    lhint.style.margin = "0 0 14px";
+    c2.appendChild(lhint);
+    // the slide cards below reuse these titles as their field labels, so
+    // typing here renames those fields as you type
+    var FALLBACK = { obj: "Column 1", who: "Column 2", why: "Column 3" };
+    var colLabelEls = { obj: [], who: [], why: [] };
+    function colTitle(key) { return ctTrim(w.labels[key]) || FALLBACK[key]; }
+    [["obj", "Column 1", "A short bullet list.", "What you'll learn"],
+     ["who", "Column 2", "A sentence or two.", "Who's it for"],
+     ["why", "Column 3", "The selling line.", "Why you'll love it"]].forEach(function(row) {
+      var key = row[0];
+      // the tick and its title edit different objects under the same name, so
+      // they need to be told apart or focus would land on the wrong one
+      ctCtx = "w2.cols";
+      ctToggleField(c2, row[1], w.cols, key, row[2], ctRebuild2);
+      if (w.cols[key]) {
+        ctCtx = "w2.labels";
+        var f = ctTextField(c2, "Title learners see", w.labels, key, {
+          max: 32, placeholder: row[3],
+          onInput: function() {
+            colLabelEls[key].forEach(function(l) { l.textContent = colTitle(key); });
+          }
+        });
+        f.style.marginLeft = "30px";
+        f.style.marginTop = "-6px";
+      }
+    });
+
+    var c3 = ctCard(host, 4, "Slides");
+    w.slides.forEach(function(p, i) {
+      var box = ctEl("div", "item");
+      c3.appendChild(box);
+      ctCtx = "w2.slides." + i;
+      // editing any field on this card turns the preview to this slide
+      box.addEventListener("focusin", function() {
+        if (ctPreviewSlide !== i) {
+          ctPreviewSlide = i;
+          ctShowSlide();
+        }
+      });
+      ctItemHead(box, "Slide " + (i + 1), i, w.slides, ctRebuild2, "w2.slides");
+      ctTextField(box, "Title", p, "title", { max: 60, placeholder: "Giving Great Feedback" });
+      ctSelectField(box, "Format", CT_FORMATS, p, "format", ctRebuild2);
+      if (ctHasRoom(p.format)) {
+        ctTextField(box, "Where", p, "where", { max: 46, placeholder: "Head office, or a city" });
+      }
+      ctDurationField(box, p.dur);
+      ctTextField(box, "Who leads it", p, "trainer", { max: 40, placeholder: "Priya Raman" });
+
+      // one select instead of a toggle plus a select: "Don't say" is an option
+      if (!p.cad.on) p.cad.every = "";
+      var cadOpts = [{ v: "", t: "Don't say" }].concat(CT_EVERY.map(function(e) { return { v: e, t: "Every " + e }; }));
+      ctSelectField(box, "How often new dates appear", cadOpts, p.cad, "every", function() {
+        p.cad.on = !!p.cad.every;
+        render(true);
+      });
+
+      ctTextField(box, "Short description", p, "summary", { area: true, max: 200 });
+      if (w.cols.obj) {
+        var objWrap = ctField(box, colTitle("obj"), "One line each. Three is the sweet spot.");
+        colLabelEls.obj.push(objWrap.labelEl);
+        p.obj.forEach(function(_, j) {
+          var row = ctEl("div", "obj-row");
+          var inp = ctEl("input");
+          inp.type = "text";
+          inp.maxLength = 90;
+          inp.value = p.obj[j];
+          inp.setAttribute("aria-label", "Line " + (j + 1));
+          ctKeyed(inp, "w2.slides." + i + ".obj." + j);
+          inp.addEventListener("input", function() { p.obj[j] = inp.value; render(true); });
+          var rm = ctEl("button", "icon-btn danger", "×");
+          rm.type = "button";
+          rm.title = "Remove line " + (j + 1);
+          rm.setAttribute("aria-label", "Remove line " + (j + 1));
+          ctKeyed(rm, "w2.slides." + i + ".obj." + j + ".remove");
+          rm.addEventListener("click", function() {
+            p.obj.splice(j, 1);
+            // stay on the line that moved up, or the button if this was last
+            ctPending = p.obj.length
+              ? "w2.slides." + i + ".obj." + Math.min(j, p.obj.length - 1)
+              : "w2.slides." + i + ".addObj";
+            ctRebuild2();
+          });
+          row.appendChild(inp);
+          row.appendChild(rm);
+          objWrap.appendChild(row);
+        });
+        var addObj = ctEl("button", "add block", "+ Add a line");
+        addObj.type = "button";
+        addObj.disabled = p.obj.length >= CT_MAX_OBJ;
+        ctKeyed(addObj, "w2.slides." + i + ".addObj");
+        addObj.addEventListener("click", function() {
+          p.obj.push("");
+          ctPending = "w2.slides." + i + ".obj." + (p.obj.length - 1);
+          ctRebuild2();
+        });
+        objWrap.appendChild(addObj);
+      }
+      if (w.cols.who) colLabelEls.who.push(ctTextField(box, colTitle("who"), p, "who", { max: 140 }).labelEl);
+      if (w.cols.why) colLabelEls.why.push(ctTextField(box, colTitle("why"), p, "why", { max: 140 }).labelEl);
+      ctLinkField(box, "Link to the path", p, "href");
+    });
+
+    ctCtx = "w2";
+    var add = ctEl("button", "add block", "+ Add a slide");
+    add.type = "button";
+    add.disabled = w.slides.length >= CT_MAX_SLIDES;
+    if (add.disabled) add.textContent = "Five slides is as far as anyone clicks";
+    ctKeyed(add, "w2.addSlide");
+    add.addEventListener("click", function() {
+      w.slides.push({
+        title: "", format: "virtual", where: "", trainer: "", dur: { n: 1, unit: "hours" },
+        cad: { on: true, every: "month" }, summary: "", obj: [""], who: "", why: "",
+        href: ""
+      });
+      ctPreviewSlide = w.slides.length - 1;
+      ctPending = "w2.slides." + (w.slides.length - 1) + ".title";
+      ctRebuild2();
+    });
+    c3.appendChild(add);
+  }
+
+  function ctRebuild1() { ctPanel1(); ctRestoreFocus(); render(false); }
+  function ctRebuild2() { ctPanel2(); ctRestoreFocus(); render(false); }
+
+  /* The preview turns to whichever slide is being edited, and stays there
+     until another slide's card is touched. Every repaint reloads the frame
+     with slide 1 checked, so the chosen slide is re-checked after each load.
+     Clicking Next inside the preview still works between edits, because
+     nothing here runs until focus comes back to a slide card. */
+  var ctPreviewSlide = null;
+  function ctShowSlide() {
+    if (active !== "classroom" || ct.layout !== "deck" || ctPreviewSlide == null) return;
+    var k = 0, target = 0;
+    for (var i = 0; i < ct.w2.slides.length; i++) {
+      if (ctTrim(ct.w2.slides[i].title)) {
+        k++;
+        if (i === ctPreviewSlide) { target = k; break; }
+      } else if (i === ctPreviewSlide) {
+        return; // an untitled slide has nothing in the deck to turn to
+      }
+    }
+    if (!target) return;
+    try {
+      var radios = previewEl.contentDocument.querySelectorAll('input[type="radio"]');
+      if (radios[target - 1]) radios[target - 1].checked = true;
+    } catch (e) { /* preview only, nothing to recover */ }
+  }
+  previewEl.addEventListener("load", ctShowSlide);
+
+  /* ---- layout and fill ---- */
+
+  segment("ctLayoutSeg", "ctlayout", function(v) {
+    ct.layout = v;
+    $("ctLayoutHint").textContent = CT_LAYOUT_HINTS[v];
+    $("ctPanel1").hidden = v !== "signpost";
+    $("ctPanel2").hidden = v !== "deck";
+    previewEl.style.height = "80px";   // let it re-measure from a small base
+    render(false);
+  });
+  segment("ctFillSeg", "ctfill", function(v) { ct.fill = v; render(false); });
+
+  /* ---- colours, managed the same way as the hero banner ---- */
+
+  var CT_COLOR_FIELDS = [
+    { key: "panel",   label: "Panel background" },
+    { key: "panel2",  label: "Gradient end" },
+    { key: "card",    label: "Card background" },
+    { key: "line",    label: "Borders and dividers" },
+    { key: "heading", label: "Headings" },
+    { key: "accent",  label: "Accent" },
+    { key: "body",    label: "Body text" },
+    { key: "btnBg",   label: "Button fill" },
+    { key: "btnFg",   label: "Button text" }
+  ];
+
+  var ctColorInputs = {}, ctResetBtn = $("ctResetColors");
+  var ctLastPreset = ctById("mist"), ctActiveMood = MOODS[0].id;
+
+  function ctPresetButton(p) {
+    var b = ctEl("button", "preset");
+    b.type = "button";
+    b.setAttribute("data-ctpreset", p.id);
+    b.setAttribute("aria-pressed", String(p.id === ct.presetId));
+    var sw = ctEl("div", "swatches");
+    [p.c.panel, p.c.accent, p.c.btnBg].forEach(function(col) {
+      var s = ctEl("span");
+      s.style.background = col;
+      sw.appendChild(s);
+    });
+    b.appendChild(sw);
+    b.appendChild(document.createTextNode(p.name));
+    b.addEventListener("click", function() { ctApplyPreset(p); ctResetBtn.hidden = true; });
+    return b;
+  }
+
+  CT_RECOMMENDED.forEach(function(id) { $("ctPresets").appendChild(ctPresetButton(ctById(id))); });
+
+  function ctRenderMore() {
+    var box = $("ctMorePresets");
+    box.innerHTML = "";
+    CT_CURATED.forEach(function(p) {
+      if (p.mood === ctActiveMood) box.appendChild(ctPresetButton(p));
+    });
+  }
+  MOODS.forEach(function(m, i) {
+    var b = ctEl("button", null, m.name);
+    b.type = "button";
+    b.setAttribute("data-ctmood", m.id);
+    b.setAttribute("aria-pressed", String(i === 0));
+    $("ctMoodSeg").appendChild(b);
+  });
+  segment("ctMoodSeg", "ctmood", function(v) { ctActiveMood = v; ctRenderMore(); });
+  ctRenderMore();
+
+  function ctDisclosure(btnId, panelId) {
+    var t = $(btnId);
+    t.addEventListener("click", function() {
+      var open = t.getAttribute("aria-expanded") === "true";
+      t.setAttribute("aria-expanded", String(!open));
+      $(panelId).hidden = open;
+    });
+  }
+  ctDisclosure("ctMoreToggle", "ctMorePanel");
+  ctDisclosure("ctCustomToggle", "ctCustomPanel");
+
+  // curated palettes live in two grids, so selection state spans both
+  function ctEachPreset(fn) {
+    Array.prototype.forEach.call(
+      document.querySelectorAll("#ctPresets [data-ctpreset], #ctMorePresets [data-ctpreset]"), fn);
+  }
+
+  function ctApplyPreset(p) {
+    ct.presetId = p.id;
+    ctLastPreset = p;
+    ct.c = clone(p.c);
+    ctEachPreset(function(e) {
+      e.setAttribute("aria-pressed", String(e.getAttribute("data-ctpreset") === p.id));
+    });
+    ctSyncColorInputs();
+    render(false);
+  }
+
+  function ctDropPreset() {
+    ct.presetId = null;
+    ctEachPreset(function(e) { e.setAttribute("aria-pressed", "false"); });
+    ctResetBtn.textContent = "Reset to " + ctLastPreset.name;
+    ctResetBtn.hidden = false;
+  }
+
+  function ctApplyGenerated(c) {
+    ct.c = c;
+    ctDropPreset();
+    ctSyncColorInputs();
+    render(false);
+  }
+  $("ctShuffle").addEventListener("click", function() {
+    var seed = hslToHex(Math.random() * 360, 0.55 + Math.random() * 0.3, 0.35 + Math.random() * 0.25);
+    ctApplyGenerated(ctPalette(seed, Math.random() < 0.25));
+  });
+  $("ctBuildFromSeed").addEventListener("click", function() {
+    ctApplyGenerated(ctPalette($("ctSeedColor").value, false));
+  });
+  ctResetBtn.addEventListener("click", function() { ctApplyPreset(ctLastPreset); ctResetBtn.hidden = true; });
+
+  CT_COLOR_FIELDS.forEach(function(fd) {
+    var wrap = ctEl("div", "cfield");
+    var lab = ctEl("label", null, fd.label);
+    lab.setAttribute("for", "ctc_" + fd.key);
+    var row = ctEl("div", "row");
+
+    var swatch = ctEl("input");
+    swatch.type = "color";
+    swatch.id = "ctc_" + fd.key;
+    swatch.value = ct.c[fd.key];
+
+    var hexIn = ctEl("input");
+    hexIn.type = "text";
+    hexIn.value = ct.c[fd.key];
+    hexIn.maxLength = 7;
+    hexIn.setAttribute("aria-label", fd.label + " hex value");
+
+    swatch.addEventListener("input", function() {
+      ct.c[fd.key] = swatch.value;
+      hexIn.value = swatch.value;
+      ctDropPreset();
+      render(true);
+    });
+    hexIn.addEventListener("input", function() {
+      var v = hexIn.value.trim();
+      if (v && v.charAt(0) !== "#") v = "#" + v;
+      if (!isHex(v)) { hexIn.setAttribute("aria-invalid", "true"); return; }
+      hexIn.setAttribute("aria-invalid", "false");
+      // colour inputs only accept #rrggbb, so shorthand is expanded first
+      if (v.length === 4) v = "#" + v[1] + v[1] + v[2] + v[2] + v[3] + v[3];
+      ct.c[fd.key] = v;
+      swatch.value = v;
+      ctDropPreset();
+      render(true);
+    });
+    // an invalid value left behind snaps back to the last colour that worked
+    hexIn.addEventListener("blur", function() {
+      hexIn.value = ct.c[fd.key];
+      hexIn.setAttribute("aria-invalid", "false");
+    });
+
+    row.appendChild(swatch);
+    row.appendChild(hexIn);
+    wrap.appendChild(lab);
+    wrap.appendChild(row);
+    $("ctColors").appendChild(wrap);
+    ctColorInputs[fd.key] = { swatch: swatch, hex: hexIn };
+  });
+
+  function ctSyncColorInputs() {
+    CT_COLOR_FIELDS.forEach(function(fd) {
+      ctColorInputs[fd.key].swatch.value = ct.c[fd.key];
+      ctColorInputs[fd.key].hex.value = ct.c[fd.key];
+      ctColorInputs[fd.key].hex.setAttribute("aria-invalid", "false");
+    });
+  }
 
   /* ---- boot ---- */
   $("layoutHint").textContent = LAYOUT_HINTS[hero.layout];
   $("cropHint").innerHTML = CROP_HINTS.split;
   syncLinkField();
   renderPrompts();
+
+  $("ctLayoutHint").textContent = CT_LAYOUT_HINTS[ct.layout];
+  ctEachPreset(function(e) {
+    e.setAttribute("aria-pressed", String(e.getAttribute("data-ctpreset") === ct.presetId));
+  });
+  ctSyncColorInputs();
+  ctPanel1();
+  ctPanel2();
+
   render(false);
 }());
 </script>
