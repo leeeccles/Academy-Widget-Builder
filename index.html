@@ -3,14 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f7f8fa">
 <title>Academy Widget Builder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+  /* The builder is a light-only UI. Saying so stops a dark OS from painting
+     the native colour pickers, selects, number spinners and scrollbars dark
+     inside it. */
+  html { color-scheme: light; }
   :root {
     --brand: #5d5fe3; --brand-dark: #4a4ccc; --brand-light: #eeeeff;
-    --text-primary: #1a1a2e; --text-secondary: #5b6472; --text-muted: #8b93a1;
+    /* --text-muted is 4.8:1 on white, so the quiet labels and ratio asides
+       that use it clear AA rather than only looking as though they do */
+    --text-primary: #1a1a2e; --text-secondary: #5b6472; --text-muted: #6b7280;
     --border: #e5e7eb; --border-strong: #d1d5db; --bg: #f7f8fa; --card: #ffffff;
     --amber: #a15c07; --amber-bg: #fef3c7; --green: #15803d; --green-bg: #dcfce7;
     --red: #b91c1c; --red-bg: #fee2e2;
@@ -34,11 +41,24 @@
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
     font-size: var(--fs-base);
+    -webkit-tap-highlight-color: rgba(93, 95, 227, 0.18);
   }
+  /* Keyboard-only users land on the header link first and would otherwise
+     tab through the whole form to reach the code they came for. */
+  .skip {
+    position: absolute; left: var(--sp-3); top: -60px; z-index: 10;
+    background: var(--card); color: var(--brand-dark);
+    font-size: var(--fs-md); font-weight: 700;
+    padding: 10px var(--sp-4); border-radius: var(--r-sm);
+    border: 1px solid var(--brand); text-decoration: none;
+  }
+  .skip:focus { top: var(--sp-3); }
   header {
     background: var(--card);
     border-bottom: 1px solid var(--border);
     padding: var(--sp-4) var(--sp-6);
+    padding-left: max(var(--sp-6), env(safe-area-inset-left));
+    padding-right: max(var(--sp-6), env(safe-area-inset-right));
     display: flex;
     align-items: baseline;
     gap: var(--sp-3);
@@ -54,6 +74,9 @@
     grid-template-columns: 408px minmax(0, 1fr);
     gap: var(--sp-5);
     padding: var(--sp-6);
+    padding-left: max(var(--sp-6), env(safe-area-inset-left));
+    padding-right: max(var(--sp-6), env(safe-area-inset-right));
+    padding-bottom: max(var(--sp-6), env(safe-area-inset-bottom));
     max-width: 1440px;
     margin: 0 auto;
     align-items: start;
@@ -61,7 +84,7 @@
 
   /* On desktop the page itself never scrolls: the header stays put and each
      column scrolls independently, so the preview is always on screen and both
-     columns can be read to the end. Sticky can't do this, because before the
+     columns can be read to the end. Sticky can’t do this, because before the
      page has scrolled a sticky column sits below the header and its own
      bottom falls off the viewport. */
   @media (min-width: 1061px) {
@@ -80,6 +103,10 @@
     padding: var(--sp-5);
   }
   .card + .card, .panel > .card:first-child { margin-top: var(--sp-4); }
+  /* skip-link target: clears the sticky header, and keeps a ring when the
+     jump came from the keyboard */
+  #output { scroll-margin-top: var(--sp-4); }
+  #output:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
   .card h2 {
     font-size: var(--fs-sm); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
     color: var(--text-secondary); margin-bottom: var(--sp-4);
@@ -90,7 +117,7 @@
     background: var(--brand-light); color: var(--brand-dark);
     font-size: 10px; font-weight: 800; line-height: 18px; text-align: center; letter-spacing: 0;
   }
-  .hint { font-size: var(--fs-sm); color: var(--text-secondary); margin-top: var(--sp-2); line-height: 1.55; }
+  .hint { font-size: var(--fs-sm); color: var(--text-secondary); margin-top: var(--sp-2); line-height: 1.55; text-wrap: pretty; }
   .hint + .hint { margin-top: var(--sp-2); }
   .hint code {
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -120,17 +147,19 @@
   .wtype button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-light); color: var(--brand-dark); }
   .wtype button[aria-pressed="true"] svg { color: var(--brand-dark); }
   .wtype button:disabled { color: var(--text-muted); cursor: default; background: var(--bg); }
+  /* on the grey badge fill, --text-muted only reaches 3.9:1, so the badge
+     steps down to the darker secondary to clear 4.5:1 at this size */
   .wtype .soon {
     margin-left: auto; font-size: 10.5px; font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.05em;
-    color: var(--text-muted); background: var(--border);
+    color: var(--text-secondary); background: var(--border);
     padding: 2px 8px; border-radius: 999px;
   }
 
   /* fields */
   .field { margin-bottom: var(--sp-4); }
   .field:last-child { margin-bottom: 0; }
-  .field > label { display: block; font-size: var(--fs-md); font-weight: 700; margin-bottom: 6px; }
+  .field > label, .field > .group-label { display: block; font-size: var(--fs-md); font-weight: 700; margin-bottom: 6px; }
   .field .row { display: flex; gap: var(--sp-2); align-items: center; }
   input[type="text"], input[type="url"], textarea {
     font: inherit; font-size: var(--fs-base); width: 100%; min-width: 0;
@@ -144,7 +173,10 @@
   input:focus-visible, textarea:focus-visible {
     outline: 2px solid var(--brand); outline-offset: 1px; border-color: var(--brand);
   }
-  input[aria-invalid="true"] { border-color: #f0a3a3; }
+  /* the old pink read as 2:1 against the card, which is not a state anyone
+     could see. This clears 3:1, and the error sentence still carries the
+     meaning so nothing depends on colour alone. */
+  input[aria-invalid="true"] { border-color: #dc2626; }
   .count {
     font-size: var(--fs-micro); color: var(--text-secondary); min-width: 44px;
     text-align: right; font-variant-numeric: tabular-nums;
@@ -263,10 +295,13 @@
   .err { font-size: var(--fs-sm); color: var(--red); font-weight: 600; margin-top: var(--sp-2); }
   .warn-inline { font-size: var(--fs-sm); color: var(--amber); font-weight: 600; margin-top: var(--sp-3); }
 
-  /* dropzone */
+  /* dropzone: a real <button>, so Enter, Space and the accessible name all
+     come from the browser rather than being re-implemented */
   .drop {
+    font: inherit; width: 100%; display: block;
     border: 1px dashed var(--border-strong); border-radius: var(--r-sm);
     padding: var(--sp-5) var(--sp-4); text-align: center; cursor: pointer;
+    color: var(--text-primary); touch-action: manipulation;
     background: var(--bg); transition: border-color 0.18s ease, background-color 0.18s ease;
   }
   .drop:hover, .drop.over { border-color: var(--brand); background: var(--brand-light); }
@@ -332,7 +367,7 @@
      Colours card, which breaks the `.card + .card` adjacency the other two
      widgets rely on. Flex gap spaces them instead, and a hidden wrapper then
      contributes no stray gap. The [hidden] rules are not redundant: the id
-     selectors above outrank the browser's own [hidden] { display: none }. */
+     selectors above outrank the browser’s own [hidden] { display: none }. */
   #panelClassroom { display: flex; flex-direction: column; gap: var(--sp-4); }
   #ctPanel1, #ctPanel2 { display: flex; flex-direction: column; gap: var(--sp-4); }
   #ctPanel1[hidden], #ctPanel2[hidden] { display: none; }
@@ -392,18 +427,24 @@
 
   @media (max-width: 640px) {
     input[type="text"], input[type="url"], input[type="number"], textarea, select { font-size: 16px; }
-    .layout { padding: var(--sp-4); }
+    .layout {
+      padding: var(--sp-4);
+      padding-left: max(var(--sp-4), env(safe-area-inset-left));
+      padding-right: max(var(--sp-4), env(safe-area-inset-right));
+      padding-bottom: max(var(--sp-4), env(safe-area-inset-bottom));
+    }
   }
   @media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms !important; } }
 </style>
 </head>
 <body>
+<a class="skip" href="#output">Skip to the widget code</a>
 <header>
   <h1>Academy Widget Builder</h1>
   <p>Generate copy-paste widgets for your 360Learning homepage and academy spaces &middot; <a href="https://support.360learning.com/hc/en-us/articles/38078313603092-Configure-an-HTML-widget" target="_blank" rel="noopener">HTML widget guide</a></p>
 </header>
 
-<div class="layout">
+<main class="layout">
   <div class="col">
     <section class="card">
       <h2>Widget</h2>
@@ -433,7 +474,7 @@
         <h2>Prompts</h2>
         <div id="prompts"></div>
         <button type="button" class="add" id="addPrompt">+ Add prompt</button>
-        <p class="hint">Up to 5 prompts, max <strong>50 characters</strong> each. The widget cycles through them with a typing animation. Shorter prompts are safer: in a very narrow column the end of a long prompt can be trimmed off.</p>
+        <p class="hint">Up to 5 prompts, max <strong>50&nbsp;characters</strong> each. The widget cycles through them with a typing animation. Shorter prompts are safer: in a very narrow column the end of a long prompt can be trimmed off.</p>
       </section>
     </div>
 
@@ -494,21 +535,24 @@
 
         <div class="field" id="imgUrlField">
           <label for="imgUrl">Image URL</label>
-          <input type="url" id="imgUrl" placeholder="https://example.com/academy-hero.jpg" aria-describedby="imgUrlHelp">
+          <input type="url" id="imgUrl" placeholder="https://example.com/academy-hero.jpg" aria-describedby="imgUrlErr imgUrlHelp">
           <p class="err" id="imgUrlErr" hidden role="alert"></p>
           <p class="hint" id="imgUrlHelp">Must be <code>https://</code>. Use an image already hosted on your marketing site, a CDN, or an asset URL you can copy from inside 360Learning.</p>
-          <p class="hint"><strong>Why this is the better option:</strong> the browser downloads a hosted image once and reuses it on every later visit. Embedded images can't be cached, so they're re-downloaded in full on every page load, by every learner, every time.</p>
+          <p class="hint"><strong>Why this is the better option:</strong> the browser downloads a hosted image once and reuses it on every later visit. Embedded images can’t be cached, so they’re re-downloaded in full on every page load, by every learner, every time.</p>
         </div>
 
         <div class="field" id="imgUploadField" hidden>
-          <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose or drop an image to embed">
+          <button type="button" class="drop" id="drop" aria-describedby="imgErr">
             <strong>Drop an image, or click to choose</strong>
             <span>Resized to 1000px wide and written into the code as text. Nothing is uploaded anywhere.</span>
-          </div>
-          <input type="file" id="file" accept="image/*" class="sr">
+          </button>
+          <!-- the real control, driven by the button above. tabindex="-1" keeps
+               it out of the tab order: it is clipped to a pixel, so landing on
+               it would put focus somewhere nobody can see. -->
+          <input type="file" id="file" accept="image/*" class="sr" tabindex="-1" aria-hidden="true">
           <div id="thumbWrap"></div>
           <p class="err" id="imgErr" hidden role="alert"></p>
-          <p class="hint">Use this when you have no hosting. The photo becomes part of the widget code, so it can never break, but it also can't be cached: its full weight is re-downloaded on every page load. Prefer a hosted URL for a homepage with daily traffic.</p>
+          <p class="hint">Use this when you have no hosting. The photo becomes part of the widget code, so it can never break, but it also can’t be cached: its full weight is re-downloaded on every page load. Prefer a hosted URL for a homepage with daily traffic.</p>
         </div>
 
         <div class="field">
@@ -538,7 +582,9 @@
             </div>
           </div>
           <div class="field">
-            <label id="linkLabel">Where it goes</label>
+            <!-- a <label> has to name one control; this names a group of
+                 buttons, so it is a span that the group points at -->
+            <span class="group-label" id="linkLabel">Where it goes</span>
             <div class="seg" id="linkSeg" role="group" aria-labelledby="linkLabel">
               <button type="button" data-link="internal" aria-pressed="true">Page in 360Learning</button>
               <button type="button" data-link="external" aria-pressed="false">External site</button>
@@ -546,7 +592,7 @@
           </div>
           <div class="field">
             <label for="href" id="hrefLabel">Relative path</label>
-            <input type="text" id="href" aria-describedby="hrefHint">
+            <input type="text" id="href" aria-describedby="hrefErr hrefHint">
             <p class="err" id="hrefErr" hidden role="alert"></p>
             <p class="hint" id="hrefHint"></p>
           </div>
@@ -665,7 +711,7 @@
 
         <div class="notes" id="ctContrast" role="status" aria-live="polite"></div>
         <details class="code"><summary>Show every colour pairing</summary><div class="checks" id="ctChecks" style="margin-top:var(--sp-3)"></div></details>
-        <p class="hint">Every pair of colours the widget actually uses, measured against the standard. Text needs 4.5 to 1, buttons and the slide dots need 3 to 1. Change anything above and this rechecks itself. Nothing here is judged by eye.</p>
+        <p class="hint">Every pair of colours the widget actually uses, measured against the standard. Text needs 4.5&nbsp;to&nbsp;1, buttons and the slide dots need 3&nbsp;to&nbsp;1. Change anything above and this rechecks itself. Nothing here is judged by eye.</p>
       </section>
     </div>
   </div>
@@ -684,25 +730,26 @@
       <p class="hint" id="previewHint"></p>
     </section>
 
-    <section class="card">
+    <section class="card" id="output" tabindex="-1">
       <h2>Widget code</h2>
       <div class="out-actions">
         <button type="button" class="btn btn-primary" id="copy">Copy widget code</button>
         <button type="button" class="btn btn-secondary" id="download">Download .html</button>
         <span class="size-note" id="sizeNote" role="status" aria-live="polite"></span>
+        <span class="sr" id="copyStatus" role="status" aria-live="polite"></span>
       </div>
       <details class="code">
         <summary>Show the code</summary>
         <div class="code-box" id="code" role="region" aria-label="Generated widget code" tabindex="0"></div>
       </details>
       <ol class="steps">
-        <li>Copy the widget code above. It's self-contained HTML and CSS, no hosting or iframe needed.</li>
+        <li>Copy the widget code above. It’s self-contained HTML and CSS, no hosting or iframe needed.</li>
         <li>In 360Learning, edit either your homepage or the group page layout and select the <strong>HTML block</strong> (<a href="https://support.360learning.com/hc/en-us/articles/38078313603092-Configure-an-HTML-widget" target="_blank" rel="noopener">how to</a>).</li>
         <li>Paste the code and click apply. Done.</li>
       </ol>
     </section>
   </div>
-</div>
+</main>
 
 <script>
 (function(){
@@ -773,7 +820,7 @@
           hide + "%,100%{max-width:0}}\n";
         charRules += ".cw-ph" + i + " .cw-c:nth-child(" + (j + 1) + "){animation-name:" + name + "}\n";
         // built with the real prefix, never post-processed, so a prompt
-        // containing "cw-" can't be mangled by the scoping pass
+        // containing "cw-" can’t be mangled by the scoping pass
         chars += '<span class="' + PC + '-c">' + escChar(p[j]) + "</span>";
       }
       spansHtml += '<span class="' + PC + "-ph " + PC + "-ph" + i + '">' + chars + "</span>";
@@ -824,7 +871,7 @@ keyframes + charRules;
     btnText: "Explore training courses",
     linkMode: "internal",         // internal | external
     hrefInternal: "",
-    hrefExternal: "",             // kept apart so switching mode doesn't strand
+    hrefExternal: "",             // kept apart so switching mode doesn’t strand
     imgMode: "url",               // a relative path in a field that rejects it
     imgUrl: "",
     imgData: "",
@@ -869,8 +916,8 @@ keyframes + charRules;
   };
 
   var CROP_HINTS = {
-    split: "<strong>Choosing a photo:</strong> it's cropped to fill a 16:10 frame, and a wider letterbox shape in very narrow or very wide columns. Anything near the top or bottom edge gets trimmed, so keep faces, logos and text away from them.",
-    overlay: "<strong>Choosing a photo:</strong> the text sits over the left of the image, so pick a shot whose left side is calm. Busy detail there fights the words even through the scrim. It's cropped hard, so keep the subject off-centre to the right."
+    split: "<strong>Choosing a photo:</strong> it’s cropped to fill a 16:10 frame, and a wider letterbox shape in very narrow or very wide columns. Anything near the top or bottom edge gets trimmed, so keep faces, logos and text away from them.",
+    overlay: "<strong>Choosing a photo:</strong> the text sits over the left of the image, so pick a shot whose left side is calm. Busy detail there fights the words even through the scrim. It’s cropped hard, so keep the subject off-centre to the right."
   };
 
   function clone(o) { var n = {}; for (var k in o) n[k] = o[k]; return n; }
@@ -934,7 +981,7 @@ keyframes + charRules;
     return toHex([f(0) * 255, f(8) * 255, f(4) * 255]);
   }
 
-  /* Nudges a colour's lightness one way until it clears `need` against every
+  /* Nudges a colour’s lightness one way until it clears `need` against every
      background. Generated palettes go through this, so they obey the same
      rules as the hand-made presets instead of hoping the seed was usable. */
   function walkTo(hex, bgs, need, dir) {
@@ -988,7 +1035,7 @@ keyframes + charRules;
     { id: "dark",   name: "Dark" }
   ];
 
-  /* Curated palettes, inspired by Figma's colour-combination moods. Each is
+  /* Curated palettes, inspired by Figma’s colour-combination moods. Each is
      stored as one seed colour and expanded through buildPalette, so all of
      them are checked by construction rather than trusted by hand. */
   var CURATED = [
@@ -1020,8 +1067,8 @@ keyframes + charRules;
   ];
   CURATED.forEach(function(p) { p.c = buildPalette(p.seed, p.mood === "dark"); });
 
-  /* The overlay layout can't be checked against a known background, because
-     the background is somebody's photograph. So it's built to survive the
+  /* The overlay layout can’t be checked against a known background, because
+     the background is somebody’s photograph. So it’s built to survive the
      worst case instead: a pure white image sitting behind the lightest part
      of the scrim that any text crosses. Every colour below is verified
      against that, which means every real photo is better. */
@@ -1050,7 +1097,7 @@ keyframes + charRules;
 
   /* ---- generator ---- */
 
-  // Only ever emit a link we've proven is safe: a relative path, or https.
+  // Only ever emit a link we’ve proven is safe: a relative path, or https.
   function safeHref() {
     var h = String(href() || "").trim();
     if (!h) return null;
@@ -1078,7 +1125,7 @@ keyframes + charRules;
       : hero.c.panel;
   }
 
-  // `preview` swaps in a placeholder tile when there's no image yet, so the
+  // `preview` swaps in a placeholder tile when there’s no image yet, so the
   // real shape is visible while you work. The copyable code never contains it.
   function buildHero(preview) {
     var c = hero.c;
@@ -1118,8 +1165,11 @@ keyframes + charRules;
       media = '<div class="' + PH + '-media"><div class="' + PH + '-ph"><span class="' + PH + '-phl">' +
         (overlay ? "Your photo fills this banner" : "Your image goes here") + "</span></div></div>";
     } else if (hasImg) {
+      // A hero banner is the first thing on the page, so lazy-loading it only
+      // delays the one image that matters. The aspect-ratio on .hw-img already
+      // reserves the space, so eager loading costs no layout shift.
       media = '<div class="' + PH + '-media"><img class="' + PH + '-img" src="' + escAttr(src) +
-        '" alt="' + escAttr(String(hero.alt || "").trim()) + '" loading="lazy"></div>';
+        '" alt="' + escAttr(String(hero.alt || "").trim()) + '" fetchpriority="high" decoding="async"></div>';
     }
 
     // media before text in the DOM would put the picture ahead of the heading
@@ -1129,7 +1179,7 @@ keyframes + charRules;
       : "grid-template-columns:minmax(0,1fr);";
 
     var css =
-// Plus Jakarta Sans is 360Learning's own typeface, so the widget matches the
+// Plus Jakarta Sans is 360Learning’s own typeface, so the widget matches the
 // page. The import stays: it guarantees weights 400/700/800 are loaded rather
 // than assuming the platform already fetched them.
 "@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap');\n" +
@@ -1223,6 +1273,34 @@ keyframes + charRules;
      ================================================================ */
 
   var $ = function(id) { return document.getElementById(id); };
+
+  /* Nothing here is a name, an address or a password, so a browser offering to
+     autofill it is only ever wrong. `code` also turns off the spell checker
+     and autocapitalisation, which belong on prose but not on a hex value or a
+     URL, where a red underline under every line is noise and a capitalised
+     first letter is a bug. */
+  /* A live region re-announces whatever is put into it, even when the words
+     are identical to the ones already there. Rebuilding the status regions on
+     every keystroke meant a screen reader repeating the same contrast verdict
+     forever, so nothing is written unless it has actually changed. */
+  function setText(el, txt) {
+    if (el.textContent !== txt) el.textContent = txt;
+  }
+  function liveSwap(el, sig, fill) {
+    if (el.getAttribute("data-sig") === sig) return;
+    el.setAttribute("data-sig", sig);
+    el.innerHTML = "";
+    fill(el);
+  }
+
+  function noAutofill(el, code) {
+    el.setAttribute("autocomplete", "off");
+    if (code) {
+      el.setAttribute("spellcheck", "false");
+      el.setAttribute("autocapitalize", "off");
+      el.setAttribute("autocorrect", "off");
+    }
+  }
   var codeEl = $("code"), previewEl = $("preview"), sizeNote = $("sizeNote"),
       contrastEl = $("contrast"), previewNotes = $("previewNotes");
 
@@ -1234,18 +1312,29 @@ keyframes + charRules;
     return buildCompanion();
   }
 
-  function render(debounce) {
+  /* Everything in here is expensive: two full builds of the snippet, a Blob
+     to weigh it, and three reports. With an embedded photo the snippet is
+     hundreds of kilobytes of string, so doing this per keystroke was the one
+     thing that made typing feel heavy. The whole pass is now deferred, not
+     just the iframe repaint, and an undebounced call still runs immediately
+     so that clicking a preset or a layout is as instant as it ever was. */
+  function renderNow() {
     snippet = build(false);
     previewSnippet = build(true);
     codeEl.textContent = snippet;
     var kb = new Blob([snippet]).size / 1024;   // bytes, not chars: user text can be non-ASCII
-    sizeNote.textContent = kb.toFixed(1) + " KB";
+    setText(sizeNote, kb.toFixed(1) + " KB");
     sizeNote.classList.toggle("heavy", kb > 120);
     syncNotes();
     checkContrast();
     ctContrastReport();
+    paint();
+  }
+
+  function render(debounce) {
     clearTimeout(previewTimer);
-    previewTimer = setTimeout(paint, debounce ? 350 : 0);
+    if (!debounce) { renderNow(); return; }
+    previewTimer = setTimeout(renderNow, 250);
   }
 
   /* The page behind the preview matches the space the widget will live in, so
@@ -1274,7 +1363,7 @@ keyframes + charRules;
   previewEl.addEventListener("load", function() {
     fitPreview();
     // the Google Font inside the iframe arrives after the document does, and
-    // its metrics can change line wraps, so measure again once it's ready
+    // its metrics can change line wraps, so measure again once it’s ready
     try {
       var fonts = previewEl.contentWindow.document.fonts;
       if (fonts && fonts.ready) fonts.ready.then(fitPreview);
@@ -1290,38 +1379,42 @@ keyframes + charRules;
   }
 
   function syncNotes() {
-    previewNotes.innerHTML = "";
+    var items = [];
+    function add(cls, text) { items.push([cls, text]); }
     if (active === "hero" && !imgSrc()) {
-      note(previewNotes, "warn", isOverlay()
+      add("warn", isOverlay()
         ? "Placeholder shown. Add an image and it fills the whole banner, sitting behind the text with a dark tint over its left side so the words stay readable. Without one the code falls back to a plain one-column panel."
         : "Placeholder shown. Add an image and the widget becomes two columns. Without one the code falls back to a single column of text.");
     }
-    if (active === "classroom") ctReadiness(previewNotes);
-    // the overlay layout ignores the panel fill, so don't offer the choice
+    if (active === "classroom") ctReadiness(add);
+    liveSwap(previewNotes, items.join(""), function(box) {
+      items.forEach(function(it) { note(box, it[0], it[1]); });
+    });
+
+    // the overlay layout ignores the panel fill, so don’t offer the choice
     $("fillField").hidden = isOverlay();
     $("overlayNote").hidden = !(active === "hero" && isOverlay());
     if (active === "hero" && isOverlay()) {
       $("overlayNote").textContent =
-        "The overlay layout puts text on the photo, so it uses white text and a white button over a scrim built from your darkest colour. Panel, heading, body and button colours don't apply here. The accent is lightened automatically until it's readable.";
+        "The overlay layout puts text on the photo, so it uses white text and a white button over a scrim built from your darkest colour. Panel, heading, body and button colours don’t apply here. The accent is lightened automatically until it’s readable.";
     }
-    $("previewHint").textContent =
+    setText($("previewHint"),
       active === "hero"
-        ? "Exactly the code you'll paste, rendered live. The widget fills the full width of whatever column it lands in and rearranges itself automatically when that column gets narrow."
+        ? "Exactly the code you’ll paste, rendered live. The widget fills the full width of whatever column it lands in and rearranges itself automatically when that column gets narrow."
       : active === "classroom"
-        ? "Exactly the code you'll paste, rendered live. The widget spans the full width of wherever it lands, and reflows on a phone by itself."
-        : "Exactly the code you'll paste, rendered live. Hover it to pause the animation.";
+        ? "Exactly the code you’ll paste, rendered live. The widget spans the full width of wherever it lands, and reflows on a phone by itself."
+        : "Exactly the code you’ll paste, rendered live. Hover it to pause the animation.");
   }
 
-  /* Contrast warnings have to say what's wrong and what to change. A ratio on
-     its own ("3.2:1, needs 4.5:1") is a number most people can't act on, so
+  /* Contrast warnings have to say what’s wrong and what to change. A ratio on
+     its own ("3.2:1, needs 4.5:1") is a number most people can’t act on, so
      the ratio is kept as a quiet aside and the sentence does the work. */
   function checkContrast() {
-    contrastEl.innerHTML = "";
-    if (active !== "hero") return;
+    if (active !== "hero") { liveSwap(contrastEl, "", function() {}); return; }
 
     var c = hero.c, grad = hero.fill === "gradient", out = [];
     // the accent colour only appears on the second heading line, so an empty
-    // second line means there's nothing to warn about
+    // second line means there’s nothing to warn about
     var hasAccent = !!String(hero.h2 || "").trim();
 
     // `subject` is what to change, `surface` is what it sits on
@@ -1333,10 +1426,10 @@ keyframes + charRules;
       var fgDir = lighter ? "lighter" : "darker";
       var bgDir = lighter ? "darker" : "lighter";
       // "make white lighter" is not advice. If the foreground has nowhere
-      // left to go, only offer the change that's actually possible.
+      // left to go, only offer the change that’s actually possible.
       var stuck = (lighter && lum(fg) > 0.82) || (!lighter && lum(fg) < 0.03);
       var problem = shape
-        ? "The button doesn't stand out from " + surface + "."
+        ? "The button doesn’t stand out from " + surface + "."
         : "The " + subject + " is hard to read on " + surface + ".";
       var thing = shape ? "the button fill" : "it";
       var fix = stuck
@@ -1366,24 +1459,31 @@ keyframes + charRules;
         test(c.heading, bg, 4.5, "heading", b[1]);
         if (hasAccent) test(c.accent, bg, 4.5, "accent line", b[1]);
         test(c.body, bg, 4.5, "body text", b[1]);
-        // 1.4.11: the button's shape must be distinguishable from the panel
+        // 1.4.11: the button’s shape must be distinguishable from the panel
         if (hero.showBtn) test(c.btnBg, bg, 3, "button", b[1], true);
       });
       if (hero.showBtn) test(c.btnFg, c.btnBg, 4.5, "button text", "the button");
     }
 
-    if (!out.length) {
-      note(contrastEl, "ok", isOverlay()
-        ? "Easy to read on any photo, even a very light one."
-        : "Easy to read. These colours are safe to use.");
-      return;
-    }
-    out.forEach(function(o) {
-      var p = note(contrastEl, "warn", o.text);
-      var span = document.createElement("span");
-      span.className = "ratio";
-      span.textContent = o.detail;
-      p.appendChild(span);
+    var okText = isOverlay()
+      ? "Easy to read on any photo, even a very light one."
+      : "Easy to read. These colours are safe to use.";
+    var sig = out.length
+      ? out.map(function(o) { return o.text + o.detail; }).join("")
+      : okText;
+
+    liveSwap(contrastEl, sig, function(box) {
+      if (!out.length) {
+        note(box, "ok", okText);
+        return;
+      }
+      out.forEach(function(o) {
+        var p = note(box, "warn", o.text);
+        var span = document.createElement("span");
+        span.className = "ratio";
+        span.textContent = o.detail;
+        p.appendChild(span);
+      });
     });
   }
 
@@ -1476,7 +1576,7 @@ keyframes + charRules;
     hrefEl.value = href();
     hrefTouched = false;
     $("hrefHint").innerHTML = internal
-      ? "Open the destination in 360Learning and copy everything after the domain, starting with <code>/</code>. Relative paths keep the link working across environments and don't force a full page reload out of the platform."
+      ? "Open the destination in 360Learning and copy everything after the domain, starting with <code>/</code>. Relative paths keep the link working across environments and don’t force a full page reload out of the platform."
       : "External links must start with <code>https://</code> and will open in a new tab.";
     validateHref();
   }
@@ -1489,11 +1589,11 @@ keyframes + charRules;
     var bad = null;
     if (hero.showBtn) {
       var raw = String(href() || "").trim();
-      if (!raw) bad = "Add a link, or the button won't be included.";
+      if (!raw) bad = "Add a link, or the button won’t be included.";
       else if (hrefTouched && !safeHref()) {
         bad = hero.linkMode === "internal"
           ? (/\/:/.test(raw)
-              ? "Replace the :placeholder parts with real values from the page's URL. Example: /paths/abc123/home"
+              ? "Replace the :placeholder parts with real values from the page’s URL. Example: /paths/abc123/home"
               : "Relative paths must start with a single /. Example: /paths/abc123/home")
           : "External links must start with https://";
       }
@@ -1520,8 +1620,8 @@ keyframes + charRules;
       var raw = String(hero.imgUrl || "").trim();
       if (raw && !/^https:\/\/.+/i.test(raw)) {
         bad = /^http:\/\//i.test(raw)
-          ? "This link is http://, so it won't be included. It needs to start with https://"
-          : "Image links must be a full https:// URL, or the image won't be included.";
+          ? "This link is http://, so it won’t be included. It needs to start with https://"
+          : "Image links must be a full https:// URL, or the image won’t be included.";
       }
     }
     imgUrlErr.hidden = !bad;
@@ -1540,10 +1640,8 @@ keyframes + charRules;
   var drop = $("drop"), fileInput = $("file"), thumbWrap = $("thumbWrap"), imgErr = $("imgErr");
   var MAX_W = 1000, QUALITY = 0.75;
 
+  // a <button> already answers Enter and Space, so click is the only handler
   drop.addEventListener("click", function() { fileInput.click(); });
-  drop.addEventListener("keydown", function(e) {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); }
-  });
   ["dragenter", "dragover"].forEach(function(t) {
     drop.addEventListener(t, function(e) { e.preventDefault(); drop.classList.add("over"); });
   });
@@ -1560,7 +1658,7 @@ keyframes + charRules;
   function takeFile(file) {
     imgErr.hidden = true;
     if (file.type.indexOf("image/") !== 0) {
-      imgErr.textContent = "That's not an image file. Try a JPG, PNG or WebP.";
+      imgErr.textContent = "That’s not an image file. Try a JPG, PNG or WebP.";
       imgErr.hidden = false;
       return;
     }
@@ -1588,7 +1686,7 @@ keyframes + charRules;
     };
     img.onerror = function() {
       URL.revokeObjectURL(url);
-      imgErr.textContent = "Couldn't read that image.";
+      imgErr.textContent = "Couldn’t read that image.";
       imgErr.hidden = false;
     };
     img.src = url;
@@ -1602,6 +1700,9 @@ keyframes + charRules;
     var im = document.createElement("img");
     im.src = hero.imgData;
     im.alt = "";
+    // matches the .thumb img rule, so the row doesn’t jump as it decodes
+    im.width = 62;
+    im.height = 44;
     var info = document.createElement("div");
     var weight = document.createElement("span");
     weight.className = "weight" + (kb > 120 ? " heavy" : "");
@@ -1612,7 +1713,7 @@ keyframes + charRules;
       var warn = document.createElement("div");
       warn.style.marginTop = "3px";
       warn.style.color = "var(--amber)";
-      warn.textContent = "That's a lot of code to paste. A hosted URL would be far lighter.";
+      warn.textContent = "That’s a lot of code to paste. A hosted URL would be far lighter.";
       info.appendChild(warn);
     }
     box.appendChild(im);
@@ -1710,6 +1811,7 @@ keyframes + charRules;
     hexIn.type = "text";
     hexIn.value = hero.c[f.key];
     hexIn.maxLength = 7;
+    noAutofill(hexIn, true);
     hexIn.setAttribute("aria-label", f.label + " hex value");
 
     swatch.addEventListener("input", function() {
@@ -1797,6 +1899,7 @@ keyframes + charRules;
       input.value = p;
       input.placeholder = "e.g. Summarise this course for me";
       input.setAttribute("aria-label", "Prompt " + (i + 1));
+      noAutofill(input, false);
 
       var count = document.createElement("span");
       count.className = "count";
@@ -1842,10 +1945,18 @@ keyframes + charRules;
 
   /* ---- copy and download ---- */
   $("copy").addEventListener("click", function() {
-    var btn = this;
+    var btn = this, status = $("copyStatus");
     function done(ok) {
       btn.textContent = ok ? "Copied \u2713" : "Copy failed. Select manually";
-      setTimeout(function() { btn.textContent = "Copy widget code"; }, 2000);
+      // the label swap alone only reaches a screen reader if focus happens to
+      // be sitting on the button, which it is not after a mouse click
+      status.textContent = ok
+        ? "Widget code copied to the clipboard."
+        : "Copy failed. Open Show the code and select it by hand.";
+      setTimeout(function() {
+        btn.textContent = "Copy widget code";
+        status.textContent = "";
+      }, 2000);
     }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(snippet).then(function() { done(true); }, function() { done(false); });
@@ -1883,7 +1994,7 @@ keyframes + charRules;
 
      Everything here is prefixed `ct`, because it lives in the same closure
      as the other two widgets and several of the names would otherwise
-     collide. It reuses this file's colour maths, esc/escAttr, uid, clone,
+     collide. It reuses this file’s colour maths, esc/escAttr, uid, clone,
      isHex and segment() rather than restating them; what it adds is a
      palette with three more roles, and a builder for repeatable items.
 
@@ -1948,7 +2059,7 @@ keyframes + charRules;
      wrong for a control: it hid how many slides there were and left the two
      buttons as floating text.
 
-     So this walks from the panel's own lightness toward the body text's and
+     So this walks from the panel’s own lightness toward the body text’s and
      stops at the first tone clearing 3:1 on the panel, the gradient end and
      a card. That is the quietest colour still guaranteed to be visible,
      whatever palette it is handed. The body colour is the floor and it
@@ -1978,7 +2089,7 @@ keyframes + charRules;
      Duration and cadence are structured rather than free text, so "3 hours"
      and "New dates every month" are spelled and pluralised the same way
      across a page of widgets, and can be translated later without hunting
-     through everybody's typing. */
+     through everybody’s typing. */
 
   var CT_UNITS = [
     { v: "minutes", one: "minute", many: "minutes" },
@@ -2046,7 +2157,7 @@ keyframes + charRules;
       allHref: "/home/content/classrooms",
       ctaText: "See dates and enroll",
       cols: { obj: true, who: true, why: true },
-      labels: { obj: "What you'll learn", who: "Who's it for", why: "Why you'll love it" },
+      labels: { obj: "What you’ll learn", who: "Who’s it for", why: "Why you’ll love it" },
       slides: [
         {
           title: "Giving Great Feedback", format: "virtual", where: "", trainer: "Priya Raman",
@@ -2166,7 +2277,7 @@ keyframes + charRules;
 
   // How long it runs, how often, where, and who leads it. The format is
   // deliberately absent: the tag above the title already says it. None of
-  // this goes stale, and the trainer's name is the one piece that sells.
+  // this goes stale, and the trainer’s name is the one piece that sells.
   function ctFactsHtml(P, p) {
     var bits = [];
     var d = ctDur(p.dur);
@@ -2355,7 +2466,7 @@ keyframes + charRules;
 
       /* The dot is a child of the label rather than the label itself, so the
          44px tap target and the 11px circle can be sized independently. */
-      // the sr text stays as well as the radio's aria-label: if anything ever
+      // the sr text stays as well as the radio’s aria-label: if anything ever
       // strips aria-, the dot still has a name rather than none at all
       dots += '<label class="' + P + "-dot " + P + "-dt" + k + '" for="' + P + "-s" + k + '">' +
         '<span class="' + P + '-dc" aria-hidden="true"></span>' +
@@ -2400,10 +2511,10 @@ keyframes + charRules;
       // last line. Same size as the slide title, so the two carry equal weight
       ".ct-h{margin:0;font-size:clamp(18px,2.2cqw,22px);font-weight:800;letter-spacing:-0.01em;line-height:1.25;" +
         "text-wrap:balance;color:" + c.heading + "}\n" +
-      // a text link, not a second button: the slide's own call to action has
+      // a text link, not a second button: the slide’s own call to action has
       // to stay the loudest thing in the widget. 44px of height on a link
       // that draws 18px of text is hit area, and the negative margin keeps it
-      // from pushing the header taller or dropping off the heading's baseline
+      // from pushing the header taller or dropping off the heading’s baseline
       ".ct-all{display:inline-flex;align-items:center;gap:6px;min-height:44px;margin:-13px 0;font-size:13px;" +
         "font-weight:700;color:" + c.accent + ";text-decoration:none}\n" +
       ".ct-all:hover{text-decoration:underline;color:" + c.accent + "}\n" +
@@ -2490,20 +2601,20 @@ keyframes + charRules;
      this the only clue is an absence. Each note names the thing, says what
      is wrong, and says what to type. */
 
-  function ctReadiness(box) {
+  function ctReadiness(add) {
     if (ct.layout === "signpost") {
       var w = ct.w1;
       if (ctTrim(w.btnText) && !ctSafe(w.btnHref)) {
-        note(box, "warn", "The main button has no working link, so it isn't in the code. Add a path starting with / or a full https address.");
+        add("warn", "The main button has no working link, so it isn’t in the code. Add a path starting with / or a full https address.");
       }
       if (w.featOn) {
         var named = w.items.filter(function(p) { return ctTrim(p.title); });
         if (!named.length) {
-          note(box, "warn", "Featured paths is on but no path has a title yet, so nothing is shown under the button.");
+          add("warn", "Featured paths is on but no path has a title yet, so nothing is shown under the button.");
         }
         named.forEach(function(p) {
           if (!ctSafe(p.href)) {
-            note(box, "warn", "“" + ctTrim(p.title) + "” has no link, so it's shown as a plain card rather than something to click.");
+            add("warn", "“" + ctTrim(p.title) + "” has no link, so it’s shown as a plain card rather than something to click.");
           }
         });
       }
@@ -2512,20 +2623,20 @@ keyframes + charRules;
     var d = ct.w2;
     var picks = d.slides.filter(function(p) { return ctTrim(p.title); });
     if (!picks.length) {
-      note(box, "warn", "No slide has a title yet, so the deck is empty. Give at least one slide a title.");
+      add("warn", "No slide has a title yet, so the deck is empty. Give at least one slide a title.");
     }
     if (d.allOn && ctTrim(d.allText) && !ctSafe(d.allHref)) {
-      note(box, "warn", "The link beside the heading has nowhere to go, so it isn't in the code.");
+      add("warn", "The link beside the heading has nowhere to go, so it isn’t in the code.");
     }
     if (ctTrim(d.ctaText)) {
       picks.forEach(function(p) {
         if (!ctSafe(p.href)) {
-          note(box, "warn", "“" + ctTrim(p.title) + "” has no link, so its button isn't in the code.");
+          add("warn", "“" + ctTrim(p.title) + "” has no link, so its button isn’t in the code.");
         }
       });
     }
     if (picks.length === 1) {
-      note(box, "warn", "With one slide there is nothing to page through, so Back, Next and the dots are left out. That is fine, it just renders as a single card.");
+      add("warn", "With one slide there is nothing to page through, so Back, Next and the dots are left out. That is fine, it just renders as a single card.");
     }
   }
 
@@ -2555,22 +2666,33 @@ keyframes + charRules;
       ["Button shape against a card", c.btnBg, c.card, 3],
       ["Button shape against the panel", c.btnBg, c.panel, 3]
     ];
-    var box = $("ctChecks"), fails = 0;
-    box.innerHTML = "";
-    tests.forEach(function(t) {
+    // measure first, then decide whether anything on screen needs replacing:
+    // this runs on every repaint and the verdict rarely moves
+    var fails = 0;
+    var rows = tests.map(function(t) {
       var r = ratio(t[1], t[2]), ok = r >= t[3] - 0.02;
       if (!ok) fails++;
-      var row = ctEl("div", "chk " + (ok ? "ok" : "bad"));
-      row.appendChild(ctEl("b", null, ok ? "PASS" : "FAIL"));
-      row.appendChild(ctEl("span", null, t[0]));
-      row.appendChild(ctEl("span", "r", r.toFixed(1) + " to 1"));
-      box.appendChild(row);
+      return { label: t[0], ok: ok, r: r.toFixed(1) };
     });
-    var notes = $("ctContrast");
-    notes.innerHTML = "";
-    note(notes, fails ? "warn" : "ok", fails
+
+    liveSwap($("ctChecks"), rows.map(function(x) {
+      return x.label + x.ok + x.r;
+    }).join(""), function(box) {
+      rows.forEach(function(x) {
+        var row = ctEl("div", "chk " + (x.ok ? "ok" : "bad"));
+        row.appendChild(ctEl("b", null, x.ok ? "PASS" : "FAIL"));
+        row.appendChild(ctEl("span", null, x.label));
+        row.appendChild(ctEl("span", "r", x.r + " to 1"));
+        box.appendChild(row);
+      });
+    });
+
+    var verdict = fails
       ? fails + (fails === 1 ? " pair of colours is" : " pairs of colours are") + " too close together. Open the list below to see which. They would be hard to read on a dim screen or in sunlight."
-      : "Every colour pairing in this widget is comfortable to read.");
+      : "Every colour pairing in this widget is comfortable to read.";
+    liveSwap($("ctContrast"), verdict, function(box) {
+      note(box, fails ? "warn" : "ok", verdict);
+    });
   }
 
   /* ================================================================
@@ -2631,10 +2753,19 @@ keyframes + charRules;
     return c;
   }
 
-  function ctField(host, label, sub) {
+  /* `group` builds the heading as a <span> inside a labelled group instead of
+     a <label>. A <label> that names a list of inputs rather than one control
+     is invalid and names nothing; a group with aria-labelledby is what the
+     objectives list actually is. */
+  function ctField(host, label, sub, group) {
     var f = ctEl("div", "field");
     if (label) {
-      var l = ctEl("label", null, label);
+      var l = ctEl(group ? "span" : "label", group ? "group-label" : null, label);
+      if (group) {
+        l.id = "ctg" + (ctFieldId++);
+        f.setAttribute("role", "group");
+        f.setAttribute("aria-labelledby", l.id);
+      }
       f.appendChild(l);
       f.labelEl = l;
     }
@@ -2667,6 +2798,7 @@ keyframes + charRules;
     if (opts.placeholder) input.placeholder = opts.placeholder;
     input.value = obj[key] || "";
     input.id = "ctf" + (ctFieldId++);
+    noAutofill(input, !!opts.code);
     ctKeyed(input, opts.k || ctK(key));
     if (f.labelEl) f.labelEl.setAttribute("for", input.id);
     input.addEventListener("input", function() {
@@ -2681,9 +2813,15 @@ keyframes + charRules;
   }
 
   function ctLinkField(host, label, obj, key, sub) {
-    var f = ctTextField(host, label, obj, key, { sub: sub, placeholder: "/paths/your-programme" });
+    var f = ctTextField(host, label, obj, key, {
+      sub: sub, placeholder: "/paths/your-programme", code: true
+    });
     var err = ctEl("p", "err");
     err.setAttribute("role", "alert");
+    // the message has to be reachable from the field itself, or a screen
+    // reader hears "invalid" with nothing saying what would fix it
+    err.id = f.input.id + "e";
+    f.input.setAttribute("aria-describedby", err.id);
     err.hidden = true;
     f.appendChild(err);
     function check() {
@@ -2733,9 +2871,12 @@ keyframes + charRules;
     n.max = "999";
     n.step = "0.5";
     n.value = dur.n;
-    n.setAttribute("aria-label", "How many");
+    n.setAttribute("inputmode", "decimal");
     n.id = "ctf" + (ctFieldId++);
     ctKeyed(n, ctK("dur.n"));
+    // no aria-label here: it would replace the visible "How long it runs"
+    // with something the label doesn’t say, which is exactly what 2.5.3 is
+    // about. The <label for> is the name; the unit select names itself.
     if (f.labelEl) f.labelEl.setAttribute("for", n.id);
     var u = ctEl("select");
     CT_UNITS.forEach(function(x) {
@@ -2744,7 +2885,7 @@ keyframes + charRules;
       u.appendChild(op);
     });
     u.value = dur.unit;
-    u.setAttribute("aria-label", "Minutes, hours, days or weeks");
+    u.setAttribute("aria-label", "How long it runs, unit");
     ctKeyed(u, ctK("dur.unit"));
     function upd() {
       dur.n = parseFloat(n.value) || 0;
@@ -2847,7 +2988,7 @@ keyframes + charRules;
 
     var c3 = ctCard(host, 4, "Featured paths");
     ctToggleField(c3, "Show featured paths", w, "featOn",
-      "Up to three paths with a link straight to each one.", ctRebuild1);
+      "Up to 3 paths with a link straight to each one.", ctRebuild1);
     if (w.featOn) {
       ctTextField(c3, "Heading over them", w, "featLabel", {
         max: 34, sub: "Call them whatever your learners call them. Workshops, classrooms, live learning.",
@@ -2883,7 +3024,7 @@ keyframes + charRules;
       ctKeyed(add, "w1.addItem");
       add.addEventListener("click", function() {
         w.items.push({ title: "", format: "virtual", where: "", trainer: "", dur: { n: 1, unit: "hours" }, href: "" });
-        // land in the new card's first field, not back at the top of the panel
+        // land in the new card’s first field, not back at the top of the panel
         ctPending = "w1.items." + (w.items.length - 1) + ".title";
         ctRebuild1();
       });
@@ -2916,7 +3057,7 @@ keyframes + charRules;
 
     var c2 = ctCard(host, 3, "What each slide shows");
     var lhint = ctEl("p", "hint",
-      "Up to three columns, side by side on every slide. Give each its own title. A slide skips any column you leave empty on it.");
+      "Up to 3 columns, side by side on every slide. Give each its own title. A slide skips any column you leave empty on it.");
     lhint.style.margin = "0 0 14px";
     c2.appendChild(lhint);
     // the slide cards below reuse these titles as their field labels, so
@@ -2924,9 +3065,9 @@ keyframes + charRules;
     var FALLBACK = { obj: "Column 1", who: "Column 2", why: "Column 3" };
     var colLabelEls = { obj: [], who: [], why: [] };
     function colTitle(key) { return ctTrim(w.labels[key]) || FALLBACK[key]; }
-    [["obj", "Column 1", "A short bullet list.", "What you'll learn"],
-     ["who", "Column 2", "A sentence or two.", "Who's it for"],
-     ["why", "Column 3", "The selling line.", "Why you'll love it"]].forEach(function(row) {
+    [["obj", "Column 1", "A short bullet list.", "What you’ll learn"],
+     ["who", "Column 2", "A sentence or two.", "Who’s it for"],
+     ["why", "Column 3", "The selling line.", "Why you’ll love it"]].forEach(function(row) {
       var key = row[0];
       // the tick and its title edit different objects under the same name, so
       // they need to be told apart or focus would land on the wrong one
@@ -2966,9 +3107,9 @@ keyframes + charRules;
       ctDurationField(box, p.dur);
       ctTextField(box, "Who leads it", p, "trainer", { max: 40, placeholder: "Priya Raman" });
 
-      // one select instead of a toggle plus a select: "Don't say" is an option
+      // one select instead of a toggle plus a select: "Don’t say" is an option
       if (!p.cad.on) p.cad.every = "";
-      var cadOpts = [{ v: "", t: "Don't say" }].concat(CT_EVERY.map(function(e) { return { v: e, t: "Every " + e }; }));
+      var cadOpts = [{ v: "", t: "Don’t say" }].concat(CT_EVERY.map(function(e) { return { v: e, t: "Every " + e }; }));
       ctSelectField(box, "How often new dates appear", cadOpts, p.cad, "every", function() {
         p.cad.on = !!p.cad.every;
         render(true);
@@ -2976,7 +3117,7 @@ keyframes + charRules;
 
       ctTextField(box, "Short description", p, "summary", { area: true, max: 200 });
       if (w.cols.obj) {
-        var objWrap = ctField(box, colTitle("obj"), "One line each. Three is the sweet spot.");
+        var objWrap = ctField(box, colTitle("obj"), "One line each. Three is the sweet spot.", true);
         colLabelEls.obj.push(objWrap.labelEl);
         p.obj.forEach(function(_, j) {
           var row = ctEl("div", "obj-row");
@@ -2985,6 +3126,7 @@ keyframes + charRules;
           inp.maxLength = 90;
           inp.value = p.obj[j];
           inp.setAttribute("aria-label", "Line " + (j + 1));
+          noAutofill(inp, false);
           ctKeyed(inp, "w2.slides." + i + ".obj." + j);
           inp.addEventListener("input", function() { p.obj[j] = inp.value; render(true); });
           var rm = ctEl("button", "icon-btn danger", "×");
@@ -3043,7 +3185,7 @@ keyframes + charRules;
   function ctRebuild2() { ctPanel2(); ctRestoreFocus(); render(false); }
 
   /* The preview turns to whichever slide is being edited, and stays there
-     until another slide's card is touched. Every repaint reloads the frame
+     until another slide’s card is touched. Every repaint reloads the frame
      with slide 1 checked, so the chosen slide is re-checked after each load.
      Clicking Next inside the preview still works between edits, because
      nothing here runs until focus comes back to a slide card. */
@@ -3197,6 +3339,7 @@ keyframes + charRules;
     hexIn.type = "text";
     hexIn.value = ct.c[fd.key];
     hexIn.maxLength = 7;
+    noAutofill(hexIn, true);
     hexIn.setAttribute("aria-label", fd.label + " hex value");
 
     swatch.addEventListener("input", function() {
@@ -3239,7 +3382,28 @@ keyframes + charRules;
     });
   }
 
+  /* ---- unsaved work ----
+     Nothing is stored anywhere, so a stray reload or a closed tab throws away
+     a fully configured widget. Typing, ticking, choosing a colour, and any
+     click in the settings column all count as work worth keeping; the copy,
+     download and disclosure controls in the right-hand column do not. */
+  var touched = false;
+  function markTouched() { touched = true; }
+  ["input", "change"].forEach(function(t) {
+    document.addEventListener(t, markTouched, true);
+  });
+  document.querySelector(".layout > .col").addEventListener("click", markTouched);
+  window.addEventListener("beforeunload", function(e) {
+    if (!touched) return;
+    e.preventDefault();
+    e.returnValue = "";   // older browsers need the assignment as well
+  });
+
   /* ---- boot ---- */
+  Array.prototype.forEach.call(
+    document.querySelectorAll('input[type="text"], input[type="url"], textarea'),
+    function(el) { noAutofill(el, el.type === "url" || el.id === "href"); });
+
   $("layoutHint").textContent = LAYOUT_HINTS[hero.layout];
   $("cropHint").innerHTML = CROP_HINTS.split;
   syncLinkField();
