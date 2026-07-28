@@ -410,6 +410,7 @@
         <div class="field" id="imgUrlField">
           <label for="imgUrl">Image URL</label>
           <input type="url" id="imgUrl" placeholder="https://example.com/academy-hero.jpg" aria-describedby="imgUrlHelp">
+          <p class="err" id="imgUrlErr" hidden role="alert"></p>
           <p class="hint" id="imgUrlHelp">Must be <code>https://</code>. Use an image already hosted on your marketing site, a CDN, or an asset URL you can copy from inside 360Learning.</p>
           <p class="hint"><strong>Why this is the better option:</strong> the browser downloads a hosted image once and reuses it on every later visit. Embedded images can't be cached, so they're re-downloaded in full on every page load, by every learner, every time.</p>
         </div>
@@ -1175,7 +1176,11 @@ keyframes + charRules;
         test(oc.btnBg, oc.worst, 3, "button", scrim, true);
         test(oc.btnFg, oc.btnBg, 4.5, "button text", "the button");
       }
-    } else {
+    }
+    // without an image the overlay layout falls back to a plain panel, so
+    // until a photo is added the panel colours are what the pasted code
+    // actually shows and they need checking too
+    if (!isOverlay() || !imgSrc()) {
       // every text colour has to survive both ends of a gradient panel
       [["panel", "the panel"], ["panel2", "the far end of the gradient"]].forEach(function(b) {
         if (b[0] === "panel2" && !grad) return;
@@ -1326,7 +1331,31 @@ keyframes + charRules;
   });
   hrefEl.addEventListener("blur", function() { hrefTouched = true; validateHref(); });
 
-  $("imgUrl").addEventListener("input", function() { hero.imgUrl = this.value; render(true); });
+  // Same blur-first pattern as the link field: a URL that fails the https
+  // check is silently left out of the code, so something has to say why.
+  var imgUrlEl = $("imgUrl"), imgUrlErr = $("imgUrlErr"), imgUrlTouched = false;
+
+  function validateImgUrl() {
+    var bad = null;
+    if (imgUrlTouched) {
+      var raw = String(hero.imgUrl || "").trim();
+      if (raw && !/^https:\/\/.+/i.test(raw)) {
+        bad = /^http:\/\//i.test(raw)
+          ? "This link is http://, so it won't be included. It needs to start with https://"
+          : "Image links must be a full https:// URL, or the image won't be included.";
+      }
+    }
+    imgUrlErr.hidden = !bad;
+    if (bad) imgUrlErr.textContent = bad;
+    imgUrlEl.setAttribute("aria-invalid", bad ? "true" : "false");
+  }
+
+  imgUrlEl.addEventListener("input", function() {
+    hero.imgUrl = this.value;
+    if (imgUrlTouched) validateImgUrl();
+    render(true);
+  });
+  imgUrlEl.addEventListener("blur", function() { imgUrlTouched = true; validateImgUrl(); });
 
   /* ---- upload: downscale in-browser, then embed as a data URI ---- */
   var drop = $("drop"), fileInput = $("file"), thumbWrap = $("thumbWrap"), imgErr = $("imgErr");
