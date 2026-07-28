@@ -290,7 +290,16 @@
     max-height: 240px; overflow: auto;
   }
   .code-box:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-  .out-actions { display: flex; gap: var(--sp-3); margin-top: var(--sp-4); flex-wrap: wrap; align-items: center; }
+  .out-actions { display: flex; gap: var(--sp-3); flex-wrap: wrap; align-items: center; }
+  details.code { margin-top: var(--sp-4); }
+  details.code summary {
+    font-size: var(--fs-md); font-weight: 600; color: var(--brand-dark); cursor: pointer;
+    list-style: none; display: inline-flex; align-items: center; gap: 6px;
+  }
+  details.code summary::-webkit-details-marker { display: none; }
+  details.code summary::before { content: "▸"; font-size: 13px; line-height: 1; }
+  details.code[open] summary::before { content: "▾"; }
+  details.code .code-box { margin-top: var(--sp-3); }
   .btn {
     font: inherit; font-size: var(--fs-base); font-weight: 700;
     padding: 11px var(--sp-5); min-height: 44px;
@@ -533,12 +542,15 @@
 
     <section class="card">
       <h2>Widget code</h2>
-      <div class="code-box" id="code" role="region" aria-label="Generated widget code" tabindex="0"></div>
       <div class="out-actions">
         <button type="button" class="btn btn-primary" id="copy">Copy widget code</button>
         <button type="button" class="btn btn-secondary" id="download">Download .html</button>
         <span class="size-note" id="sizeNote" role="status" aria-live="polite"></span>
       </div>
+      <details class="code">
+        <summary>Show the code</summary>
+        <div class="code-box" id="code" role="region" aria-label="Generated widget code" tabindex="0"></div>
+      </details>
       <ol class="steps">
         <li>Copy the widget code above. It's self-contained HTML and CSS, no hosting or iframe needed.</li>
         <li>In 360Learning, edit either your homepage or the group page layout and select the <strong>HTML block</strong> (<a href="https://support.360learning.com/hc/en-us/articles/38078313603092-Configure-an-HTML-widget" target="_blank" rel="noopener">how to</a>).</li>
