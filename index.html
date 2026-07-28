@@ -955,7 +955,8 @@ keyframes + charRules;
 
     var media = "";
     if (ghost) {
-      media = '<div class="' + PH + '-media"><div class="' + PH + '-ph">Your image goes here</div></div>';
+      media = '<div class="' + PH + '-media"><div class="' + PH + '-ph"><span class="' + PH + '-phl">' +
+        (overlay ? "Your photo fills this banner" : "Your image goes here") + "</span></div></div>";
     } else if (hasImg) {
       media = '<div class="' + PH + '-media"><img class="' + PH + '-img" src="' + escAttr(src) +
         '" alt="' + escAttr(String(hero.alt || "").trim()) + '" loading="lazy"></div>';
@@ -1018,10 +1019,14 @@ keyframes + charRules;
     (overlay ? "height:100%;object-fit:cover" : "height:auto;aspect-ratio:16/10;object-fit:cover;border-radius:10px") + "}\n"
   : "") +
 (ghost
-  ? ".hw-ph{display:flex;align-items:center;justify-content:center;" +
-    (overlay ? "height:100%;background:" + oc.base + ";color:#fff"
-             : "aspect-ratio:16/10;border-radius:10px;border:1px dashed " + c.body + ";color:" + c.body + ";opacity:.6") +
-    ";font-size:13px;font-weight:700}\n"
+  ? (overlay
+      // the scrim sits on top of the media box, so the label chip gets its own
+      // stacking context and lives on the right, where the photo shows through
+      ? ".hw-ph{display:flex;align-items:center;justify-content:flex-end;height:100%;background:" + oc.base + ";padding:0 26px}\n" +
+        ".hw-phl{position:relative;z-index:1;border:1.5px dashed rgba(255,255,255,0.6);color:rgba(255,255,255,0.92);" +
+        "padding:8px 14px;border-radius:999px;font-size:12.5px;font-weight:700}\n"
+      : ".hw-ph{display:flex;align-items:center;justify-content:center;aspect-ratio:16/10;border-radius:10px;" +
+        "border:1px dashed " + c.body + ";color:" + c.body + ";opacity:.6;font-size:13px;font-weight:700}\n")
   : "") +
 
 // Once the column is narrow the two columns stack, and a 16:10 photo would eat
@@ -1034,6 +1039,7 @@ keyframes + charRules;
     ? ".hw-text{max-width:100%}.hw-media::after{background:linear-gradient(180deg," +
       rgba(oc.base, 0.88) + " 0%," + rgba(oc.base, 0.8) + " 100%)}"
     : "") +
+  (overlay && ghost ? ".hw-phl{display:none}" : "") +
   "}\n" +
 "@container (max-width:400px){.hw-panel{padding:20px}" +
   (hasBtn ? ".hw-btn{width:100%;justify-content:center}" : "") + "}\n" +
@@ -1108,8 +1114,9 @@ keyframes + charRules;
   function syncNotes() {
     previewNotes.innerHTML = "";
     if (active === "hero" && !imgSrc()) {
-      note(previewNotes, "warn",
-        "Placeholder shown. Add an image and the widget becomes two columns. Without one the code falls back to a single column of text.");
+      note(previewNotes, "warn", isOverlay()
+        ? "Placeholder shown. Add an image and it fills the whole banner, sitting behind the text with a dark tint over its left side so the words stay readable. Without one the code falls back to a plain one-column panel."
+        : "Placeholder shown. Add an image and the widget becomes two columns. Without one the code falls back to a single column of text.");
     }
     $("overlayNote").hidden = !(active === "hero" && isOverlay());
     if (active === "hero" && isOverlay()) {
