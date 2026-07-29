@@ -53,12 +53,15 @@
     border: 1px solid var(--brand); text-decoration: none;
   }
   .skip:focus { top: var(--sp-3); }
-  /* The header is one line, always, at a height that cannot change. It used to
-     wrap, which meant the webfont arriving mid-load pushed the strapline onto
-     a second line and the whole page stepped down: the title visibly moved on
-     every refresh. Nothing in here is allowed to reflow now. The strapline
-     truncates rather than wraps, and drops out entirely when there is no room
-     for it, so the height is the same before and after the font lands. */
+  /* The header is one line at a height that cannot change. It used to wrap on
+     content, which meant the webfont arriving mid-load pushed the strapline
+     onto a second line and the whole page stepped down: the title visibly
+     moved on every refresh. Nothing in here reflows on content now. The
+     strapline truncates rather than wraps, and drops out entirely when there
+     is no room for it, so the height is the same before and after the font
+     lands. Below 640px the actions move to a deliberate second row instead
+     (see the rule under .saved), which is a fixed decision at a fixed width,
+     not something the font can trigger. */
   header {
     background: var(--card);
     border-bottom: 1px solid var(--border);
@@ -90,9 +93,30 @@
   }
   .saved {
     font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap;
+    min-width: 0; overflow: hidden; text-overflow: ellipsis;
     opacity: 0; transition: opacity 0.3s ease;
   }
   .saved.on { opacity: 1; }
+
+  /* On a phone the title and both buttons cannot share one line: "Start over"
+     was pushed off the right edge and could not be reached at all. So the
+     actions take a row of their own and split it between them, which is the
+     full-width tap target a thumb wants anyway. flex-basis:100% is what forces
+     that second row: with a basis of 0 the buttons would happily squeeze back
+     up beside the title. */
+  @media (max-width: 640px) {
+    header {
+      flex-wrap: wrap;
+      row-gap: var(--sp-2);
+      padding-left: max(var(--sp-4), env(safe-area-inset-left));
+      padding-right: max(var(--sp-4), env(safe-area-inset-right));
+    }
+    header h1 { flex: 1 1 auto; min-width: 0; }
+    .header-actions { flex: 1 0 100%; margin-left: 0; }
+    /* auto, not 0: the basis is the label's own width, so a button never
+       shrinks below its text and "Copy share link" cannot be clipped */
+    .header-actions .btn { flex: 1 1 auto; }
+  }
 
   .layout {
     display: grid;
@@ -1338,18 +1362,51 @@ keyframes + charRules;
       ? (hero.layout === "imageFirst" ? "grid-template-columns:4fr 5fr;" : "grid-template-columns:5fr 4fr;")
       : "grid-template-columns:minmax(0,1fr);";
 
+    /* Definition against the page it lands on. A pale panel on a white
+       360Learning homepage has no edge at all: the widget reads as background
+       rather than as an object, which is most of why a flat fill looks cheap.
+       A hairline and a soft shadow fix it, and both are mixed from the
+       palette's own heading colour rather than being black, so a navy hero
+       gets a navy-tinted shadow instead of a grey smudge.
+
+       A dark panel inverts: a dark hairline on a dark panel is invisible, so
+       it becomes a light one, and the shadow goes to real black because a
+       tinted shadow does nothing under a dark widget. */
+    var pDark = lum(overlay ? oc.base : c.panel) < 0.22;
+    var edge = pDark ? "rgba(255,255,255,0.10)" : rgba(c.heading, 0.10);
+    var shade = pDark
+      ? "0 1px 2px rgba(0,0,0,0.30),0 12px 32px rgba(0,0,0,0.24)"
+      : "0 1px 2px " + rgba(c.heading, 0.05) + ",0 12px 32px " + rgba(c.heading, 0.07);
+    var ring = pDark ? "rgba(255,255,255,0.12)" : rgba(c.heading, 0.10);
+
+    /* The button's shadow is tinted from the button itself, so a coloured
+       button casts its own colour. A white button on the overlay layout has
+       no usable tint of its own, so it borrows a dark one instead. */
+    var bBg = overlay ? oc.btnBg : c.btnBg;
+    var bTint = lum(bBg) > 0.5 ? (pDark ? "#000000" : c.heading) : bBg;
+
     var css =
 // Plus Jakarta Sans is 360Learning’s own typeface, so asking for it by name
 // is how the widget matches the page around it. Asking is all it does: see
 // FONT_STACK for why the @import that used to sit here had to go.
 ".hw-wrap{container-type:inline-size;width:100%;margin:0}\n" +
 ".hw-wrap *{box-sizing:border-box}\n" +
-".hw-panel{display:grid;" + cols + "gap:30px;align-items:center;padding:" +
-  (overlay ? "38px" : "34px") + ";border-radius:12px;" +
+// Padding and the column gap scale with the column the widget lands in, not
+// with the viewport: the same hero is a sidebar strip on one page and a
+// full-bleed banner on another, and a fixed 34px is generous in the first and
+// mean in the second.
+".hw-panel{display:grid;" + cols + "gap:clamp(24px,3cqw,40px);align-items:center;" +
+  "padding:clamp(26px,3.2cqw,44px);border-radius:16px;" +
+  "border:1px solid " + edge + ";box-shadow:" + shade + ";" +
   // a floor, not a fixed height: a full-bleed photo needs some depth to read
   // as a photo rather than a stripe, but short copy should still give a short
   // hero. Set too high, this is what makes an overlay hero feel oversized.
-  (overlay ? "position:relative;overflow:hidden;background:" + c.panel + ";min-height:260px;"
+  // The overlay panel is filled with the scrim's own dark base, not the light
+  // panel colour. That colour is what shows in the two moments the photo
+  // isn't there: while it downloads, and forever if its URL 404s. Filling it
+  // light meant a white flash before a dark hero on a slow connection, and
+  // white text on a white panel if the image never arrived.
+  (overlay ? "position:relative;overflow:hidden;background:" + oc.base + ";min-height:260px;"
            : "background:" + panelBg() + ";") +
   "font-family:" + FONT_STACK + "}\n" +
 ".hw-text,.hw-media{min-width:0}\n" +
@@ -1366,18 +1423,27 @@ keyframes + charRules;
     ".hw-text{position:relative;z-index:1;max-width:56%}\n"
   : "") +
 
-".hw-title{margin:0;font-size:clamp(23px,3.6cqw,34px);font-weight:800;line-height:1.16;letter-spacing:-0.01em;color:" +
-  (overlay ? oc.heading : c.heading) + "}\n" +
+// balance, so a two-word second line never dangles under a full first one,
+// and a tighter track because 800 weight at 36px sets loose by default
+".hw-title{margin:0;font-size:clamp(24px,3.6cqw,36px);font-weight:800;line-height:1.14;letter-spacing:-0.022em;" +
+  "text-wrap:balance;color:" + (overlay ? oc.heading : c.heading) + "}\n" +
 ".hw-accent{display:block;color:" + (overlay ? oc.accent : c.accent) + "}\n" +
-".hw-body{margin:14px 0 0;font-size:clamp(13.5px,1.5cqw,15px);font-weight:400;line-height:1.6;color:" +
-  (overlay ? oc.body : c.body) + ";max-width:52ch}\n" +
+".hw-body{margin:15px 0 0;font-size:clamp(13.5px,1.5cqw,15px);font-weight:400;line-height:1.62;color:" +
+  (overlay ? oc.body : c.body) + ";max-width:52ch;text-wrap:pretty}\n" +
 
 (hasBtn
-  ? ".hw-btn{display:inline-flex;align-items:center;gap:9px;margin-top:24px;min-height:44px;padding:12px 24px;" +
-    "border-radius:999px;background:" + (overlay ? oc.btnBg : c.btnBg) + ";color:" + (overlay ? oc.btnFg : c.btnFg) + ";" +
-    "font-size:14.5px;font-weight:700;line-height:1.2;text-decoration:none;transition:filter .15s ease}\n" +
-    ".hw-btn:hover{filter:brightness(1.12);text-decoration:none;color:" + (overlay ? oc.btnFg : c.btnFg) + "}\n" +
-    ".hw-btn:focus-visible{outline:2px solid " + (overlay ? oc.btnBg : c.btnBg) + ";outline-offset:3px}\n" +
+  // It lifts on hover and presses back down on click. A button that only
+  // changes brightness feels like a coloured rectangle; one that moves feels
+  // like something you pushed.
+  ? ".hw-btn{display:inline-flex;align-items:center;gap:9px;margin-top:26px;min-height:44px;padding:13px 26px;" +
+    "border-radius:999px;background:" + bBg + ";color:" + (overlay ? oc.btnFg : c.btnFg) + ";" +
+    "font-size:14.5px;font-weight:700;line-height:1.2;letter-spacing:-0.005em;text-decoration:none;" +
+    "box-shadow:0 1px 2px " + rgba(bTint, 0.24) + ",0 6px 16px " + rgba(bTint, 0.20) + ";" +
+    "transition:filter .15s ease,transform .15s ease,box-shadow .15s ease}\n" +
+    ".hw-btn:hover{filter:brightness(1.08);transform:translateY(-1px);text-decoration:none;color:" +
+      (overlay ? oc.btnFg : c.btnFg) + ";box-shadow:0 2px 4px " + rgba(bTint, 0.26) + ",0 10px 24px " + rgba(bTint, 0.24) + "}\n" +
+    ".hw-btn:active{transform:translateY(0);box-shadow:0 1px 2px " + rgba(bTint, 0.24) + "}\n" +
+    ".hw-btn:focus-visible{outline:2px solid " + bBg + ";outline-offset:3px}\n" +
     ".hw-arrow{transition:transform .15s ease}\n" +
     ".hw-btn:hover .hw-arrow{transform:translateX(3px)}\n" +
     ".hw-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);border:0}\n"
@@ -1387,9 +1453,15 @@ keyframes + charRules;
 // collapsed) an uncapped 16:10 image drives the whole panel past 500px tall.
 // The max-height turns extra width into a wider crop instead of extra height,
 // the same trade the narrow breakpoint already makes with 21:9.
+// The ring matters more than it looks: a photo with a pale sky or a white
+// studio background bleeds straight into a pale panel without one, and the
+// image stops having a shape. box-sizing is already border-box up top, so it
+// costs no layout.
 (hasImg
   ? ".hw-img{display:block;width:100%;" +
-    (overlay ? "height:100%;object-fit:cover" : "height:auto;aspect-ratio:16/10;max-height:340px;object-fit:cover;border-radius:10px") + "}\n"
+    (overlay ? "height:100%;object-fit:cover"
+             : "height:auto;aspect-ratio:16/10;max-height:340px;object-fit:cover;border-radius:12px;" +
+               "border:1px solid " + ring) + "}\n"
   : "") +
 (ghost
   ? (overlay
@@ -1398,7 +1470,7 @@ keyframes + charRules;
       ? ".hw-ph{display:flex;align-items:center;justify-content:flex-end;height:100%;background:" + oc.base + ";padding:0 26px}\n" +
         ".hw-phl{position:relative;z-index:1;border:1.5px dashed rgba(255,255,255,0.6);color:rgba(255,255,255,0.92);" +
         "padding:8px 14px;border-radius:999px;font-size:12.5px;font-weight:700}\n"
-      : ".hw-ph{display:flex;align-items:center;justify-content:center;aspect-ratio:16/10;max-height:340px;border-radius:10px;" +
+      : ".hw-ph{display:flex;align-items:center;justify-content:center;aspect-ratio:16/10;max-height:340px;border-radius:12px;" +
         "border:1px dashed " + c.body + ";color:" + c.body + ";opacity:.6;font-size:13px;font-weight:700}\n")
   : "") +
 
@@ -1416,7 +1488,11 @@ keyframes + charRules;
   "}\n" +
 "@container (max-width:400px){.hw-panel{padding:20px}" +
   (hasBtn ? ".hw-btn{width:100%;justify-content:center}" : "") + "}\n" +
-(hasBtn ? "@media (prefers-reduced-motion:reduce){.hw-btn,.hw-arrow{transition:none}}\n" : "");
+// transition:none alone would still let the hover lift snap into place, which
+// is the movement someone asking for reduced motion is asking not to see. The
+// button keeps its brightness and shadow change and loses the travel.
+(hasBtn ? "@media (prefers-reduced-motion:reduce){.hw-btn,.hw-arrow{transition:none}" +
+  ".hw-btn:hover,.hw-btn:active{transform:none}.hw-btn:hover .hw-arrow{transform:none}}\n" : "");
 
     // Only the CSS is prefixed by search-and-replace. The markup is built with
     // the prefix already in place, because it carries user text: a heading or
@@ -2518,24 +2594,65 @@ keyframes + charRules;
       : c.panel;
   }
 
+  /* The tones that give these widgets depth rather than colour. A hairline at
+     the panel edge, a soft shadow under it, and quieter versions of both
+     under each card. Everything is mixed from the palette's own heading
+     colour rather than from black, so a navy widget casts a navy shadow and a
+     terracotta one casts terracotta: the difference is barely nameable and it
+     is most of what separates this from a flat coloured rectangle.
+
+     A dark palette inverts. Its heading is white, so the same rgba() gives
+     the light hairline a dark surface needs; the shadows have to go to real
+     black, because a tinted shadow under a dark widget does nothing at all,
+     and cards drop their shadow entirely and rely on the hairline. */
+  function ctTone(c) {
+    var d = c.dark;
+    return {
+      edge: rgba(c.heading, d ? 0.11 : 0.09),
+      panel: d ? "0 1px 2px rgba(0,0,0,0.30),0 12px 32px rgba(0,0,0,0.24)"
+                : "0 1px 2px " + rgba(c.heading, 0.05) + ",0 12px 32px " + rgba(c.heading, 0.07),
+      card: d ? "none" : "0 1px 2px " + rgba(c.heading, 0.04) + ",0 4px 12px " + rgba(c.heading, 0.05),
+      cardUp: d ? "none" : "0 2px 4px " + rgba(c.heading, 0.05) + ",0 10px 24px " + rgba(c.heading, 0.10),
+      // a pale button has no usable tint of its own, so it borrows a dark one
+      btn: lum(c.btnBg) > 0.5 ? (d ? "#000000" : c.heading) : c.btnBg
+    };
+  }
+
+  // `pad` is a full CSS length, usually a clamp on container width: the same
+  // widget is a sidebar strip on one page and a full-bleed banner on another,
+  // and one fixed number cannot be right in both.
   function ctBaseCss(c, fill, pad) {
+    var t = ctTone(c);
     return ".ct-wrap{container-type:inline-size;width:100%;margin:0}\n" +
       ".ct-wrap *{box-sizing:border-box}\n" +
-      ".ct-panel{padding:" + pad + "px;border-radius:12px;background:" + ctPanelBg(c, fill) +
+      ".ct-panel{padding:" + pad + ";border-radius:16px;background:" + ctPanelBg(c, fill) +
+        ";border:1px solid " + t.edge + ";box-shadow:" + t.panel +
         ";font-family:" + FONT_STACK + "}\n" +
       ".ct-i{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}\n" +
       ".ct-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);border:0}\n";
   }
 
+  // Same button as the hero banner, on purpose: someone running both widgets
+  // on one homepage should not be able to tell they came from two builders.
+  // It lifts on hover and presses back down on click, because a button that
+  // only changes brightness feels like a coloured rectangle.
   function ctBtnCss(c) {
-    return ".ct-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 20px;" +
+    var t = ctTone(c);
+    return ".ct-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:11px 22px;" +
       "border-radius:999px;background:" + c.btnBg + ";color:" + c.btnFg + ";font-size:13.5px;font-weight:700;line-height:1.2;" +
-      "text-decoration:none;transition:filter .15s ease}\n" +
-      ".ct-btn:hover{filter:brightness(1.12);text-decoration:none;color:" + c.btnFg + "}\n" +
+      "letter-spacing:-0.005em;text-decoration:none;" +
+      "box-shadow:0 1px 2px " + rgba(t.btn, 0.24) + ",0 6px 16px " + rgba(t.btn, 0.20) + ";" +
+      "transition:filter .15s ease,transform .15s ease,box-shadow .15s ease}\n" +
+      ".ct-btn:hover{filter:brightness(1.08);transform:translateY(-1px);text-decoration:none;color:" + c.btnFg +
+        ";box-shadow:0 2px 4px " + rgba(t.btn, 0.26) + ",0 10px 24px " + rgba(t.btn, 0.24) + "}\n" +
+      ".ct-btn:active{transform:translateY(0);box-shadow:0 1px 2px " + rgba(t.btn, 0.24) + "}\n" +
       ".ct-btn:focus-visible{outline:2px solid " + c.btnBg + ";outline-offset:3px}\n" +
       ".ct-arrow{transition:transform .15s ease}\n" +
       ".ct-btn:hover .ct-arrow{transform:translateX(3px)}\n" +
-      "@media (prefers-reduced-motion:reduce){.ct-btn,.ct-arrow{transition:none}}\n";
+      // transition:none alone would still let the lift snap into place, which
+      // is the movement someone asking for reduced motion asked not to see
+      "@media (prefers-reduced-motion:reduce){.ct-btn,.ct-arrow{transition:none}" +
+        ".ct-btn:hover,.ct-btn:active{transform:none}.ct-btn:hover .ct-arrow{transform:none}}\n";
   }
 
   /* No link, no button. An <a href="#"> looks exactly like a working call to
@@ -2598,7 +2715,7 @@ keyframes + charRules;
     // accent now means "you can act on this": links, arrows, the dots.
     return ".ct-sec{margin-top:12px}\n" +
       ".ct-sh{margin:0;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:" + c.body + "}\n" +
-      ".ct-p{margin:4px 0 0;font-size:13px;font-weight:400;line-height:1.45;color:" + c.body + "}\n" +
+      ".ct-p{margin:4px 0 0;font-size:13px;font-weight:400;line-height:1.45;color:" + c.body + ";text-wrap:pretty}\n" +
       ".ct-ul{margin:5px 0 0;padding:0;list-style:none}\n" +
       ".ct-ul li{position:relative;padding-left:15px;margin-top:3px;font-size:13px;font-weight:400;line-height:1.45;color:" + c.body + "}\n" +
       // a drawn dot rather than a list marker, so its colour and size are ours
@@ -2660,46 +2777,102 @@ keyframes + charRules;
         "</div>" + btn +
       "</div>" + featured + "</div></div>";
 
-    var css = ctBaseCss(c, fill, 22) + ctBtnCss(c) +
+    var t = ctTone(c);
+
+    var css = ctBaseCss(c, fill, "clamp(22px,2.8cqw,34px)") + ctBtnCss(c) +
       // no button means no third column, or its gap would sit on the right as
       // an unexplained 18px of air
       ".ct-top{display:grid;grid-template-columns:auto minmax(0,1fr)" + (btn ? " auto" : "") +
-        ";gap:18px;align-items:center}\n" +
-      ".ct-badge{flex:none;display:inline-flex;align-items:center;justify-content:center;width:54px;height:54px;" +
-        "border-radius:15px;background:" + ch.bg + ";color:" + ch.fg + "}\n" +
+        ";gap:clamp(16px,1.8cqw,24px);align-items:center}\n" +
+      // 14px on a 56px square is the same optical curvature as the 16px on the
+      // panel around it, which is what keeps a nested shape from looking like
+      // it came from somewhere else
+      ".ct-badge{flex:none;display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;" +
+        "border-radius:14px;background:" + ch.bg + ";color:" + ch.fg + "}\n" +
       ".ct-badge .ct-i{width:26px;height:26px;stroke-width:1.5}\n" +
       ".ct-main{min-width:0}\n" +
       ".ct-eyebrow{margin:0;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:" + c.accent + "}\n" +
-      ".ct-t{margin:5px 0 0;font-size:clamp(18px,2.2cqw,22px);font-weight:800;line-height:1.2;letter-spacing:-0.015em;color:" + c.heading + "}\n" +
-      ".ct-body{margin:7px 0 0;font-size:13px;font-weight:400;line-height:1.5;color:" + c.body + ";max-width:60ch}\n" +
+      // balance and pretty do the work no one notices: no one-word last line
+      // under the title, no single orphan word ending the description
+      ".ct-t{margin:6px 0 0;font-size:clamp(19px,2.5cqw,26px);font-weight:800;line-height:1.18;letter-spacing:-0.02em;" +
+        "text-wrap:balance;color:" + c.heading + "}\n" +
+      ".ct-body{margin:8px 0 0;font-size:13.5px;font-weight:400;line-height:1.55;color:" + c.body +
+        ";max-width:60ch;text-wrap:pretty}\n" +
       ".ct-act{flex:none}\n" +
 
       (items.length
-        ? ".ct-feat{margin-top:20px;padding-top:18px;border-top:1px solid " + c.line + "}\n" +
+        ? ".ct-feat{margin-top:clamp(20px,2.2cqw,28px);padding-top:clamp(18px,2cqw,24px);border-top:1px solid " + c.line + "}\n" +
           ".ct-fh{margin:0 0 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:" + c.body + "}\n" +
-          ".ct-tiles{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}\n" +
+          /* N tiles, N columns, or one column. Never a half-empty row.
+             auto-fit used to drop three tiles into two columns from about a
+             700px container down, which left the third one sitting alone
+             beside an empty cell for the whole tablet range. The same gap is
+             invisible in a text layout and glaring in a row of cards,
+             because the card outlines draw the hole for you.
+
+             The breakpoint is what N tiles genuinely need: 210px each, the
+             gaps between them, and the panel's own padding either side. */
+          ".ct-tiles{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}\n" +
+          (items.length > 1
+            ? "@container (min-width:" + (210 * items.length + 14 * (items.length - 1) + 72) + "px){" +
+              ".ct-tiles{grid-template-columns:repeat(" + items.length + ",minmax(0,1fr))}}\n"
+            : "") +
           // the whole tile is the link, so the target is the size of the card
           // rather than the size of the words "learn more"
-          ".ct-tile{display:flex;flex-direction:column;height:100%;padding:16px;border-radius:12px;background:" + c.card +
-            ";border:1px solid " + c.line + ";text-decoration:none;transition:border-color .15s ease,transform .15s ease}\n" +
+          ".ct-tile{display:flex;flex-direction:column;height:100%;padding:18px;border-radius:12px;background:" + c.card +
+            ";border:1px solid " + c.line + ";box-shadow:" + t.card + ";text-decoration:none;" +
+            "transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease}\n" +
           // only the linked tiles lift and highlight: a plain card that
           // reacted to the pointer would be promising a click it cannot honour
-          "a.ct-tile:hover{border-color:" + c.accent + ";transform:translateY(-2px);text-decoration:none}\n" +
+          "a.ct-tile:hover{border-color:" + c.accent + ";transform:translateY(-3px);box-shadow:" + t.cardUp +
+            ";text-decoration:none}\n" +
           "a.ct-tile:focus-visible{outline:2px solid " + c.accent + ";outline-offset:2px}\n" +
           ".ct-tag{align-self:flex-start;padding:3px 9px;border-radius:999px;background:" + ch.bg + ";color:" + ch.fg +
             ";font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em}\n" +
-          ".ct-tt{margin-top:8px;font-size:15px;font-weight:800;line-height:1.3;letter-spacing:-0.01em;color:" + c.heading + "}\n" +
-          ".ct-tm{margin-top:5px;font-size:12.5px;font-weight:500;line-height:1.45;color:" + c.body + "}\n" +
-          ".ct-tgo{display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:12px;font-size:13px;font-weight:700;color:" + c.accent + "}\n" +
+          ".ct-tt{margin-top:10px;font-size:15.5px;font-weight:800;line-height:1.28;letter-spacing:-0.015em;" +
+            "text-wrap:balance;color:" + c.heading + "}\n" +
+          ".ct-tm{margin-top:5px;font-size:12.5px;font-weight:500;line-height:1.45;color:" + c.body + ";text-wrap:pretty}\n" +
+          ".ct-tgo{display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:14px;font-size:13px;font-weight:700;color:" + c.accent + "}\n" +
           "a.ct-tile:hover .ct-arrow{transform:translateX(3px)}\n" +
-          "@media (prefers-reduced-motion:reduce){.ct-tile{transition:none}}\n"
+
+          /* Between a phone and the breakpoint above, the tiles are stacked
+             but the column is wide, so a tile drawn as a narrow card leaves
+             two thirds of itself empty. In that band it becomes a row
+             instead: everything on the left, the link on the right, centred
+             against the whole card. Same markup, same tap target, the width
+             just gets used.
+
+             This has to sit after the .ct-tile rules above, not beside the
+             .ct-tiles one it belongs with: a container query adds no
+             specificity, so declared first, its display:grid loses to the
+             base display:flex while its align-items:center survives, and the
+             tile silently centres its own text. */
+          (items.length > 1
+            ? "@container (min-width:470px) and (max-width:" +
+                (210 * items.length + 14 * (items.length - 1) + 71) + "px){" +
+                ".ct-tile{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:22px}" +
+                // spelled out rather than auto-placed: the link spans all
+                // three rows to centre, and a tile with no meta has only two
+                // justify-self, not the align-self the base rule uses: in a
+                // grid that one is the block axis, so the pill would stretch
+                // the full width of the card and stop being a pill
+                ".ct-tag{grid-area:1/1;justify-self:start}" +
+                ".ct-tt{grid-area:2/1}.ct-tm{grid-area:3/1}" +
+                ".ct-tgo{grid-area:1/2/4/3;margin-top:0;padding-top:0}}\n"
+            : "") +
+
+          "@media (prefers-reduced-motion:reduce){.ct-tile{transition:none}a.ct-tile:hover{transform:none}}\n"
         : "") +
 
       "@container (max-width:640px){.ct-top{grid-template-columns:auto minmax(0,1fr);gap:16px 18px}" +
         ".ct-act{grid-column:1/-1}.ct-btn{width:100%}" +
-        (items.length ? ".ct-tiles{grid-template-columns:minmax(0,1fr);gap:12px}.ct-tile{padding:16px}" : "") + "}\n" +
+        // no grid-template-columns here: the min-width query above already
+        // owns the column count, and repeating it at max-width:640 would
+        // outrank that query on source order and strand two tiles in one
+        // column at a width they both fit
+        (items.length ? ".ct-tiles{gap:12px}.ct-tile{padding:16px}" : "") + "}\n" +
       "@container (max-width:400px){.ct-panel{padding:18px}.ct-top{grid-template-columns:minmax(0,1fr)}" +
-        ".ct-badge{width:42px;height:42px;border-radius:12px}.ct-badge .ct-i{width:20px;height:20px}}\n";
+        ".ct-badge{width:44px;height:44px;border-radius:12px}.ct-badge .ct-i{width:20px;height:20px}}\n";
 
     return ctWrap("Signpost with featured paths", P, markup, css);
   }
@@ -2782,11 +2955,13 @@ keyframes + charRules;
           '<div class="' + P + '-arrows">' + arrows + "</div></div>" +
       "</div></div></div>";
 
-    var css = ctBaseCss(c, fill, 18) + ctBtnCss(c) + ctFactsCss(c) + ctSectionsCss(c) +
-      ".ct-dhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 12px}\n" +
+    var t = ctTone(c);
+
+    var css = ctBaseCss(c, fill, "clamp(18px,2.2cqw,28px)") + ctBtnCss(c) + ctFactsCss(c) + ctSectionsCss(c) +
+      ".ct-dhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px}\n" +
       // balance stops a marketing headline breaking one word onto its own
       // last line. Same size as the slide title, so the two carry equal weight
-      ".ct-h{margin:0;font-size:clamp(18px,2.2cqw,22px);font-weight:800;letter-spacing:-0.01em;line-height:1.25;" +
+      ".ct-h{margin:0;font-size:clamp(19px,2.5cqw,26px);font-weight:800;letter-spacing:-0.02em;line-height:1.2;" +
         "text-wrap:balance;color:" + c.heading + "}\n" +
       // a text link, not a second button: the slide’s own call to action has
       // to stay the loudest thing in the widget. 44px of height on a link
@@ -2799,17 +2974,18 @@ keyframes + charRules;
       ".ct-all:hover .ct-arrow{transform:translateX(3px)}\n" +
 
       // the slide itself, which is also what a fallback list item looks like
-      ".ct-slide{padding:16px;border-radius:12px;background:" + c.card + ";border:1px solid " + c.line + "}\n" +
+      ".ct-slide{padding:clamp(16px,1.8cqw,24px);border-radius:12px;background:" + c.card +
+        ";border:1px solid " + c.line + ";box-shadow:" + t.card + "}\n" +
       ".ct-slide + .ct-slide{margin-top:10px}\n" +
       ".ct-tag{display:inline-block;padding:3px 10px;border-radius:999px;background:" + ch.bg + ";color:" + ch.fg +
         ";font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em}\n" +
-      ".ct-t{margin:8px 0 0;font-size:clamp(18px,2.2cqw,22px);font-weight:800;line-height:1.16;letter-spacing:-0.02em;" +
+      ".ct-t{margin:10px 0 0;font-size:clamp(19px,2.5cqw,26px);font-weight:800;line-height:1.16;letter-spacing:-0.022em;" +
         "text-wrap:balance;color:" + c.heading + "}\n" +
-      ".ct-lede{margin:6px 0 0;font-size:13px;font-weight:400;line-height:1.5;color:" + c.body + ";max-width:75ch;text-wrap:pretty}\n" +
-      ".ct-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 22px;margin-top:4px;" +
-        "padding-top:4px;border-top:1px solid " + c.line + "}\n" +
-      ".ct-cols .ct-sec{margin-top:12px}\n" +
-      ".ct-cta{margin-top:14px}\n" +
+      ".ct-lede{margin:7px 0 0;font-size:13.5px;font-weight:400;line-height:1.55;color:" + c.body + ";max-width:75ch;text-wrap:pretty}\n" +
+      ".ct-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 22px;margin-top:6px;" +
+        "padding-top:6px;border-top:1px solid " + c.line + "}\n" +
+      ".ct-cols .ct-sec{margin-top:14px}\n" +
+      ".ct-cta{margin-top:16px}\n" +
 
       // fallback state: radios missing, so this is a plain list and the
       // controls are not shown at all
@@ -2819,16 +2995,21 @@ keyframes + charRules;
       (n > 1
         ? // proof of life: a checked radio exists, so become a deck
           ".ct-deck:has(.ct-r:checked) .ct-track{display:grid}\n" +
+          /* The 6px rise is the difference between a slide that appeared and
+             a slide that arrived. It is small enough that nobody consciously
+             sees it and large enough that the deck stops feeling like a light
+             switch. Reduced motion drops it to a plain cut, below. */
           ".ct-deck:has(.ct-r:checked) .ct-slide{grid-area:1/1;margin-top:0;visibility:hidden;opacity:0;" +
-            "transition:opacity .25s ease,visibility .25s ease}\n" +
+            "transform:translateY(6px);transition:opacity .28s ease,transform .28s cubic-bezier(.16,1,.3,1),visibility .28s ease}\n" +
           ".ct-deck:has(.ct-r:checked) .ct-nav{display:flex;align-items:center;justify-content:space-between;gap:14px;" +
-            "flex-wrap:wrap;margin-top:10px}\n" +
+            "flex-wrap:wrap;margin-top:14px}\n" +
 
           // one rule per slide. Ids beat the :has rule on specificity, so the
           // checked slide always wins however the two are ordered.
           picks.map(function(p, i) {
             var k = i + 1;
-            return "#ct-s" + k + ":checked ~ .ct-track .ct-sl" + k + "{visibility:visible;opacity:1}\n" +
+            return "#ct-s" + k + ":checked ~ .ct-track .ct-sl" + k +
+                "{visibility:visible;opacity:1;transform:none}\n" +
               "#ct-s" + k + ":checked ~ .ct-nav .ct-dt" + k + " .ct-dc{background-color:" + c.accent + "}\n" +
               "#ct-s" + k + ":checked ~ .ct-nav .ct-nx" + k + ",#ct-s" + k + ":checked ~ .ct-nav .ct-bk" + k +
                 "{display:inline-flex}\n" +
@@ -2850,12 +3031,17 @@ keyframes + charRules;
           ".ct-arrows{display:flex;align-items:center;gap:8px}\n" +
           // the card these sit on is nearly the colour of the panel, so the
           // edge has to be the quiet tone or they read as loose text
-          ".ct-bk,.ct-nx{display:none;align-items:center;gap:7px;min-height:44px;padding:10px 18px;border-radius:999px;" +
+          ".ct-bk,.ct-nx{display:none;align-items:center;gap:7px;min-height:44px;padding:11px 20px;border-radius:999px;" +
             "border:1px solid " + edge + ";background:" + c.card + ";color:" + c.heading + ";font-size:13.5px;font-weight:700;" +
-            "cursor:pointer;user-select:none;transition:border-color .15s ease}\n" +
-          ".ct-bk:hover,.ct-nx:hover{border-color:" + c.accent + "}\n" +
+            "cursor:pointer;user-select:none;box-shadow:" + t.card +
+            ";transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease}\n" +
+          ".ct-bk:hover,.ct-nx:hover{border-color:" + c.accent + ";box-shadow:" + t.cardUp + "}\n" +
+          // the press is the whole point: these are the only two controls in
+          // the widget a learner clicks repeatedly
+          ".ct-bk:active,.ct-nx:active{transform:translateY(1px);box-shadow:" + t.card + "}\n" +
           ".ct-la,.ct-ra{color:" + c.accent + "}\n" +
-          "@media (prefers-reduced-motion:reduce){.ct-deck:has(.ct-r:checked) .ct-slide,.ct-dc,.ct-bk,.ct-nx{transition:none}}\n"
+          "@media (prefers-reduced-motion:reduce){.ct-deck:has(.ct-r:checked) .ct-slide,.ct-dc,.ct-bk,.ct-nx{transition:none}" +
+            ".ct-deck:has(.ct-r:checked) .ct-slide{transform:none}.ct-bk:active,.ct-nx:active{transform:none}}\n"
         : "") +
 
       "@container (max-width:620px){.ct-panel{padding:14px}.ct-slide{padding:14px}.ct-cols{gap:0 18px}}\n" +
@@ -3140,7 +3326,10 @@ keyframes + charRules;
 
   // number plus unit, so "3 hours" and "Half day" are spelled by the builder
   function ctDurationField(host, dur) {
-    var f = ctField(host, "How long it runs", "Half a day is 0.5 days.");
+    // No sub-line. The number field steps in halves, so 0.5 days is one click
+    // of the spinner away, and it renders as "Half day" the moment you get
+    // there. A sentence explaining that was explaining the obvious.
+    var f = ctField(host, "How long it runs");
     var wrap = ctEl("div", "dur");
     var n = ctEl("input");
     n.type = "number";
