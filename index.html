@@ -91,12 +91,34 @@
     flex: none; white-space: nowrap;
     font-size: var(--fs-md); padding: 8px var(--sp-3); min-height: 38px;
   }
+  /* A reserved slot, not a growing one. This used to size itself to its own
+     text, so the first "Saved" of the session shoved both buttons left by the
+     width of the word and they never came back. It now occupies the same
+     140px whether it is empty, fading, or showing the longest message it
+     has, so nothing beside it can ever move. Fading in and out is the only
+     thing that changes. */
   .saved {
+    flex: none; width: 140px; text-align: right;
     font-size: var(--fs-sm); color: var(--text-secondary); white-space: nowrap;
-    min-width: 0; overflow: hidden; text-overflow: ellipsis;
+    overflow: hidden; text-overflow: ellipsis;
     opacity: 0; transition: opacity 0.3s ease;
   }
   .saved.on { opacity: 1; }
+
+  /* Below 900px there is no room for that slot, which is the same width at
+     which the strapline drops out: the header is simply in compact mode.
+
+     Clipped rather than display:none, because a live region that is removed
+     from the page announces nothing at all. A screen reader user still hears
+     "Saved"; they just do not lose a button to it. The permanent note in the
+     Widget card is what tells everyone else how saving works, so the toast
+     is confirmation rather than the only explanation. */
+  @media (max-width: 900px) {
+    .saved {
+      position: absolute; width: 1px; height: 1px; margin: -1px;
+      padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0;
+    }
+  }
 
   /* On a phone the title and both buttons cannot share one line: "Start over"
      was pushed off the right edge and could not be reached at all. So the
@@ -621,6 +643,13 @@
           Learning dashboard <span class="soon">Soon</span>
         </button>
       </div>
+      <hr class="divider">
+      <!-- Permanent, because the alternative is finding out how saving works
+           by losing something. The header's "Saved" flash confirms a write
+           that already happened; this is the sentence that sets the
+           expectation before anyone needs it. -->
+      <p class="hint"><strong>Your work is saved as you go</strong>, in this browser and nowhere else. Clearing your browsing data clears it too, and it will not follow you to another browser, another device, or a colleague.</p>
+      <p class="hint"><strong>Copy share link</strong> is how you keep it. The link reopens everything exactly as it is now, so it works as a backup, as a way to move between machines, and as a way to hand a half-built widget to someone else.</p>
     </section>
 
     <!-- ===== AI Companion ===== -->
@@ -900,6 +929,19 @@
         <li>Paste the code and click apply. Done.</li>
       </ol>
       <p class="hint">The widget makes no external requests of any kind. It asks for Plus Jakarta Sans, uses it if 360Learning already serves it, and otherwise falls back to the reader’s own system font, which needs no download at all.</p>
+
+      <hr class="divider">
+      <details class="code">
+        <summary>Reopen a widget from its code</summary>
+        <p class="hint">Every widget this builder makes carries its own settings in a comment on the last line. Paste that code back here and the controls come back, so a widget already live on a page can be edited months later by someone who never had the share link.</p>
+        <p class="hint">An uploaded photo is the one thing that doesn’t travel: it would be far larger than the widget it sits in. A hosted image URL comes back fine.</p>
+        <label class="sr" for="loadCode">Widget code to reopen</label>
+        <textarea id="loadCode" placeholder="Paste widget code here" style="margin-top:var(--sp-3); min-height:88px"></textarea>
+        <div class="out-actions" style="margin-top:var(--sp-3)">
+          <button type="button" class="btn btn-secondary" id="loadBtn">Load these settings</button>
+        </div>
+        <div class="notes" id="loadMsg" role="status" aria-live="polite"></div>
+      </details>
     </section>
   </div>
 </main>
@@ -1602,7 +1644,7 @@ keyframes + charRules;
      just the iframe repaint, and an undebounced call still runs immediately
      so that clicking a preset or a layout is as instant as it ever was. */
   function renderNow() {
-    snippet = build(false);
+    snippet = build(false) + "\n" + stateComment();
     previewSnippet = build(true);
     codeEl.textContent = snippet;
     var kb = new Blob([snippet]).size / 1024;   // bytes, not chars: user text can be non-ASCII
@@ -3912,7 +3954,9 @@ keyframes + charRules;
       if (lean.hero) lean.hero.imgData = "";
       localStorage.setItem(STORE_KEY, JSON.stringify(lean));
       imgTooBig = true;
-      flagSaved("Saved without the photo, it is too big to store");
+      // short enough for the header's fixed slot. The thumbnail beside the
+      // upload already carries the detail about weight.
+      flagSaved("Saved without the photo");
     } catch (e2) {
       flagSaved("");   // private mode, or storage is off. Nothing to promise.
     }
@@ -4013,12 +4057,39 @@ keyframes + charRules;
 
   var WIDGETS = { companion: 1, hero: 1, classroom: 1 };
 
+  /* Colours are the one part of a restored state that can be wrong in a way
+     nothing downstream notices. Every other field degrades safely: an unknown
+     layout falls through to the default branch, a duration that is a string
+     fails the `d.n > 0` test and prints nothing. A bad colour does not throw.
+     rgbOf() returns NaN, the widget quietly emits rgba(NaN,NaN,NaN,0.1) and
+     loses its border and shadow, and worse, the contrast checker skips every
+     pair it cannot measure and then reports "safe to use", which is a claim
+     it has not earned.
+
+     The UI cannot produce one of these: the hex field refuses anything that
+     is not a hex, and the colour picker cannot. They only arrive from outside
+     this session, which is exactly what this function is the boundary for. */
+  function cleanColors(host, key, fallback) {
+    if (!host[key] || typeof host[key] !== "object" || Array.isArray(host[key])) {
+      host[key] = JSON.parse(JSON.stringify(fallback));
+      return;
+    }
+    for (var k in fallback) {
+      if (!Object.prototype.hasOwnProperty.call(fallback, k)) continue;
+      // only the roles that are hex values; `dark` is a flag and is left alone
+      if (typeof fallback[k] !== "string" || fallback[k].charAt(0) !== "#") continue;
+      if (!isHex(host[key][k])) host[key][k] = fallback[k];
+    }
+  }
+
   function adopt(data) {
     if (!data || typeof data !== "object") return false;
     if (data.active && WIDGETS[data.active]) active = data.active;
     for (var k in WIDGET_STATE) {
       if (data[k] && typeof data[k] === "object") absorb(WIDGET_STATE[k], data[k]);
     }
+    cleanColors(hero, "c", DEFAULTS.hero.c);
+    cleanColors(ct, "c", DEFAULTS.classroom.c);
     // a stored list can be empty or missing; every renderer assumes at least one
     if (!companion.prompts || !companion.prompts.length) companion.prompts = [""];
     if (!ct.w1.items || !ct.w1.items.length) ct.w1.items = [DEFAULTS.classroom.w1.items[0]];
@@ -4063,6 +4134,94 @@ keyframes + charRules;
       location.hash = url.slice(url.indexOf("#"));
       done(false);
     }
+  });
+
+  /* ---- reopening a widget from its own code ----
+
+     A share link is a message, and messages get lost. The widget code is the
+     artifact that actually survives: it is sitting in a 360Learning HTML
+     block months later, long after whoever built it moved on. So the code
+     carries its own settings, and pasting it back rebuilds every control.
+
+     The settings are the same serialised state the share link uses, not
+     anything parsed out of the rendered HTML. Reading a heading back out of
+     the markup is just about possible; reading "2 hours" back into
+     {n:2,unit:"hours"} is the kind of thing that works until someone hand
+     edits the code, and then fails silently rather than loudly. This is
+     exact, and it fails cleanly when it fails.
+
+     base64url cannot produce "<", "!" or ">", so the payload can never close
+     the comment early or open a nested one, whatever the user typed.
+
+     This depends on 360Learning's sanitiser keeping HTML comments, which is
+     the whole feature: the point is reopening a widget that is already live,
+     not one you still have in a tab. Confirmed in a real 360Learning space
+     on 2026-07-29, with a Live training widget, which carries the largest
+     payload of the four: edited, pasted into an HTML block, saved, copied
+     back out and loaded, and every setting came back. Worth re-testing if
+     the platform ever changes how it cleans pasted HTML. */
+  function stateComment() {
+    try {
+      var s = { v: 1, active: active };
+      if (active === "hero") {
+        s.hero = JSON.parse(JSON.stringify(hero));
+        s.hero.imgData = "";     // a data URI would dwarf the widget it sits in
+      } else if (active === "classroom") {
+        // only the layout this code actually renders. Carrying the other one
+        // doubled the payload for content that is not on the page.
+        var t = { c: ct.c, presetId: ct.presetId, layout: ct.layout, fill: ct.fill };
+        if (ct.layout === "deck") t.w2 = ct.w2; else t.w1 = ct.w1;
+        s.classroom = t;
+      } else {
+        s.companion = companion;
+      }
+      return "<!-- Reopen this widget in the Academy Widget Builder by pasting this code into it. " +
+        "Safe to delete this line. awb:1:" + toB64(JSON.stringify(s)) + " -->";
+    } catch (e) { return ""; }   // never let this break the widget itself
+  }
+
+  var loadEl = $("loadCode"), loadMsg = $("loadMsg");
+
+  function loadFromCode(text) {
+    var m = /awb:1:([A-Za-z0-9_-]+)/.exec(String(text || ""));
+    if (!m) {
+      return "No settings found in that. Paste the whole widget code, including the comment on the last line. " +
+        "Widgets made before this feature existed do not carry their settings.";
+    }
+    var data;
+    try { data = JSON.parse(fromB64(m[1])); }
+    catch (e) { return "The settings in that code could not be read. It was probably cut short when it was copied."; }
+
+    /* Everything on screen is kept first. A bad paste must not be able to
+       destroy work in progress, and adopt() writes straight into the live
+       objects, so the only safe undo is a full snapshot taken beforehand. */
+    var backup = JSON.parse(JSON.stringify(snapshot()));
+    var wasActive = active;
+    try {
+      if (!adopt(data)) throw new Error("not a builder state");
+      syncUI();
+      build(false);            // prove it renders before anyone sees it
+    } catch (e2) {
+      adopt(backup);
+      active = wasActive;
+      syncUI();
+      render(false);
+      return "That code could not be turned back into a widget. Nothing has changed.";
+    }
+    render(false);
+    return null;
+  }
+
+  $("loadBtn").addEventListener("click", function() {
+    var bad = loadFromCode(loadEl.value);
+    loadMsg.innerHTML = "";
+    loadEl.setAttribute("aria-invalid", bad ? "true" : "false");
+    if (bad) { note(loadMsg, "warn", bad); return; }
+    note(loadMsg, "ok", "Settings loaded. Every control below now matches that widget.");
+    loadEl.value = "";
+    flagSaved("Loaded from code");
+    // the widget type may well have changed, so put focus where the change is
+    $("wtype").querySelector('button[data-w="' + active + '"]').focus();
   });
 
   /* ---- start over ---- */
@@ -4161,7 +4320,7 @@ keyframes + charRules;
 
   render(false);
   if (fromLink) {
-    flagSaved("Loaded from a shared link");
+    flagSaved("Loaded from a link");
     // the first autosave lands 600ms from now and would replace that message
     // with "Saved" before anyone has read it
     setTimeout(function() { booted = true; }, 2600);
