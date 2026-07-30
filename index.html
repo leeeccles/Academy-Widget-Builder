@@ -19,7 +19,9 @@
        that use it clear AA rather than only looking as though they do */
     --text-primary: #1a1a2e; --text-secondary: #5b6472; --text-muted: #6b7280;
     --border: #e5e7eb; --border-strong: #d1d5db; --bg: #f7f8fa; --card: #ffffff;
-    --amber: #a15c07; --amber-bg: #fef3c7; --green: #15803d; --green-bg: #dcfce7;
+    /* no --amber-bg: unlike the green and red pairs it was never referenced,
+       and a token nothing uses is a token that drifts out of step unnoticed */
+    --amber: #a15c07; --green: #15803d; --green-bg: #dcfce7;
     --red: #b91c1c; --red-bg: #fee2e2;
 
     /* type scale */
@@ -30,9 +32,24 @@
     /* one token, because the row-icon buttons and the grid column that has to
        leave room for them must never disagree */
     --icon-btn: 36px;
+    /* Every press target is this tall. It used to be six numbers for one idea:
+       the widget list 46, segments and the prompt remove 42, buttons and Add 44,
+       the disclosures and Reset 40, the header 38. Three of those were under the
+       44px minimum on a touch screen, and none of the six differences meant
+       anything. */
+    --tap: 44px;
+    /* The header keeps its own, shorter, value. Its height is fixed at 64px on
+       purpose, so that the webfont arriving mid-load cannot make the whole page
+       step down, and a 44px button inside 24px of padding does not fit that.
+       38 is comfortable for a mouse, and below it goes to the full 44, which is
+       also the width at which the header actions move to a row of their own and
+       have the room. */
+    --tap-compact: 38px;
   }
-  /* a mouse can hit 36px; a finger needs the full 44 */
-  @media (pointer: coarse) { :root { --icon-btn: 44px; } }
+  /* A mouse can hit 36px; a finger needs the full 44. One query, so the two
+     tokens that have a compact desktop size can never disagree about when to
+     give it up. */
+  @media (pointer: coarse) { :root { --icon-btn: 44px; --tap-compact: 44px; } }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -89,7 +106,7 @@
      the header it sits in */
   .header-actions .btn {
     flex: none; white-space: nowrap;
-    font-size: var(--fs-md); padding: 8px var(--sp-3); min-height: 38px;
+    font-size: var(--fs-md); padding: 8px var(--sp-3); min-height: var(--tap-compact);
   }
   /* A reserved slot, not a growing one. This used to size itself to its own
      text, so the first "Saved" of the session shoved both buttons left by the
@@ -220,7 +237,15 @@
     border-radius: var(--r);
     padding: var(--sp-5);
   }
-  .card + .card, .panel > .card:first-child { margin-top: var(--sp-4); }
+  .card + .card { margin-top: var(--sp-4); }
+  /* The gap between the Widget card and whichever panel follows it.
+     On the panel, not on its first card. It used to be
+     `.panel > .card:first-child`, and the Live training panel's first child is
+     a container the generated cards go into rather than a card itself, so that
+     rule missed it completely: every other widget had 16px under the Widget
+     card and Live training alone opened flush against it at 0. Measured, not
+     spotted by eye, after it was spotted by eye. */
+  .panel { margin-top: var(--sp-4); }
   /* skip-link target: clears the sticky header, and keeps a ring when the
      jump came from the keyboard */
   #output { scroll-margin-top: var(--sp-4); }
@@ -233,7 +258,7 @@
   .num {
     flex: none; width: 18px; height: 18px; border-radius: 50%;
     background: var(--brand-light); color: var(--brand-dark);
-    font-size: 10px; font-weight: 800; line-height: 18px; text-align: center; letter-spacing: 0;
+    font-size: var(--fs-micro); font-weight: 800; line-height: 18px; text-align: center; letter-spacing: 0;
   }
   .hint { font-size: var(--fs-sm); color: var(--text-secondary); margin-top: var(--sp-2); line-height: 1.55; text-wrap: pretty; }
   .hint + .hint { margin-top: var(--sp-2); }
@@ -249,7 +274,7 @@
     display: flex; align-items: center; gap: var(--sp-3);
     font: inherit; font-size: var(--fs-base); font-weight: 600;
     padding: 11px var(--sp-4);
-    min-height: 46px;
+    min-height: var(--tap);
     border: 1px solid var(--border-strong);
     border-radius: var(--r-sm);
     background: var(--card);
@@ -273,7 +298,7 @@
   /* on the grey badge fill, --text-muted only reaches 3.9:1, so the badge
      steps down to the darker secondary to clear 4.5:1 at this size */
   .wtype .soon {
-    margin-left: auto; font-size: 10.5px; font-weight: 700;
+    margin-left: auto; font-size: var(--fs-micro); font-weight: 700;
     text-transform: uppercase; letter-spacing: 0.05em;
     color: var(--text-secondary); background: var(--border);
     padding: 2px 8px; border-radius: 999px;
@@ -314,8 +339,8 @@
   .prompt-row { display: flex; gap: var(--sp-2); align-items: center; margin-bottom: var(--sp-3); }
   .remove {
     font: inherit; font-size: 16px; line-height: 1;
-    width: 42px; height: 42px; flex: none;
-    border: 1px solid var(--border-strong); border-radius: var(--r-sm);
+    width: var(--icon-btn); height: var(--icon-btn); flex: none;
+    border: 1px solid var(--border-strong); border-radius: 6px;
     background: var(--card); color: var(--text-secondary); cursor: pointer;
     touch-action: manipulation;
     transition: color 0.18s ease, border-color 0.18s ease;
@@ -326,7 +351,7 @@
   .add {
     font: inherit; font-size: var(--fs-md); font-weight: 700;
     padding: 11px var(--sp-4);
-    min-height: 44px;
+    min-height: var(--tap);
     border: 1px dashed var(--brand);
     border-radius: var(--r-sm);
     background: var(--card); color: var(--brand); cursor: pointer;
@@ -338,10 +363,12 @@
   .add:disabled { opacity: 0.4; cursor: default; }
 
   /* segmented control */
-  .seg { display: flex; gap: 6px; flex-wrap: wrap; }
+  /* 8px, not the 6 it was: the minimum comfortable gap between two touch
+     targets, and the spacing rhythm the rest of the builder already uses. */
+  .seg { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
   .seg button {
     font: inherit; font-size: var(--fs-md); font-weight: 600;
-    padding: 9px var(--sp-3); min-height: 42px;
+    padding: 9px var(--sp-3); min-height: var(--tap);
     border: 1px solid var(--border-strong); border-radius: var(--r-sm);
     background: var(--card); color: var(--text-primary);
     cursor: pointer; touch-action: manipulation;
@@ -355,10 +382,19 @@
   }
   .seg svg { flex: none; color: var(--text-muted); }
   .seg button[aria-pressed="true"] svg { color: var(--brand-dark); }
+  /* aria-disabled, not disabled: a removed button never tells a keyboard or
+     screen-reader user that the option exists or why it is unavailable */
+  .seg button[aria-disabled="true"] { color: var(--text-muted); background: var(--bg); cursor: default; }
+  .seg button[aria-disabled="true"]:hover { border-color: var(--border-strong); }
+  .seg button[aria-disabled="true"] .pill { background: var(--border); color: var(--text-secondary); }
   .seg.stack { flex-direction: column; }
   .seg.stack button { width: 100%; text-align: left; }
+  /* All four of the builder's badge sizes are this one token now. It was 9.5px
+     here, 10 on the step numbers and the verdict chips, 10.5 on "Soon": four
+     sizes inside a single point of each other, none of the differences saying
+     anything, and 9.5px is small enough to be a struggle to read. */
   .pill {
-    font-size: 9.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
+    font-size: var(--fs-micro); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;
     background: var(--green-bg); color: var(--green); padding: 2px 6px; border-radius: 999px;
   }
 
@@ -380,13 +416,18 @@
   .disclose {
     font: inherit; font-size: var(--fs-md); font-weight: 700;
     display: flex; align-items: center; gap: var(--sp-2);
-    padding: 8px 0; min-height: 40px;
+    /* A disclosure carries no border or fill, so it reads as a link and the
+       temptation is to size it like one. It is a press target, and it gets the
+       same height as every other press target. */
+    padding: 8px 0; min-height: var(--tap);
     background: none; border: 0; color: var(--brand-dark); cursor: pointer;
   }
   .disclose:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: var(--r-sm); }
   .disclose svg { transition: transform 0.18s ease; }
   .disclose[aria-expanded="true"] svg { transform: rotate(90deg); }
-  .reset { margin-top: var(--sp-3); font-size: var(--fs-md); padding: 9px var(--sp-4); min-height: 40px; }
+  /* no min-height: .btn already sets one, and a second value here was the
+     only reason Reset stood 4px shorter than every button beside it */
+  .reset { margin-top: var(--sp-3); font-size: var(--fs-md); padding: 9px var(--sp-4); }
   .colors { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); margin-top: var(--sp-3); }
   .cfield > label { font-size: var(--fs-micro); font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 5px; }
   .cfield .row { display: flex; gap: 6px; align-items: center; }
@@ -445,7 +486,11 @@
   .preview-head { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; margin-bottom: var(--sp-4); }
   .preview-head h2 { margin: 0; }
   .preview-tools { margin-left: auto; display: flex; gap: var(--sp-2); align-items: center; }
-  .pv-toggle { display: none; min-height: 32px; padding: 5px 10px; font-size: var(--fs-sm); }
+  /* Only the display matters. This used to also set min-height, padding and
+     font-size, and every one of them was dead: .btn is declared further down at
+     equal specificity and won on source order, so the control has always been a
+     normal 44px button and the numbers here described nothing. */
+  .pv-toggle { display: none; }
   .preview-stage { background: #ffffff; border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--sp-5); overflow-x: auto; }
   /* The widget is shown at the full width of the block it will land in, and
      at no other width. Nothing here ever caps its height either: the point of
@@ -476,7 +521,7 @@
   details.code .code-box { margin-top: var(--sp-3); }
   .btn {
     font: inherit; font-size: var(--fs-base); font-weight: 700;
-    padding: 11px var(--sp-5); min-height: 44px;
+    padding: 11px var(--sp-5); min-height: var(--tap);
     border-radius: var(--r-sm); border: 1px solid transparent;
     cursor: pointer; touch-action: manipulation;
     transition: background-color 0.18s ease, border-color 0.18s ease;
@@ -496,20 +541,18 @@
      .err, .btn, .seg, .presets, .cfield and .notes rather than restating
      them; these are the shapes the first two widgets never needed. */
 
-  /* The #ctPanel1 / #ctPanel2 wrappers sit between the Layout card and the
-     Colours card, which breaks the `.card + .card` adjacency the other two
-     widgets rely on. Flex gap spaces them instead, and a hidden wrapper then
-     contributes no stray gap. The [hidden] rules are not redundant: the id
-     selectors above outrank the browser’s own [hidden] { display: none }. */
+  /* The #ctPanel wrapper sits above the Colours card, which breaks the
+     `.card + .card` adjacency the other two widgets rely on. Flex gap spaces
+     them instead. */
   #panelClassroom { display: flex; flex-direction: column; gap: var(--sp-4); }
-  #ctPanel1, #ctPanel2 { display: flex; flex-direction: column; gap: var(--sp-4); }
-  /* Every one of these [hidden] rules is load-bearing, including the one on
-     #panelClassroom itself. An id selector in this stylesheet outranks the
-     browser’s own [hidden] { display: none }, so without it the panel stays
-     laid out while `hidden` is true: 3,700px of the wrong widget’s controls
-     rendered under whichever widget you actually picked, all of it still in
-     the tab order. The boot check in the script catches a repeat of this. */
-  #panelClassroom[hidden], #ctPanel1[hidden], #ctPanel2[hidden] { display: none; }
+  #ctPanel { display: flex; flex-direction: column; gap: var(--sp-4); }
+  /* Both [hidden] rules are load-bearing. An id selector in this stylesheet
+     outranks the browser’s own [hidden] { display: none }, so without them the
+     panel stays laid out while `hidden` is true: thousands of pixels of the
+     wrong widget’s controls rendered under whichever widget you actually
+     picked, all of it still in the tab order. The boot check in the script
+     catches a repeat of this. */
+  #panelClassroom[hidden], #ctPanel[hidden] { display: none; }
   #panelClassroom .card + .card { margin-top: 0; }
 
   /* a secondary line under a field label, for the sentence that explains it */
@@ -542,7 +585,11 @@
   .icon-btn:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 
   .add.block { width: 100%; text-align: center; }
-  .obj-row { display: grid; grid-template-columns: minmax(0, 1fr) var(--icon-btn); gap: var(--sp-2); margin-bottom: var(--sp-2); align-items: start; }
+  /* Three children, auto-placed: input at 1/1, remove at 1/2, and the counter
+     falls to 2/1 under the input. row-gap stays at 0 so the counter sits close
+     to the field it belongs to rather than half a row away. */
+  .obj-row { display: grid; grid-template-columns: minmax(0, 1fr) var(--icon-btn); gap: 0 var(--sp-2); margin-bottom: var(--sp-2); align-items: start; }
+  .obj-row .count { display: block; margin-top: 3px; }
   .dur { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: var(--sp-2); }
   input[type="number"], select {
     font: inherit; font-size: var(--fs-base); width: 100%; min-width: 0;
@@ -558,11 +605,26 @@
   /* the pair-by-pair readability report */
   .checks { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--sp-2) var(--sp-4); }
   .chk { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--text-secondary); }
-  .chk b { flex: none; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.03em; }
+  /* One width for both verdicts, because "FAIL" sets 5px narrower than "PASS"
+     in this face and every failing row's label used to start 5px to the left of
+     every passing one. In a list you read down the left edge, that reads as the
+     row being broken rather than as the badge being a different word. */
+  .chk b {
+    flex: none; font-size: var(--fs-micro); font-weight: 800; padding: 2px 6px; border-radius: 4px;
+    letter-spacing: 0.03em; min-width: 46px; text-align: center;
+  }
   .chk.ok b { color: var(--green); background: var(--green-bg); }
   .chk.bad b { color: var(--red); background: var(--red-bg); }
   .chk .r { margin-left: auto; font-variant-numeric: tabular-nums; color: var(--text-muted); font-size: var(--fs-micro); white-space: nowrap; }
   .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+  /* A screen-reader-only live region that is shown to everyone when it carries
+     something everyone needs. Used for the copy failure, where "Copy failed" in
+     the button does not say what to do instead. It is the last item in its row,
+     so growing it pushes nothing sideways. Id, because it has to outrank .sr. */
+  #copyStatus.shown {
+    position: static; width: auto; height: auto; margin: 0; clip: auto; overflow: visible;
+    font-size: var(--fs-sm); font-weight: 600; color: var(--amber);
+  }
 
   /* Undo. Removing a prompt, a path or a slide is the one destructive action
      in the builder and it used to be final. One shared bar serves all three
@@ -659,6 +721,36 @@
         <div id="prompts"></div>
         <button type="button" class="add" id="addPrompt">+ Add prompt</button>
         <p class="hint">Up to 5 prompts, max <strong>50&nbsp;characters</strong> each. The widget cycles through them with a typing animation. Shorter prompts are safer: in a very narrow column the end of a long prompt can be trimmed off.</p>
+      </section>
+
+      <section class="card">
+        <h2><span class="num" aria-hidden="true">2</span> Colours</h2>
+        <p class="hint" style="margin-top:0">The gradient runs through the word <strong>Companion</strong> and the star beside it. The prompt text stays near-black, because it is the part people read.</p>
+        <div class="presets" id="cwPresets" role="group" aria-label="Recommended gradients" style="margin-top:var(--sp-3)"></div>
+
+        <hr class="divider">
+        <button type="button" class="disclose" id="cwCustomToggle" aria-expanded="false" aria-controls="cwCustomPanel">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+          Match your brand colours
+        </button>
+        <div id="cwCustomPanel" hidden>
+          <div class="cfield" style="margin-top:var(--sp-3)">
+            <label for="cwSeedColor">Build a gradient from one colour</label>
+            <div class="row">
+              <input type="color" id="cwSeedColor" value="#6d28d9">
+              <button type="button" class="btn btn-secondary" id="cwBuildFromSeed">Build gradient</button>
+            </div>
+          </div>
+          <p class="hint">Your colour sets the hue the gradient starts from, and the other two stops are worked out for you. Each one is darkened only as far as it needs to be to stay readable on a white page, so a pale brand colour comes back deeper than you picked it. Pick a grey and you get a grey gradient.</p>
+          <hr class="divider">
+          <p class="hint">Or set all three by hand. Watch the check underneath as you go.</p>
+          <div class="colors" id="cwColors"></div>
+          <button type="button" class="btn btn-secondary reset" id="cwResetColors" hidden></button>
+        </div>
+
+        <div class="notes" id="cwContrast" role="status" aria-live="polite"></div>
+        <details class="code"><summary>Show every colour pairing</summary><div class="checks" id="cwChecks" style="margin-top:var(--sp-3)"></div></details>
+        <p class="hint">Each stop of the gradient is measured against a white page, because the widget has no background of its own and sits straight on it. Coloured type needs 4.5&nbsp;to&nbsp;1. Every gradient the builder works out for you passes.</p>
       </section>
     </div>
 
@@ -827,26 +919,10 @@
 
     <!-- ===== Live training ===== -->
     <div class="panel" id="panelClassroom" hidden>
-      <section class="card">
-        <h2><span class="num" aria-hidden="true">1</span> Layout</h2>
-        <div class="seg stack" id="ctLayoutSeg" role="group" aria-label="Live training layout">
-          <button type="button" data-ctlayout="signpost" aria-pressed="true">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="8" rx="2"/><rect x="2" y="15" width="5.6" height="6" rx="1"/><rect x="9.2" y="15" width="5.6" height="6" rx="1"/><rect x="16.4" y="15" width="5.6" height="6" rx="1"/></svg>
-            Signpost with featured paths
-          </button>
-          <button type="button" data-ctlayout="deck" aria-pressed="false">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h.01M12 21h.01M16 21h.01"/></svg>
-            Path slides
-          </button>
-        </div>
-        <p class="hint" id="ctLayoutHint"></p>
-      </section>
-
-      <div id="ctPanel1"></div>
-      <div id="ctPanel2" hidden></div>
+      <div id="ctPanel"></div>
 
       <section class="card">
-        <h2><span class="num" aria-hidden="true">5</span> Colours</h2>
+        <h2><span class="num" aria-hidden="true">4</span> Colours</h2>
         <div class="presets" id="ctPresets" role="group" aria-label="Recommended colour palettes"></div>
 
         <button type="button" class="disclose" id="ctMoreToggle" aria-expanded="false" aria-controls="ctMorePanel">
@@ -861,8 +937,9 @@
         </div>
 
         <div class="field" style="margin-top:var(--sp-4)">
-          <div class="seg" id="ctFillSeg" role="group" aria-label="Panel fill">
-            <button type="button" data-ctfill="flat" aria-pressed="true">Solid panel</button>
+          <div class="seg" id="ctFillSeg" role="group" aria-label="Panel">
+            <button type="button" data-ctfill="none" aria-pressed="true">No panel <span class="pill">Best</span></button>
+            <button type="button" data-ctfill="flat" aria-pressed="false">Solid panel</button>
             <button type="button" data-ctfill="gradient" aria-pressed="false">Gradient panel</button>
           </div>
         </div>
@@ -929,6 +1006,7 @@
         <li>Paste the code and click apply. Done.</li>
       </ol>
       <p class="hint">The widget makes no external requests of any kind. It asks for Plus Jakarta Sans, uses it if 360Learning already serves it, and otherwise falls back to the reader’s own system font, which needs no download at all.</p>
+      <p class="hint"><strong>You can put several widgets on one page.</strong> Each one names its own styles after its own settings, so they can’t interfere with each other. The one thing to avoid is pasting the very same widget twice: two copies with identical settings are identical code, and on a Live training deck that means both sets of arrows drive whichever came first. Change anything at all on the second one, even the heading, and they work independently.</p>
 
       <hr class="divider">
       <details class="code">
@@ -962,8 +1040,52 @@
   /* Class names are scoped per widget so two of them can sit on the same
      360Learning page without one <style> block overriding the other. Digits
      only: a random letter suffix can spell something unfortunate. */
-  function uid(p) { return p + Math.floor(1000 + Math.random() * 9000); }
-  var PC = uid("cw"), PH = uid("hw");
+  /* The suffix is derived from the widget's own settings, not drawn at random,
+     and that is a bug fix rather than a preference.
+
+     It used to be one random number per *page load*. Two widgets of different
+     types never collided, because their letters differ, and two of the same
+     type always did: build a Live training deck, paste it, edit the heading,
+     paste the second one, and both decks carried the same prefix. Which meant
+     both sets of radio buttons shared one `name` and behaved as a single group,
+     so clicking a dot on the second deck blanked the first, and three element
+     ids appeared twice so every label drove whichever deck came first. Measured
+     2026-07-30: visible slides went from one each to three and none. Two decks
+     on one group page is an ordinary thing to want.
+
+     Deriving it from the settings fixes that and costs nothing else. Two widgets
+     that differ in any way at all get different prefixes. Two that differ in no
+     way get the same one, which is the only case left and is the harmless one:
+     identical settings mean identical CSS, so there is nothing to override.
+     A deck is the exception, since identical ids still fight, and the note in
+     the Widget code card is what tells anyone the answer is to change something.
+
+     It also made the output more honest than it was. The same settings now
+     always produce the same bytes, where before every reload renamed every
+     class, so "copy this again and check nothing moved" is now a thing you can
+     actually do. Digits only, because a random letter suffix can spell
+     something unfortunate. */
+  function hash6(str) {
+    // FNV-1a, 32 bit. Nothing here is a security boundary: it only has to
+    // spread widely enough that two different widgets land on two different
+    // numbers, and 900,000 buckets does that.
+    var h = 0x811c9dc5;
+    for (var i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = (h * 0x01000193) >>> 0;
+    }
+    return String(100000 + (h % 900000));
+  }
+  /* An embedded photo is a data URI weighing up to a megabyte, and re-hashing it
+     on every repaint is work for nothing: its length separates two different
+     photos perfectly well for the purpose of naming a class. */
+  function stateSeed(o) {
+    return JSON.stringify(o, function(k, v) {
+      return k === "imgData" && typeof v === "string" && v.length > 64
+        ? "img:" + v.length : v;
+    });
+  }
+  function uid(p, seed) { return p + hash6(seed); }
 
   function esc(s) {
     return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -994,6 +1116,68 @@
     '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?' +
     'family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">';
 
+  /* ---- the shape scale, read off the platform ----
+     Every widget the builder makes lands beside 360Learning's own components,
+     so the corner radii are the platform's rather than ours. Four values,
+     used everywhere, no exceptions:
+
+       panel  16px  the widget's outer surface, matching a course card
+       card   12px  anything sitting on the panel: a tile, a slide, an image
+       btn     8px  every button and every button-shaped control
+       pill   999   tags and status chips only, never a call to action
+
+     The last line is the one that was wrong. Buttons used to be full pills,
+     which on this platform is the shape of a filter tab, not of something
+     you press. 360Learning's own Start and Create buttons are 8px rounded
+     rectangles, so ours are too. */
+  var R_PANEL = "16px", R_CARD = "12px", R_BTN = "8px", R_PILL = "999px";
+
+  /* ---- one button, shared by every widget ----
+     The hero banner and both Live training layouts emit the same button from
+     here, so somebody running two of these on one homepage cannot tell they
+     came from two builders. It is deliberately plain: a solid rounded
+     rectangle with a bold centred label and nothing else.
+
+     What it no longer carries is the pill radius, the trailing arrow glyph
+     and the coloured drop shadow. Those three are a marketing-page
+     vocabulary. Sitting next to a platform button that has none of them, a
+     widget wearing all three reads as something pasted in from outside,
+     which is exactly what it is and exactly what it should not look like.
+
+     Hover picks its brightness direction from the fill's own lightness. The
+     single hard-coded direction this used to have did nothing whatsoever to
+     the white button the overlay hero uses, so that button had no hover
+     state at all. */
+  function buttonCss(ns, bg, fg) {
+    var d = "." + ns + "-btn";
+    return d + "{display:inline-flex;align-items:center;justify-content:center;min-height:44px;" +
+      "padding:12px 24px;border-radius:" + R_BTN + ";background:" + bg + ";color:" + fg + ";" +
+      "font-size:14px;font-weight:700;line-height:1.25;letter-spacing:-0.005em;" +
+      "text-align:center;text-decoration:none;transition:filter .15s ease,transform .1s ease}\n" +
+      d + ":hover{filter:brightness(" + (lum(bg) > 0.5 ? ".94" : "1.12") + ");" +
+        "text-decoration:none;color:" + fg + "}\n" +
+      // the press is the whole of the tactility now that the hover lift is
+      // gone, so it stays even under reduced motion's transition:none
+      d + ":active{transform:translateY(1px)}\n" +
+      d + ":focus-visible{outline:2px solid " + bg + ";outline-offset:3px}\n" +
+      "@media (prefers-reduced-motion:reduce){" + d + "{transition:none}" +
+        d + ":active{transform:none}}\n";
+  }
+
+  /* ---- one text link, shared by every widget ----
+     The platform's secondary action is an underlined bold link, not a second
+     button and not an arrow. "Find more" above a row of courses is exactly
+     this, so the widget's own section links are built the same way. */
+  function linkCss(ns, color) {
+    var d = "." + ns + "-link";
+    // 14px, measured against the platform's own "Find more": 15 ink to our 14,
+    // which at 13.5px put ours a size step below the thing it sits next to
+    return d + "{display:inline-flex;align-items:center;min-height:44px;font-size:14px;font-weight:700;" +
+      "color:" + color + ";text-decoration:underline;text-underline-offset:3px}\n" +
+      d + ":hover{color:" + color + ";text-decoration:underline}\n" +
+      d + ":focus-visible{outline:2px solid " + color + ";outline-offset:3px;border-radius:4px}\n";
+  }
+
   /* ================================================================
      AI Companion prompt banner
      ================================================================ */
@@ -1005,11 +1189,105 @@
       "How do our top reps handle objections?",
       "What are some ways I can use AI to save time?",
       "What are our company values?"
-    ]
+    ],
+    preset: "companion",
+    c: {}
   };
 
-  // v1 fixed gradient (matches the original Companion widget)
-  var C1 = "#6d28d9", CM = "#a21caf", C2 = "#ec4899";
+  /* ---- the gradient ----
+     One colour in, three stops out, every one of them checked.
+
+     The gradient is painted through the word "Companion" and the star beside
+     it with background-clip:text, so it is not decoration: it is the colour of
+     type, sitting on whatever the host page's background is, which on this
+     platform is white. That makes each stop a foreground colour with a
+     readability bar to clear, and it is why the seed's own lightness is thrown
+     away rather than respected. Somebody picking their brand pink means "make
+     it this hue", not "make it unreadable".
+
+     The travel is a 52 degree hue sweep, which is the shape of the platform's
+     own Companion mark: violet into magenta into pink. Sweeping hue rather than
+     lightness is what keeps the word an even weight across its length; a
+     lightness sweep gives you type that fades out halfway through a word.
+
+     A grey seed has no hue to travel through, so it travels in lightness
+     instead and the sweep collapses to nothing. Without that branch a grey
+     gradient is three copies of the same grey, which is a flat fill wearing a
+     gradient's clothes.
+
+     `hslOf` and `walkTo` are declared further down, with the rest of the colour
+     maths the hero banner introduced. Function declarations hoist, so calling
+     them from up here at load time is safe, and sharing them is the point:
+     three widgets measuring contrast three different ways is how they drift. */
+
+  /* 34 degrees, and the number was decided by rendering every hue rather than
+     by copying the platform's own 68. A long sweep is fine for the hues that
+     start far from yellow, which is why violet into pink survives it, and it
+     falls apart for the ones that do not: at 52 degrees a rose seed arrives at
+     olive, because yellow is the brightest hue there is and the only way to get
+     it to 4.5:1 against white is to darken it until it is brown. 34 keeps every
+     seed inside one recognisable family: rose runs to burnt orange, green to
+     teal, violet to magenta. Wide enough to read as a gradient, short enough
+     not to cross the hue that cannot be darkened gracefully. */
+  var CW_SWEEP = 34;
+
+  function cwGradient(seed) {
+    var s = hslOf(seed);
+    var sat = Math.min(0.85, s.s);
+    var mono = sat < 0.12;
+    // Walked down from a common target rather than set outright, so each stop
+    // ends at equal *contrast* rather than equal lightness. A yellow and a blue
+    // at one lightness are nowhere near equally readable.
+    var targets = mono ? [0.30, 0.38, 0.46] : [0.45, 0.45, 0.45];
+    var stops = [0, 1, 2].map(function(i) {
+      var h = s.h + (mono ? 0 : CW_SWEEP * i / 2);
+      return walkTo(hslToHex(h, sat, targets[i]), ["#ffffff"], 4.6, -1);
+    });
+    return { c1: stops[0], cm: stops[1], c2: stops[2] };
+  }
+
+  /* The first entry is the platform's own Companion gradient, and it is the
+     default because it is the one that matches the real AI Companion a learner
+     already knows: violet, into magenta, into pink.
+
+     Two of its three stops are the platform's exactly. The third is not, and
+     that is deliberate. The pink the platform ships, #ec4899, is 3.53:1 on
+     white. That is fine while the word renders at 18.66px or more, where bold
+     type only needs 3:1, and short of the bar below it, and the word is
+     `clamp(15px,2.5cqw,22px)`, so it drops under 18.66px in any column narrower
+     than about 746px. Which is most of them: with the 360Learning newsfeed open
+     a widget gets about 795px, and the word sets around 20px there, but a
+     sidebar or a two-column homepage row puts it well under.
+
+     So the end stop is the same hue and the same saturation, deepened by 14
+     points of lightness to #d61675, which measures 4.96:1. It is a visibly
+     deeper pink and it is the same gradient. Every other stop, and every other
+     gradient in this list, is untouched.
+
+     Everything below the default is grown from a single seed through
+     cwGradient, so it is checked by construction rather than trusted by hand.
+     The id stays "companion" so that a saved link or a pasted widget from
+     before this existed still finds its preset; only the label changed. */
+  var CW_PRESETS = [
+    { id: "companion", name: "Default", c: { c1: "#6d28d9", cm: "#a21caf", c2: "#d61675" } },
+    // a hueless seed, so Grey is grey. The obvious pick is one of the slate
+    // greys every UI palette ships, and all of them carry a few degrees of blue
+    // that the mono branch faithfully preserves into a gradient nobody would
+    // call grey. The seed picker still respects a tint if somebody wants one.
+    { id: "grey",      name: "Grey",      seed: "#737373" },
+    { id: "violet",    name: "Violet",    seed: "#6d28d9" },
+    { id: "blue",      name: "Blue",      seed: "#2563eb" },
+    { id: "teal",      name: "Teal",      seed: "#0d9488" },
+    { id: "green",     name: "Green",     seed: "#16a34a" },
+    { id: "rose",      name: "Rose",      seed: "#e11d48" }
+  ];
+  CW_PRESETS.forEach(function(p) { if (!p.c) p.c = cwGradient(p.seed); });
+
+  var CW_COLOR_FIELDS = [
+    { key: "c1", label: "Gradient start" },
+    { key: "cm", label: "Gradient middle" },
+    { key: "c2", label: "Gradient end" }
+  ];
 
   /* Zero-JavaScript HTML and CSS, pasted straight into a 360Learning HTML
      block. The typing animation is a master timeline: every character gets
@@ -1023,6 +1301,7 @@
   }
 
   function buildCompanion() {
+    var PC = uid("cw", stateSeed(companion));
     var phrases = companion.prompts
       .map(function(p) { return p.trim().slice(0, MAX_CHARS); })
       .filter(Boolean);
@@ -1053,6 +1332,9 @@
       spansHtml += '<span class="' + PC + "-ph " + PC + "-ph" + i + '">' + chars + "</span>";
       t0 += segs[i];
     });
+
+    var g = companion.c;
+    var C1 = g.c1, CM = g.cm, C2 = g.c2;
 
     var css =
 ".cw-wrap{container-type:inline-size;position:relative;width:100%;margin:0;overflow:hidden;background:transparent}\n" +
@@ -1146,8 +1428,18 @@ keyframes + charRules;
     overlay: "<strong>Choosing a photo:</strong> the text sits over the left of the image, so pick a shot whose left side is calm. Busy detail there fights the words even through the scrim. It’s cropped hard, so keep the subject off-centre to the right."
   };
 
-  function clone(o) { var n = {}; for (var k in o) n[k] = o[k]; return n; }
+  /* Own enumerable keys only. A bare for-in here would copy anything sitting on
+     Object.prototype into a palette, which is the second half of the hazard
+     `unsafeKey` closes at the other end. */
+  function clone(o) {
+    var n = {};
+    for (var k in o) {
+      if (Object.prototype.hasOwnProperty.call(o, k)) n[k] = o[k];
+    }
+    return n;
+  }
   hero.c = clone(PRESETS[0].c);
+  companion.c = clone(CW_PRESETS[0].c);
 
   function href() { return hero.linkMode === "internal" ? hero.hrefInternal : hero.hrefExternal; }
   function isOverlay() { return hero.layout === "overlay"; }
@@ -1354,6 +1646,12 @@ keyframes + charRules;
   // `preview` swaps in a placeholder tile when there’s no image yet, so the
   // real shape is visible while you work. The copyable code never contains it.
   function buildHero(preview) {
+    /* The seed is the settings, never the built output, so the preview and the
+       copyable code share one prefix. The preview swaps in a placeholder tile
+       when there is no photo yet; hashing the result would give those two
+       different class names and the preview would stop being the thing you
+       are about to paste. */
+    var PH = uid("hw", stateSeed(hero));
     var c = hero.c;
     var src = imgSrc();
     var ghost = preview && !src;
@@ -1378,10 +1676,11 @@ keyframes + charRules;
     var hasBtn = !!(link && btnText);
     if (hasBtn) {
       var ext = hero.linkMode === "external";
+      // no trailing arrow: the platform's own buttons are label and nothing
+      // else, and an arrow is what made this one look imported
       inner += '<a class="' + PH + '-btn" href="' + escAttr(link) + '"' +
         (ext ? ' target="_blank" rel="noopener noreferrer"' : "") + ">" +
         esc(btnText) +
-        '<span class="' + PH + '-arrow" aria-hidden="true">&#8594;</span>' +
         (ext ? '<span class="' + PH + '-sr"> (opens in a new tab)</span>' : "") +
         "</a>";
     }
@@ -1416,16 +1715,16 @@ keyframes + charRules;
        tinted shadow does nothing under a dark widget. */
     var pDark = lum(overlay ? oc.base : c.panel) < 0.22;
     var edge = pDark ? "rgba(255,255,255,0.10)" : rgba(c.heading, 0.10);
+    /* Tight, not dramatic. This used to spread 32px, which is a shadow that
+       lifts a marketing card off a landing page. The platform's own surfaces
+       barely cast one at all: the hairline does the separating and the shadow
+       only stops a pale panel from dissolving into a white homepage. */
     var shade = pDark
-      ? "0 1px 2px rgba(0,0,0,0.30),0 12px 32px rgba(0,0,0,0.24)"
-      : "0 1px 2px " + rgba(c.heading, 0.05) + ",0 12px 32px " + rgba(c.heading, 0.07);
+      ? "0 1px 2px rgba(0,0,0,0.28),0 4px 12px rgba(0,0,0,0.20)"
+      : "0 1px 2px " + rgba(c.heading, 0.04) + ",0 4px 12px " + rgba(c.heading, 0.05);
     var ring = pDark ? "rgba(255,255,255,0.12)" : rgba(c.heading, 0.10);
 
-    /* The button's shadow is tinted from the button itself, so a coloured
-       button casts its own colour. A white button on the overlay layout has
-       no usable tint of its own, so it borrows a dark one instead. */
     var bBg = overlay ? oc.btnBg : c.btnBg;
-    var bTint = lum(bBg) > 0.5 ? (pDark ? "#000000" : c.heading) : bBg;
 
     var css =
 // Plus Jakarta Sans is 360Learning’s own typeface, so asking for it by name
@@ -1438,7 +1737,7 @@ keyframes + charRules;
 // full-bleed banner on another, and a fixed 34px is generous in the first and
 // mean in the second.
 ".hw-panel{display:grid;" + cols + "gap:clamp(24px,3cqw,40px);align-items:center;" +
-  "padding:clamp(26px,3.2cqw,44px);border-radius:16px;" +
+  "padding:clamp(26px,3.2cqw,44px);border-radius:" + R_PANEL + ";" +
   "border:1px solid " + edge + ";box-shadow:" + shade + ";" +
   // a floor, not a fixed height: a full-bleed photo needs some depth to read
   // as a photo rather than a stripe, but short copy should still give a short
@@ -1470,24 +1769,21 @@ keyframes + charRules;
 ".hw-title{margin:0;font-size:clamp(24px,3.6cqw,36px);font-weight:800;line-height:1.14;letter-spacing:-0.022em;" +
   "text-wrap:balance;color:" + (overlay ? oc.heading : c.heading) + "}\n" +
 ".hw-accent{display:block;color:" + (overlay ? oc.accent : c.accent) + "}\n" +
-".hw-body{margin:15px 0 0;font-size:clamp(13.5px,1.5cqw,15px);font-weight:400;line-height:1.62;color:" +
+// The floor is 14.5px, not 13.5. A clamp's floor is not an edge case here: at
+// the 795px a real embed gets with the newsfeed open, 1.5cqw is 11.9px, so the
+// floor is the size this text renders at on most of the pages it lands on. It
+// only reached 15px past 1000px, which is the newsfeed collapsed. So the hero
+// was shipping its smallest body copy in its commonest column, a full point
+// under the platform's own 15px "Find more". The floor is now the size that
+// matters and the cap went with it.
+".hw-body{margin:15px 0 0;font-size:clamp(14.5px,1.5cqw,15.5px);font-weight:400;line-height:1.6;color:" +
   (overlay ? oc.body : c.body) + ";max-width:52ch;text-wrap:pretty}\n" +
 
 (hasBtn
-  // It lifts on hover and presses back down on click. A button that only
-  // changes brightness feels like a coloured rectangle; one that moves feels
-  // like something you pushed.
-  ? ".hw-btn{display:inline-flex;align-items:center;gap:9px;margin-top:26px;min-height:44px;padding:13px 26px;" +
-    "border-radius:999px;background:" + bBg + ";color:" + (overlay ? oc.btnFg : c.btnFg) + ";" +
-    "font-size:14.5px;font-weight:700;line-height:1.2;letter-spacing:-0.005em;text-decoration:none;" +
-    "box-shadow:0 1px 2px " + rgba(bTint, 0.24) + ",0 6px 16px " + rgba(bTint, 0.20) + ";" +
-    "transition:filter .15s ease,transform .15s ease,box-shadow .15s ease}\n" +
-    ".hw-btn:hover{filter:brightness(1.08);transform:translateY(-1px);text-decoration:none;color:" +
-      (overlay ? oc.btnFg : c.btnFg) + ";box-shadow:0 2px 4px " + rgba(bTint, 0.26) + ",0 10px 24px " + rgba(bTint, 0.24) + "}\n" +
-    ".hw-btn:active{transform:translateY(0);box-shadow:0 1px 2px " + rgba(bTint, 0.24) + "}\n" +
-    ".hw-btn:focus-visible{outline:2px solid " + bBg + ";outline-offset:3px}\n" +
-    ".hw-arrow{transition:transform .15s ease}\n" +
-    ".hw-btn:hover .hw-arrow{transform:translateX(3px)}\n" +
+  // the shared platform button, plus the one thing that is this layout's own
+  // business: how far it sits below the body copy
+  ? buttonCss("hw", bBg, overlay ? oc.btnFg : c.btnFg) +
+    ".hw-btn{margin-top:26px}\n" +
     ".hw-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);border:0}\n"
   : "") +
 
@@ -1502,7 +1798,7 @@ keyframes + charRules;
 (hasImg
   ? ".hw-img{display:block;width:100%;" +
     (overlay ? "height:100%;object-fit:cover"
-             : "height:auto;aspect-ratio:16/10;max-height:340px;object-fit:cover;border-radius:12px;" +
+             : "height:auto;aspect-ratio:16/10;max-height:340px;object-fit:cover;border-radius:" + R_CARD + ";" +
                "border:1px solid " + ring) + "}\n"
   : "") +
 (ghost
@@ -1511,8 +1807,8 @@ keyframes + charRules;
       // stacking context and lives on the right, where the photo shows through
       ? ".hw-ph{display:flex;align-items:center;justify-content:flex-end;height:100%;background:" + oc.base + ";padding:0 26px}\n" +
         ".hw-phl{position:relative;z-index:1;border:1.5px dashed rgba(255,255,255,0.6);color:rgba(255,255,255,0.92);" +
-        "padding:8px 14px;border-radius:999px;font-size:12.5px;font-weight:700}\n"
-      : ".hw-ph{display:flex;align-items:center;justify-content:center;aspect-ratio:16/10;max-height:340px;border-radius:12px;" +
+        "padding:8px 14px;border-radius:" + R_PILL + ";font-size:12.5px;font-weight:700}\n"
+      : ".hw-ph{display:flex;align-items:center;justify-content:center;aspect-ratio:16/10;max-height:340px;border-radius:" + R_CARD + ";" +
         "border:1px dashed " + c.body + ";color:" + c.body + ";opacity:.6;font-size:13px;font-weight:700}\n")
   : "") +
 
@@ -1529,12 +1825,8 @@ keyframes + charRules;
   (overlay && ghost ? ".hw-phl{display:none}" : "") +
   "}\n" +
 "@container (max-width:400px){.hw-panel{padding:20px}" +
-  (hasBtn ? ".hw-btn{width:100%;justify-content:center}" : "") + "}\n" +
-// transition:none alone would still let the hover lift snap into place, which
-// is the movement someone asking for reduced motion is asking not to see. The
-// button keeps its brightness and shadow change and loses the travel.
-(hasBtn ? "@media (prefers-reduced-motion:reduce){.hw-btn,.hw-arrow{transition:none}" +
-  ".hw-btn:hover,.hw-btn:active{transform:none}.hw-btn:hover .hw-arrow{transform:none}}\n" : "");
+  (hasBtn ? ".hw-btn{width:100%}" : "") + "}\n";
+  // reduced motion is handled inside buttonCss, with the rest of the button
 
     // Only the CSS is prefixed by search-and-replace. The markup is built with
     // the prefix already in place, because it carries user text: a heading or
@@ -1652,6 +1944,7 @@ keyframes + charRules;
     sizeNote.classList.toggle("heavy", kb > 120);
     syncNotes();
     checkContrast();
+    cwContrastReport();
     ctContrastReport();
     paint();
     saveSoon();   // every change already comes through here
@@ -2272,6 +2565,187 @@ keyframes + charRules;
     });
   }
 
+  /* ---- companion colours ----
+     The same three moves the other two widgets offer, in the same order:
+     pick a checked gradient, build one from a brand colour, or set the stops by
+     hand and watch the report. Nothing new to learn on the third widget. */
+  var cwColorInputs = {}, cwResetBtn = $("cwResetColors");
+  var cwLastPreset = CW_PRESETS[0];
+
+  function cwPresetButton(p) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "preset";
+    b.setAttribute("data-cwpreset", p.id);
+    b.setAttribute("aria-pressed", String(p.id === companion.preset));
+    var sw = document.createElement("div");
+    sw.className = "swatches";
+    // the three bands are the three stops, so the swatch is the gradient
+    [p.c.c1, p.c.cm, p.c.c2].forEach(function(col) {
+      var s = document.createElement("span");
+      s.style.background = col;
+      sw.appendChild(s);
+    });
+    b.appendChild(sw);
+    b.appendChild(document.createTextNode(p.name));
+    b.addEventListener("click", function() { cwApplyPreset(p); cwResetBtn.hidden = true; });
+    return b;
+  }
+  CW_PRESETS.forEach(function(p) { $("cwPresets").appendChild(cwPresetButton(p)); });
+
+  function cwEachPreset(fn) {
+    Array.prototype.forEach.call(document.querySelectorAll("#cwPresets [data-cwpreset]"), fn);
+  }
+
+  function cwApplyPreset(p) {
+    companion.preset = p.id;
+    cwLastPreset = p;
+    companion.c = clone(p.c);
+    cwEachPreset(function(el) {
+      el.setAttribute("aria-pressed", String(el.getAttribute("data-cwpreset") === p.id));
+    });
+    cwSyncColorInputs();
+    render(false);
+  }
+
+  function cwDropPreset() {
+    companion.preset = null;
+    cwEachPreset(function(el) { el.setAttribute("aria-pressed", "false"); });
+    cwResetBtn.textContent = "Reset to " + cwLastPreset.name;
+    cwResetBtn.hidden = false;
+  }
+
+  $("cwCustomToggle").addEventListener("click", function() {
+    var open = this.getAttribute("aria-expanded") === "true";
+    this.setAttribute("aria-expanded", String(!open));
+    $("cwCustomPanel").hidden = open;
+  });
+  $("cwBuildFromSeed").addEventListener("click", function() {
+    companion.c = cwGradient($("cwSeedColor").value);
+    cwDropPreset();
+    cwSyncColorInputs();
+    render(false);
+  });
+  cwResetBtn.addEventListener("click", function() { cwApplyPreset(cwLastPreset); cwResetBtn.hidden = true; });
+
+  CW_COLOR_FIELDS.forEach(function(fd) {
+    var wrap = document.createElement("div");
+    wrap.className = "cfield";
+    var lab = document.createElement("label");
+    lab.textContent = fd.label;
+    lab.setAttribute("for", "cwc_" + fd.key);
+    var row = document.createElement("div");
+    row.className = "row";
+
+    var swatch = document.createElement("input");
+    swatch.type = "color";
+    swatch.id = "cwc_" + fd.key;
+    swatch.value = companion.c[fd.key];
+
+    var hexIn = document.createElement("input");
+    hexIn.type = "text";
+    hexIn.value = companion.c[fd.key];
+    hexIn.maxLength = 7;
+    noAutofill(hexIn, true);
+    hexIn.setAttribute("aria-label", fd.label + " hex value");
+
+    swatch.addEventListener("input", function() {
+      companion.c[fd.key] = swatch.value;
+      hexIn.value = swatch.value;
+      cwDropPreset();
+      render(true);
+    });
+    hexIn.addEventListener("input", function() {
+      var v = hexIn.value.trim();
+      if (v && v.charAt(0) !== "#") v = "#" + v;
+      if (!isHex(v)) { hexIn.setAttribute("aria-invalid", "true"); return; }
+      hexIn.setAttribute("aria-invalid", "false");
+      if (v.length === 4) v = "#" + v[1] + v[1] + v[2] + v[2] + v[3] + v[3];
+      companion.c[fd.key] = v;
+      swatch.value = v;
+      cwDropPreset();
+      render(true);
+    });
+    hexIn.addEventListener("blur", function() {
+      hexIn.value = companion.c[fd.key];
+      hexIn.setAttribute("aria-invalid", "false");
+    });
+
+    row.appendChild(swatch);
+    row.appendChild(hexIn);
+    wrap.appendChild(lab);
+    wrap.appendChild(row);
+    $("cwColors").appendChild(wrap);
+    cwColorInputs[fd.key] = { swatch: swatch, hex: hexIn };
+  });
+
+  function cwSyncColorInputs() {
+    CW_COLOR_FIELDS.forEach(function(fd) {
+      cwColorInputs[fd.key].swatch.value = companion.c[fd.key];
+      cwColorInputs[fd.key].hex.value = companion.c[fd.key];
+      cwColorInputs[fd.key].hex.setAttribute("aria-invalid", "false");
+    });
+  }
+
+  /* ---- readability report ----
+     This widget had no contrast check of any kind until now, which made the
+     builder's promise untrue for one widget in three. It is the one whose
+     colours are type: the gradient is painted through the word "Companion"
+     with background-clip:text and the widget has no background of its own, so
+     every stop is a foreground colour on the host page. 360Learning's pages are
+     white, so white is what they are measured against.
+
+     Three rows rather than one, because a gradient that passes where it starts
+     can fail where it ends, and the platform's own pink is the proof: two of its
+     stops clear the bar comfortably and the third does not, which a single
+     verdict on the gradient as a whole would have hidden. Every gradient the
+     builder offers or works out now passes, so a warning here means somebody
+     set a stop by hand. */
+  function cwContrastReport() {
+    if (active !== "companion") { liveSwap($("cwContrast"), "", function() {}); return; }
+    var c = companion.c;
+    // terse, because these are rows in a list and the sentence above the report
+    // has already said the gradient is the colour of the word "Companion".
+    // Spelled out in full, every one of them wrapped to two lines.
+    var tests = [
+      ["The gradient, at the start", c.c1, "#ffffff", 4.5],
+      ["The gradient, in the middle", c.cm, "#ffffff", 4.5],
+      ["The gradient, at the end", c.c2, "#ffffff", 4.5],
+      // fixed in the generator, so this row is a guarantee rather than a check,
+      // and it is here because it is the text people actually read
+      ["The prompt text", "#18191D", "#ffffff", 4.5]
+    ];
+    var fails = 0;
+    var rows = tests.map(function(t) {
+      // an unparseable hex cannot be measured, and reporting a pass on a pair
+      // nothing measured is the one answer worse than reporting a fail
+      var ok = isHex(t[1]) && ratio(t[1], t[2]) >= t[3] - 0.02;
+      if (!ok) fails++;
+      return { label: t[0], ok: ok, r: isHex(t[1]) ? ratio(t[1], t[2]).toFixed(1) : "?" };
+    });
+
+    liveSwap($("cwChecks"), rows.map(function(x) { return x.label + x.ok + x.r; }).join(""), function(box) {
+      rows.forEach(function(x) {
+        var row = ctEl("div", "chk " + (x.ok ? "ok" : "bad"));
+        row.appendChild(ctEl("b", null, x.ok ? "PASS" : "FAIL"));
+        row.appendChild(ctEl("span", null, x.label));
+        row.appendChild(ctEl("span", "r", x.r + " to 1"));
+        box.appendChild(row);
+      });
+    });
+
+    /* Nothing the builder hands out can land here, so whoever is reading this
+       typed a colour in. Name the fix rather than the rule: darkening the stop
+       is the one-click answer, and rebuilding from a seed is the no-thought one. */
+    var verdict = fails
+      ? (fails === 1 ? "One part of the gradient is" : fails + " parts of the gradient are") +
+        " too pale to read on a white page. Make it darker, or build a gradient from one colour and every stop is worked out for you."
+      : "Every part of this gradient is comfortable to read.";
+    liveSwap($("cwContrast"), verdict, function(box) {
+      note(box, fails ? "warn" : "ok", verdict);
+    });
+  }
+
   /* ---- companion prompts ---- */
   var promptsEl = $("prompts"), addBtn = $("addPrompt");
 
@@ -2340,19 +2814,52 @@ keyframes + charRules;
   });
 
   /* ---- copy and download ---- */
+
+  /* The Copy button's label swaps to "Copied ✓" for two seconds, and a shorter
+     label used to drag the KB note and the Download button left with it and
+     then back again. Same bug the header's "Saved" note had, same fix: reserve
+     the width once and let the label change inside it.
+
+     Measured after the webfont lands, because the width of "Copy widget code"
+     in the fallback font is not the width it will be. The failure label is far
+     longer than either and will still grow the button, which is the one case
+     where a jump is worth less than the sentence. */
+  (function() {
+    var b = $("copy");
+    function reserve() {
+      b.style.minWidth = "";
+      b.style.minWidth = Math.ceil(b.getBoundingClientRect().width) + "px";
+    }
+    try {
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(reserve);
+      else reserve();
+    } catch (e) { reserve(); }
+  }());
+
   $("copy").addEventListener("click", function() {
     var btn = this, status = $("copyStatus");
     function done(ok) {
-      btn.textContent = ok ? "Copied \u2713" : "Copy failed. Select manually";
-      // the label swap alone only reaches a screen reader if focus happens to
-      // be sitting on the button, which it is not after a mouse click
+      /* Both labels are shorter than "Copy widget code", so neither can grow
+         past the width reserved above and nothing beside the button moves.
+         "Copy failed. Select manually" was the one that did: two words of
+         instruction crammed into a button label, 67px wider than the label it
+         replaced, shoving Download and the KB note sideways for two seconds. */
+      btn.textContent = ok ? "Copied \u2713" : "Copy failed";
+      /* The instruction goes in the status line instead, which is the last
+         thing in the row and so has nothing to its right to push. It is a live
+         region either way: the label swap alone only reaches a screen reader if
+         focus happens to be sitting on the button, which it is not after a
+         mouse click. On failure it is shown to everyone, because "Copy failed"
+         on its own does not say what to do next. */
       status.textContent = ok
         ? "Widget code copied to the clipboard."
-        : "Copy failed. Open Show the code and select it by hand.";
+        : "Open Show the code below and select it by hand.";
+      status.classList.toggle("shown", !ok);
       setTimeout(function() {
         btn.textContent = "Copy widget code";
         status.textContent = "";
-      }, 2000);
+        status.classList.remove("shown");
+      }, ok ? 2000 : 6000);
     }
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(snippet).then(function() { done(true); }, function() { done(false); });
@@ -2373,20 +2880,34 @@ keyframes + charRules;
       snippet + "</body></html>";
     var blob = new Blob([doc], { type: "text/html" });
     var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
+    var url = URL.createObjectURL(blob);
+    a.href = url;
     a.download = active === "hero" ? "hero-widget.html"
-      : active === "classroom" ? (ct.layout === "deck" ? "path-slides-widget.html" : "signpost-widget.html")
+      : active === "classroom" ? "path-slides-widget.html"
       : "ai-companion-widget.html";
+    /* In the document, and revoked on the next turn of the loop rather than on
+       this one. Chrome tolerates a detached anchor and a URL revoked in the
+       same tick; Firefox and Safari have both historically dropped the download
+       in exactly that shape, so a link that worked on the machine it was
+       written on silently did nothing elsewhere. */
+    a.style.display = "none";
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(a.href);
+    setTimeout(function() {
+      URL.revokeObjectURL(url);
+      if (a.parentNode) a.parentNode.removeChild(a);
+    }, 0);
   });
 
   /* ================================================================
      Live training
 
      Two layouts sharing one set of content, one palette and one preview:
-     a Signpost that hands off to the classrooms tab, and Path slides that
-     page through a few programmes one at a time.
+     one layout, Path slides, which pages through a few programmes one at a
+     time. A second layout, a Signpost that put three featured paths in a row,
+     was built and then removed on 2026-07-30: the deck does the same job with
+     more room to sell, and two layouts sharing one palette and one preview was
+     twice the surface for one purpose.
 
      Everything here is prefixed `ct`, because it lives in the same closure
      as the other two widgets and several of the names would otherwise
@@ -2400,8 +2921,6 @@ keyframes + charRules;
      so both layouts hand off to it rather than duplicating it into
      something that goes stale the moment a date moves.
      ================================================================ */
-
-  var PS = uid("cts"), PD = uid("ctd");
 
   /* ---- palette ----
      These widgets need three roles the hero banner never did: a card
@@ -2422,7 +2941,7 @@ keyframes + charRules;
         dark: true, panel: dp, panel2: dp2, card: card, line: line,
         heading: "#ffffff", accent: accent,
         body: walkTo(hslToHex(h, 0.16, 0.8), bgs, 4.6, 1),
-        btnBg: "#ffffff", btnFg: dp
+        btnBg: "#ffffff", btnFg: dp, tile: null
       };
     }
     var ps = Math.min(0.5, 0.2 + s.s * 0.3);
@@ -2437,7 +2956,16 @@ keyframes + charRules;
       heading: hslToHex(h, 0.38, 0.1), accent: accent,
       body: walkTo(hslToHex(h, 0.13, 0.34), bgs, 4.6, -1),
       btnBg: walkTo(accent, ["#ffffff"], 4.6, -1),
-      btnFg: "#ffffff"
+      btnFg: "#ffffff",
+      /* Explicitly null, never absent, and that is a bug fix. `absorb` merges a
+         restored state key by key rather than replacing the object, so that the
+         live references the panel holds stay valid. The cost is that a key which
+         exists on the current palette and not on the incoming one survives the
+         merge. Only the monochrome palettes state a tile, so picking Black and
+         then pressing Start over left the black tile sitting under Mist's
+         colours: a black thumbnail beside a blue button. Every palette declaring
+         the role, even as null, is what makes the merge total. */
+      tile: null
     };
   }
 
@@ -2447,6 +2975,63 @@ keyframes + charRules;
   function ctChip(c) {
     var bg = blend(c.accent, c.card, c.dark ? 0.22 : 0.10);
     return { bg: bg, fg: walkTo(c.accent, [bg], 4.6, c.dark ? 1 : -1) };
+  }
+
+  /* ---- the programme tile ----
+     360Learning generates a gradient thumbnail with the item's name typeset
+     on it for any catalogue content that has no uploaded photo. Every course
+     on a group page without a cover image is drawn that way. So this is not
+     an invention, it is the platform's own fallback, reproduced from the
+     palette so a widget's tiles sit in a row of real ones without announcing
+     themselves.
+
+     The lightness is walked rather than fixed, because a fixed one cannot
+     survive the hue. A yellow accent and a blue accent at the same HSL
+     lightness are nowhere near the same brightness, so a band that carries
+     white comfortably under blue puts white on pale yellow under yellow.
+     This walks down from a mid tone until white clears 4.8:1 on it, then
+     derives the gradient's far end darker still, which means white is
+     guaranteed on both ends for every palette and both modes with no
+     branching and nothing to get wrong later. */
+  function ctTile(c) {
+    /* A palette may state its own tile, and the two monochrome palettes are why.
+       The walk below derives the tile from the accent's hue and saturation but
+       always starts its descent from the same lightness, so it answers the
+       question "how dark must this hue be to carry white". Two neutral palettes
+       ask the same question and get the same answer, which would give the black
+       palette and the grey one an identical grey tile. Stating the pair is the
+       honest way out. Both ends are still measured against white in the
+       readability report, exactly as a walked tile is.
+
+       Both ends are hex-checked, and that is a security check rather than a
+       tidiness one. Every other colour role is validated by `cleanColors` on the
+       way in, which only knows about the roles the default palette has, and the
+       default palette has no tile. So a restored state is the one place a tile
+       can arrive from outside this session, and it lands in a
+       `linear-gradient(...)` value: without this, a crafted share link could
+       close the declaration and write its own CSS. A tile that fails falls
+       through to the walk below, which cannot be anything but a colour. */
+    if (c.tile && isHex(c.tile[0]) && isHex(c.tile[1])) {
+      return { start: c.tile[0], end: c.tile[1], fg: "#ffffff" };
+    }
+    var a = hslOf(c.accent);
+    /* The 0.25 saturation floor stops a mid-grey tile reading as dead, and it is
+       precisely wrong for a palette that is grey on purpose. An accent that is
+       already all but colourless keeps its own saturation. Nothing derived from
+       a seed can reach this branch: buildPalette forces accent saturation to at
+       least 0.5, and walkTo only ever moves lightness. */
+    var s = a.s < 0.06 ? a.s : Math.min(0.72, Math.max(0.25, a.s));
+    var start = hslToHex(a.h, s, 0.05);
+    for (var l = 0.44; l >= 0.05; l -= 0.02) {
+      var cand = hslToHex(a.h, s, l);
+      if (ratio("#ffffff", cand) >= 4.8) { start = cand; break; }
+    }
+    var sh = hslOf(start);
+    return {
+      start: start,
+      end: hslToHex(sh.h + 10, Math.min(0.8, sh.s + 0.05), Math.max(0.05, sh.l - 0.13)),
+      fg: "#ffffff"
+    };
   }
 
   /* The quiet tone. A dot you have not reached and the edge of the Back and
@@ -2475,7 +3060,54 @@ keyframes + charRules;
   var CT_CURATED = CURATED.map(function(p) {
     return { id: p.id, name: p.name, mood: p.mood, c: ctPalette(p.seed, p.mood === "dark") };
   });
-  var CT_RECOMMENDED = ["mist", "seafoam", "royal", "violet", "terracotta", "honey", "navy"];
+
+  /* ---- the two monochrome palettes ----
+     Written out rather than grown from a seed, because the seed path cannot
+     reach them. `ctPalette` floors the panel saturation at 0.2 and the accent's
+     at 0.5, which is right for the twenty-five coloured palettes and makes a
+     neutral one impossible: hand it grey and it returns a tinted panel under a
+     saturated accent.
+
+     These are not the "Dark" mood palettes. Those invert the widget, put a
+     white heading on a dark panel, and therefore cannot be used without a
+     panel at all: `ctEnforcePanel` disables that combination, because a white
+     heading on a white 360Learning page is not there. These two are ordinary
+     light-mode palettes whose ink happens to be black and grey, so they work
+     with no panel like every other palette in the list, which is the whole
+     point of them. `dark: false` is doing real work on both.
+
+     Every value below is measured, not chosen by eye: all seventeen pairings
+     in the readability report pass, and the tile ends carry white at better
+     than 4.5:1. The two differ in ink weight rather than in hue, so Black
+     reads as a statement and Grey as a quiet one. */
+  var CT_MONO = [
+    {
+      id: "black", name: "Black", mood: "dark",
+      c: {
+        dark: false, panel: "#f4f4f5", panel2: "#e8e8ea", card: "#ffffff", line: "#e4e4e7",
+        heading: "#111114", accent: "#3f3f46", body: "#52525b",
+        btnBg: "#18181b", btnFg: "#ffffff", tile: ["#2b2b30", "#141417"]
+      }
+    },
+    {
+      id: "grey", name: "Grey", mood: "dark",
+      c: {
+        dark: false, panel: "#f5f5f6", panel2: "#eaeaec", card: "#ffffff", line: "#e6e6e9",
+        heading: "#2c2c33", accent: "#3f3f46", body: "#63636d",
+        btnBg: "#4b4b53", btnFg: "#ffffff", tile: ["#66666e", "#47474e"]
+      }
+    }
+  ];
+  CT_CURATED = CT_CURATED.concat(CT_MONO);
+
+  /* The palette the widget starts on comes first, on every widget, so that the
+     swatch sitting in the top-left is the one already selected. Black and grey
+     follow it rather than leading, because leading meant the first swatch in the
+     row was not the one pressed, which reads as the builder having lost track of
+     itself. They are still in the always-visible row: "can I have this without
+     the colour" is a common enough first question that it should not need More
+     palettes to answer. */
+  var CT_RECOMMENDED = ["mist", "black", "grey", "seafoam", "royal", "violet", "terracotta", "honey", "navy"];
   function ctById(id) {
     for (var i = 0; i < CT_CURATED.length; i++) if (CT_CURATED[i].id === id) return CT_CURATED[i];
     return CT_CURATED[0];
@@ -2493,9 +3125,10 @@ keyframes + charRules;
     { v: "days",    one: "day",    many: "days" },
     { v: "weeks",   one: "week",   many: "weeks" }
   ];
-  var CT_EVERY = ["week", "fortnight", "month", "quarter", "term"];
   var CT_FORMATS = [
-    { v: "virtual",  t: "Virtual classroom" },
+    // "Virtual" on its own. The word classroom was doing no work next to it
+    // and it is the pill that decides whether the pair fits on one line.
+    { v: "virtual",  t: "Virtual" },
     { v: "inperson", t: "In person" },
     { v: "both",     t: "Virtual or in person" }
   ];
@@ -2514,51 +3147,31 @@ keyframes + charRules;
     for (var i = 0; i < CT_FORMATS.length; i++) if (CT_FORMATS[i].v === f) return CT_FORMATS[i].t;
     return CT_FORMATS[0].t;
   }
-  function ctCadence(c) { return c && c.on ? "New dates every " + c.every : ""; }
-  function ctHasRoom(f) { return f === "inperson" || f === "both"; }
-
-  var CT_LAYOUT_HINTS = {
-    signpost: "The everyday widget. One button to the classrooms tab, and up to three featured paths underneath, each linking straight to its page.",
-    deck: "The hero paths, one slide at a time, with Next to reach the rest. A link to the full calendar sits beside the heading, so the deck can market a few without hiding the rest."
-  };
 
   /* Two separate content lists, because a customer may install only one of
      the two layouts and their copy has no reason to match. */
   var ct = {
-    c: clone(ctById("mist").c), presetId: "mist", layout: "signpost", fill: "flat",
-
-    w1: {
-      eyebrow: "Live and in person training",
-      title: "See what is coming up",
-      body: "Every session, with its dates, its trainer and the places still free, is on the classrooms tab. It updates itself as new sessions are added.",
-      btnText: "See all sessions",
-      btnHref: "/home/content/classrooms",
-      featOn: true,
-      featLabel: "Featured paths",
-      moreLabel: "Learn more",
-      items: [
-        { title: "Giving Great Feedback", format: "virtual", where: "", trainer: "Priya Raman",
-          dur: { n: 2, unit: "hours" }, href: "/paths/giving-great-feedback" },
-        { title: "Presenting with Confidence", format: "both", where: "Head office and online", trainer: "",
-          dur: { n: 0.5, unit: "days" }, href: "/paths/presenting-with-confidence" },
-        { title: "First Aid Essentials", format: "inperson", where: "Head office", trainer: "",
-          dur: { n: 3, unit: "hours" }, href: "/paths/first-aid-essentials" }
-      ]
-    },
+    // `layout` is gone. A saved link or a pasted widget from before
+    // 2026-07-30 may still carry it, and absorb() will happily set it; nothing
+    // reads it, so there is nothing to migrate.
+    c: clone(ctById("mist").c), presetId: "mist", fill: "none",
 
     w2: {
       heading: "Workshops worth clearing your diary for",
+      // whatever the customer calls the person at the front. Empty prints the
+      // name on its own, for anyone who would rather not label it at all.
+      trainerLabel: "Trainer",
       allOn: true,
       allText: "See all sessions",
       allHref: "/home/content/classrooms",
-      ctaText: "See dates and enroll",
+      ctaText: "See dates and book",
       cols: { obj: true, who: true, why: true },
       labels: { obj: "What you’ll learn", who: "Who’s it for", why: "Why you’ll love it" },
       slides: [
         {
-          title: "Giving Great Feedback", format: "virtual", where: "", trainer: "Priya Raman",
-          dur: { n: 2, unit: "hours" }, cad: { on: true, every: "month" },
-          summary: "Practise feedback that actually lands, with live roleplay and coaching from your peers.",
+          title: "Giving Great Feedback", format: "virtual", trainer: "Priya Raman",
+          dur: { n: 2, unit: "hours" },
+          summary: "",
           obj: [
             "Frame feedback so it gets heard rather than defended",
             "Turn a vague concern into a specific, fair ask",
@@ -2569,9 +3182,9 @@ keyframes + charRules;
           href: "/paths/giving-great-feedback"
         },
         {
-          title: "Presenting with Confidence", format: "both", where: "Head office and online", trainer: "",
-          dur: { n: 0.5, unit: "days" }, cad: { on: true, every: "quarter" },
-          summary: "Build a talk people remember, and deliver it without the nerves taking over.",
+          title: "Presenting with Confidence", format: "both", trainer: "Ivo Karagyozov",
+          dur: { n: 0.5, unit: "days" },
+          summary: "",
           obj: [
             "Open with something better than an agenda slide",
             "Cut a rambling deck down to one clear message",
@@ -2582,9 +3195,9 @@ keyframes + charRules;
           href: "/paths/presenting-with-confidence"
         },
         {
-          title: "First Aid Essentials", format: "inperson", where: "Head office", trainer: "",
-          dur: { n: 3, unit: "hours" }, cad: { on: true, every: "month" },
-          summary: "Hands on practice in the basics that matter most in the first five minutes of an emergency.",
+          title: "First Aid Essentials", format: "inperson", trainer: "Dai Whitlock",
+          dur: { n: 3, unit: "hours" },
+          summary: "",
           obj: [
             "Know exactly what to do before help arrives",
             "Practise CPR and the recovery position on real kit",
@@ -2598,7 +3211,24 @@ keyframes + charRules;
     }
   };
 
-  var CT_MAX_ITEMS = 3, CT_MAX_SLIDES = 5, CT_MAX_OBJ = 4;
+  /* 60 characters a line. The field capped at 90 and showed no counter, so the
+     only way to find the limit was to hit it.
+
+     70 was the cap before, on the stated grounds that it keeps a bullet to one
+     line. Measured on 2026-07-30, it does not. With the newsfeed open a real
+     embed gets about 795px, which leaves the bullet column 254px, and at 14px
+     that holds roughly 36 characters: every one of the sample bullets wraps to
+     two lines there. One line only ever held at 1100px and up, which is the
+     newsfeed collapsed.
+
+     So the cap is no longer pretending to buy a single line, because at this
+     width nothing short enough to say anything can. What it buys is a bullet
+     that never runs past two lines, which is the point at which it stops
+     reading as a bullet and starts reading as a paragraph with a dot. The
+     hanging indent already makes the second line look deliberate. The field's
+     own guidance says two lines rather than one, so the counter and the sentence
+     beside it now describe the same widget. */
+  var CT_MAX_SLIDES = 5, CT_MAX_OBJ = 4, CT_MAX_OBJ_CHARS = 60;
 
   /* ---- snippet helpers ---- */
 
@@ -2620,17 +3250,19 @@ keyframes + charRules;
      scripts, and a font or a PNG is one more thing that can fail to load.
      These inherit their colour from the text beside them. */
   var CT_ICON = {
-    cal:    '<rect x="2.6" y="3.6" width="12.8" height="11.8" rx="2.2"/><path d="M2.6 7.4h12.8M6 2.2v2.8M12 2.2v2.8"/>',
-    clock:  '<circle cx="9" cy="9" r="6.4"/><path d="M9 5.3V9l2.6 1.6"/>',
-    pin:    '<path d="M9 15.8s4.9-4.5 4.9-8A4.9 4.9 0 0 0 4.1 7.8c0 3.5 4.9 8 4.9 8z"/><circle cx="9" cy="7.6" r="1.9"/>',
-    user:   '<circle cx="9" cy="6.2" r="2.7"/><path d="M3.8 15.1a5.2 5.2 0 0 1 10.4 0"/>',
-    repeat: '<path d="M3 8.2a6 6 0 0 1 10.2-3.4L15.4 7"/><path d="M15.4 3.6V7h-3.4"/><path d="M15 9.8a6 6 0 0 1-10.2 3.4L2.6 11"/><path d="M2.6 14.4V11H6"/>'
+    // the platform draws its carousel controls with chevrons, so Back and Next
+    // do too. Real strokes from this icon set rather than the loose ← and →
+    // text glyphs they replace, which rendered at whatever weight and baseline
+    // the reader's fallback font happened to have.
+    chevL:  '<path d="M11.2 4.2 6.4 9l4.8 4.8"/>',
+    chevR:  '<path d="M6.8 4.2 11.6 9l-4.8 4.8"/>'
   };
   function ctSvg(P, name) {
     return '<svg class="' + P + '-i" viewBox="0 0 18 18" aria-hidden="true" focusable="false">' + CT_ICON[name] + "</svg>";
   }
 
   function ctPanelBg(c, fill) {
+    if (fill === "none") return "transparent";
     return fill === "gradient"
       ? "linear-gradient(115deg," + c.panel + " 0%," + c.panel2 + " 100%)"
       : c.panel;
@@ -2651,51 +3283,141 @@ keyframes + charRules;
     var d = c.dark;
     return {
       edge: rgba(c.heading, d ? 0.11 : 0.09),
-      panel: d ? "0 1px 2px rgba(0,0,0,0.30),0 12px 32px rgba(0,0,0,0.24)"
-                : "0 1px 2px " + rgba(c.heading, 0.05) + ",0 12px 32px " + rgba(c.heading, 0.07),
-      card: d ? "none" : "0 1px 2px " + rgba(c.heading, 0.04) + ",0 4px 12px " + rgba(c.heading, 0.05),
-      cardUp: d ? "none" : "0 2px 4px " + rgba(c.heading, 0.05) + ",0 10px 24px " + rgba(c.heading, 0.10),
-      // a pale button has no usable tint of its own, so it borrows a dark one
-      btn: lum(c.btnBg) > 0.5 ? (d ? "#000000" : c.heading) : c.btnBg
+      // tight rather than dramatic: 32px of blur lifts a marketing card off a
+      // landing page, and this is a product surface sitting among others
+      panel: d ? "0 1px 2px rgba(0,0,0,0.28),0 4px 12px rgba(0,0,0,0.20)"
+                : "0 1px 2px " + rgba(c.heading, 0.04) + ",0 4px 12px " + rgba(c.heading, 0.05),
+      /* A slide is flat. A course card on a 360Learning group page is a white
+         rectangle with a hairline round it and no shadow at all, so anything
+         softly floating is the tell that this widget was drawn elsewhere. The
+         hairline does the separating. */
+      card: "none"
     };
   }
 
-  // `pad` is a full CSS length, usually a clamp on container width: the same
-  // widget is a sidebar strip on one page and a full-bleed banner on another,
-  // and one fixed number cannot be right in both.
-  function ctBaseCss(c, fill, pad) {
+  /* Scales with the column the widget lands in, not the viewport: the same
+     widget is a sidebar strip on one page and a full-bleed banner on another,
+     and one fixed number cannot be right in both. Only used when there is a
+     panel to pad. */
+  var CT_PAD = "clamp(22px,2.8cqw,32px)";
+
+  function ctBaseCss(c, fill) {
     var t = ctTone(c);
+    /* No panel is the default, and it is the single biggest thing that decides
+       whether these widgets look like part of the page or like something
+       pasted into it. A 360Learning content row has no container at all: the
+       section heading sits on the page background, its "Find more" sits
+       opposite, and only the cards carry a border. Wrapping all of that in a
+       tinted rounded box with its own shadow reads as an embed, and its
+       padding pushes the heading and the cards a further 32px in from the left
+       margin every other row on the page lines up to.
+
+       Taking the panel away fixes the frame, the tint and the misalignment in
+       one move, and takes about 64px of height with it. The panel is still
+       there for anyone who wants the widget to read as a deliberate marketing
+       block rather than as catalogue content. */
+    var bare = fill === "none";
     return ".ct-wrap{container-type:inline-size;width:100%;margin:0}\n" +
       ".ct-wrap *{box-sizing:border-box}\n" +
-      ".ct-panel{padding:" + pad + ";border-radius:16px;background:" + ctPanelBg(c, fill) +
-        ";border:1px solid " + t.edge + ";box-shadow:" + t.panel +
-        ";font-family:" + FONT_STACK + "}\n" +
+      ".ct-panel{font-family:" + FONT_STACK +
+        (bare ? "" :
+          ";padding:" + CT_PAD + ";border-radius:" + R_PANEL + ";background:" + ctPanelBg(c, fill) +
+          ";border:1px solid " + t.edge + ";box-shadow:" + t.panel) + "}\n" +
       ".ct-i{width:15px;height:15px;flex:none;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}\n" +
       ".ct-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);border:0}\n";
   }
 
-  // Same button as the hero banner, on purpose: someone running both widgets
-  // on one homepage should not be able to tell they came from two builders.
-  // It lifts on hover and presses back down on click, because a button that
-  // only changes brightness feels like a coloured rectangle.
-  function ctBtnCss(c) {
-    var t = ctTone(c);
-    return ".ct-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:11px 22px;" +
-      "border-radius:999px;background:" + c.btnBg + ";color:" + c.btnFg + ";font-size:13.5px;font-weight:700;line-height:1.2;" +
-      "letter-spacing:-0.005em;text-decoration:none;" +
-      "box-shadow:0 1px 2px " + rgba(t.btn, 0.24) + ",0 6px 16px " + rgba(t.btn, 0.20) + ";" +
-      "transition:filter .15s ease,transform .15s ease,box-shadow .15s ease}\n" +
-      ".ct-btn:hover{filter:brightness(1.08);transform:translateY(-1px);text-decoration:none;color:" + c.btnFg +
-        ";box-shadow:0 2px 4px " + rgba(t.btn, 0.26) + ",0 10px 24px " + rgba(t.btn, 0.24) + "}\n" +
-      ".ct-btn:active{transform:translateY(0);box-shadow:0 1px 2px " + rgba(t.btn, 0.24) + "}\n" +
-      ".ct-btn:focus-visible{outline:2px solid " + c.btnBg + ";outline-offset:3px}\n" +
-      ".ct-arrow{transition:transform .15s ease}\n" +
-      ".ct-btn:hover .ct-arrow{transform:translateX(3px)}\n" +
-      // transition:none alone would still let the lift snap into place, which
-      // is the movement someone asking for reduced motion asked not to see
-      "@media (prefers-reduced-motion:reduce){.ct-btn,.ct-arrow{transition:none}" +
-        ".ct-btn:hover,.ct-btn:active{transform:none}.ct-btn:hover .ct-arrow{transform:none}}\n";
+  /* ---- the header ----
+     Heading and the link to everything else share one baseline. That is how a
+     group page sets a section title against its "Find more", and it is why
+     there is no standalone button here: on this platform the section-level
+     action is a link, and there is only one of them. */
+  function ctHeadHtml(P, heading, linkText, href) {
+    var h = ctSafe(href), txt = ctTrim(linkText);
+    var link = (h && txt)
+      ? '<a class="' + P + '-link" href="' + escAttr(h) + '"' +
+        (ctExternal(h) ? ' target="_blank" rel="noopener noreferrer"' : "") + ">" + esc(txt) +
+        (ctExternal(h) ? '<span class="' + P + '-sr"> (opens in a new tab)</span>' : "") + "</a>"
+      : "";
+    if (!ctTrim(heading) && !link) return "";
+    /* The heading is one flex item and the link is the other, so the link sits
+       on the heading's baseline over on the right, which is how a group page
+       sets a section title against its "Find more". */
+    return '<div class="' + P + '-head"><div class="' + P + '-htext">' +
+      (ctTrim(heading) ? '<h2 class="' + P + '-h">' + esc(ctTrim(heading)) + "</h2>" : "") +
+      "</div>" + link + "</div>";
   }
+  function ctHeadCss(c) {
+    return ".ct-head{display:flex;align-items:baseline;justify-content:space-between;gap:4px 16px;flex-wrap:wrap;margin:0}\n" +
+      // a block's first baseline is its first line box, so the link still
+      // aligns to the heading rather than to the description under it
+      ".ct-htext{min-width:0;flex:1 1 auto}\n" +
+      /* 21px at the top, not 25. Measured against a real group page: the
+         platform's own section headings sit around 20px, and four extra pixels
+         is enough to make the widget's heading the loudest thing in a column
+         of otherwise equal sections. balance stops a marketing line dropping
+         one word onto a line of its own. */
+      /* A flat 18px at 600, and deliberately not a clamp. Measured by cropping
+         "On the Job: A Day in the Life" out of a real group page and comparing
+         ink heights and stem widths in pixels: 18 ink, 3.08 mean stem, which is
+         18px at 600.
+
+         The clamp was the actual bug. The platform sets its section headings at
+         one fixed size whatever the column is doing, so a heading that scales
+         with container width can only match at a single width and is wrong
+         everywhere else. At 1020px this rendered 17.3px and read visibly
+         smaller than the row beneath it; at 1760px it rendered 18px and
+         matched. Nothing about a section label should depend on how wide its
+         section happens to be. */
+      ".ct-h{margin:0;font-size:18px;font-weight:600;line-height:1.25;" +
+        "letter-spacing:-0.02em;text-wrap:balance;color:" + c.heading + "}\n" +
+      linkCss("ct", c.accent) +
+      // 44px of hit area on a link drawing 18px of text, pulled back out again
+      // so it cannot push the header taller or float off the heading's baseline
+      ".ct-link{margin:-13px 0}\n";
+  }
+
+  /* ---- the card ----
+     A gradient tile carrying the programme name, then a row of small meta
+     pills. That row is lifted from the home-page course card, where "3min"
+     sits in an outlined pill beside the status ones. Duration as a pill rather
+     than a headline is also what survives a deck of programmes that all happen
+     to run for an hour. */
+  function ctCardCss(c) {
+    var ch = ctChip(c), tl = ctTile(c), edge = ctEdge(c);
+    return ".ct-tile{position:relative;display:flex;flex-direction:column;justify-content:center;" +
+        "align-items:center;text-align:center;padding:18px 20px;overflow:hidden;" +
+        "background:linear-gradient(140deg," + tl.start + " 0%," + tl.end + " 100%)}\n" +
+      // the platform's generated tiles carry a soft light off the top corner
+      ".ct-tile::after{content:'';position:absolute;inset:0;pointer-events:none;" +
+        "background:radial-gradient(120% 90% at 20% 0%,rgba(255,255,255,0.20),transparent 60%)}\n" +
+      // the same 700 as a platform card title
+      ".ct-tt{position:relative;z-index:1;margin:0;font-size:16px;font-weight:700;line-height:1.25;" +
+        "letter-spacing:-0.015em;text-wrap:balance;color:" + tl.fg + "}\n" +
+      ".ct-pills{display:flex;flex-wrap:wrap;gap:6px;margin:0}\n" +
+      // 11.5px, up with the body copy: a chip a full 3px under the words around
+      // it stops reading as a label and starts reading as a footnote
+      ".ct-pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:" + R_PILL + ";" +
+        "font-size:11.5px;font-weight:700;line-height:1.45;white-space:nowrap}\n" +
+      ".ct-dur{border:1px solid " + edge + ";color:" + c.heading + "}\n" +
+      ".ct-mode{background:" + ch.bg + ";color:" + ch.fg + "}\n";
+  }
+
+  // duration and format, in that order, because that is the order the
+  // home-page card puts them in
+  function ctPillsHtml(P, p) {
+    var bits = "";
+    var d = ctDur(p.dur);
+    if (d) bits += '<span class="' + P + "-pill " + P + '-dur">' + esc(d) + "</span>";
+    bits += '<span class="' + P + "-pill " + P + '-mode">' + esc(ctFormat(p.format)) + "</span>";
+    return '<p class="' + P + '-pills">' + bits + "</p>";
+  }
+
+  // Literally the hero banner's button, from the same function: someone
+  // running both widgets on one homepage should not be able to tell they came
+  // from two builders. This used to be a second copy of the rules that drifted
+  // by a pixel and half a font size.
+  function ctBtnCss(c) { return buttonCss("ct", c.btnBg, c.btnFg); }
 
   /* No link, no button. An <a href="#"> looks exactly like a working call to
      action and does nothing at all when a learner clicks it, which is worse
@@ -2707,61 +3429,88 @@ keyframes + charRules;
     var ext = ctExternal(h);
     return '<a class="' + P + '-btn" href="' + escAttr(h) + '"' +
       (ext ? ' target="_blank" rel="noopener noreferrer"' : "") + ">" + esc(txt) +
-      '<span class="' + P + '-arrow" aria-hidden="true">&#8594;</span>' +
       (ext ? '<span class="' + P + '-sr"> (opens in a new tab)</span>' : "") + "</a>";
   }
 
-  // How long it runs, how often, where, and who leads it. The format is
-  // deliberately absent: the tag above the title already says it. None of
-  // this goes stale, and the trainer’s name is the one piece that sells.
-  function ctFactsHtml(P, p) {
-    var bits = [];
-    var d = ctDur(p.dur);
-    if (d) bits.push('<span class="' + P + '-f">' + ctSvg(P, "clock") + esc(d) + "</span>");
-    var cad = ctCadence(p.cad);
-    if (cad) bits.push('<span class="' + P + '-f">' + ctSvg(P, "repeat") + esc(cad) + "</span>");
-    if (ctHasRoom(p.format) && ctTrim(p.where)) {
-      bits.push('<span class="' + P + '-f">' + ctSvg(P, "pin") + esc(ctTrim(p.where)) + "</span>");
-    }
-    if (ctTrim(p.trainer)) {
-      bits.push('<span class="' + P + '-f">' + ctSvg(P, "user") + esc(ctTrim(p.trainer)) + "</span>");
-    }
-    return bits.length ? '<p class="' + P + '-facts">' + bits.join("") + "</p>" : "";
-  }
-  function ctFactsCss(c) {
-    return ".ct-facts{margin:8px 0 0;display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;font-weight:600;line-height:1.4;color:" + c.body + "}\n" +
-      ".ct-f{display:inline-flex;align-items:center;gap:6px}\n";
-  }
+  /* There is no facts row any more, on either layout, and that is the point.
+     Everything that used to sit in one turned out to be either a fact the tile
+     already carries, or a session detail dressed as a programme detail:
+
+       duration and format  now pills on the tile
+       who leads it         now the line under the title
+       how often it runs    a promise about a schedule, wrong the first month
+                            somebody skips it
+       where it happens     a programme runs in many rooms over its life, so
+                            this went stale exactly the way a date does, which
+                            is the reason these widgets never carried dates
+
+     What is left is a programme's name, its shape and its link, none of which
+     rot. Anything a learner needs about a specific sitting is on the page the
+     link goes to, where the platform keeps it current for free. */
 
   /* A column renders only when it is ticked on, has content on this slide,
      and has a title. Unticking a column drops it from every slide at once. */
-  function ctSectionsHtml(P, p, w) {
-    var out = "";
+  /* The bullet list and the call to action share the wide track, and the two
+     short prose blocks share the narrow one.
+
+     The button used to sit below the whole grid, which meant the tallest
+     column set the height and then the button added its own row underneath.
+     On a normal slide that left a hand-sized hole under the bullets and put
+     roughly fifty pixels of nothing into every deck. It now sits at the foot
+     of its own column, so it fills that hole and lines up with the bottom of
+     the prose beside it. */
+  function ctSectionsHtml(P, p, w, cta) {
+    var main = "", side = "";
+    function sec(label, body) {
+      return '<div class="' + P + '-sec"><h4 class="' + P + '-sh">' + esc(label) + "</h4>" + body + "</div>";
+    }
     var objs = (p.obj || []).map(ctTrim).filter(Boolean);
     if (w.cols.obj && objs.length && ctTrim(w.labels.obj)) {
-      out += '<div class="' + P + '-sec"><h4 class="' + P + '-sh">' + esc(ctTrim(w.labels.obj)) + '</h4><ul class="' + P + '-ul">' +
-        objs.map(function(t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul></div>";
+      main += sec(ctTrim(w.labels.obj), '<ul class="' + P + '-ul">' +
+        objs.map(function(t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul>");
     }
     if (w.cols.who && ctTrim(p.who) && ctTrim(w.labels.who)) {
-      out += '<div class="' + P + '-sec"><h4 class="' + P + '-sh">' + esc(ctTrim(w.labels.who)) + '</h4><p class="' + P + '-p">' + esc(ctTrim(p.who)) + "</p></div>";
+      side += sec(ctTrim(w.labels.who), '<p class="' + P + '-p">' + esc(ctTrim(p.who)) + "</p>");
     }
     if (w.cols.why && ctTrim(p.why) && ctTrim(w.labels.why)) {
-      out += '<div class="' + P + '-sec"><h4 class="' + P + '-sh">' + esc(ctTrim(w.labels.why)) + '</h4><p class="' + P + '-p">' + esc(ctTrim(p.why)) + "</p></div>";
+      side += sec(ctTrim(w.labels.why), '<p class="' + P + '-p">' + esc(ctTrim(p.why)) + "</p>");
     }
-    return out;
+    if (!main && !side && !cta) return "";
+    /* Bullets, then prose, then the button, in that order, because that is the
+       order it should be read in. The button is placed into the wide layout's
+       left column by grid rather than by living inside it, which is what lets
+       the reading order and the painted order agree at every width. An earlier
+       version nested it in .ct-main and used `order` to move it last on a
+       phone: `order` moves paint and leaves the DOM alone, so a screen reader
+       met the call to action halfway through the description. */
+    return '<div class="' + P + "-cols" + (main && side ? "" : " " + P + '-one') + '">' +
+      (main ? '<div class="' + P + '-main">' + main + "</div>" : "") +
+      (side ? '<div class="' + P + '-side">' + side + "</div>" : "") +
+      (cta ? '<div class="' + P + '-cta">' + cta + "</div>" : "") + "</div>";
   }
   function ctSectionsCss(c) {
     // Block headings are labels, not actions. They used to be accent
     // coloured, which spent the loudest colour in the palette on six words
     // nobody clicks and left the call to action competing with them. The
-    // accent now means "you can act on this": links, arrows, the dots.
+    // accent now means "you can act on this": links, bullets, the slide dots.
+    /* 14px, not 12.5. Measured in a real embed on 2026-07-30: with the
+       360Learning newsfeed open the widget gets about 795px, and at that width
+       12.5px descriptions rendered visibly smaller than the newsfeed body copy
+       sitting beside them. The widget read as the fine print of the page rather
+       than as content on it, which is the opposite of the whole point. 14 is
+       the platform's own card body size, so the words now match the words
+       around them. Column labels and pills came up with it, because a label at
+       10.5 under 14px copy reads as a footnote to it. Line height came down
+       from 1.42 to 1.4: the same optical leading at a larger size. */
     return ".ct-sec{margin-top:12px}\n" +
-      ".ct-sh{margin:0;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:" + c.body + "}\n" +
-      ".ct-p{margin:4px 0 0;font-size:13px;font-weight:400;line-height:1.45;color:" + c.body + ";text-wrap:pretty}\n" +
+      ".ct-sh{margin:0;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:" + c.body + "}\n" +
+      ".ct-p{margin:4px 0 0;font-size:14px;font-weight:400;line-height:1.4;color:" + c.body + ";text-wrap:pretty}\n" +
       ".ct-ul{margin:5px 0 0;padding:0;list-style:none}\n" +
-      ".ct-ul li{position:relative;padding-left:15px;margin-top:3px;font-size:13px;font-weight:400;line-height:1.45;color:" + c.body + "}\n" +
-      // a drawn dot rather than a list marker, so its colour and size are ours
-      ".ct-ul li::before{content:'';position:absolute;left:0;top:7px;width:5px;height:5px;border-radius:50%;background:" + c.accent + "}\n";
+      ".ct-ul li{position:relative;padding-left:15px;margin-top:3px;font-size:14px;font-weight:400;line-height:1.4;color:" + c.body + "}\n" +
+      // a drawn dot rather than a list marker, so its colour and size are ours.
+      // 7px down puts it on the optical centre of a 19.6px first line, which is
+      // where 6px used to sit under a 17.75px one.
+      ".ct-ul li::before{content:'';position:absolute;left:0;top:7px;width:4px;height:4px;border-radius:50%;background:" + c.accent + "}\n";
   }
 
   // Only the CSS is prefixed by search and replace, and it covers both class
@@ -2772,154 +3521,8 @@ keyframes + charRules;
       markup + "\n<style>\n" + css.replace(/([.#])ct-/g, "$1" + P + "-") + "</style>";
   }
 
-  /* ---- layout 1 · Signpost with featured paths ---- */
 
-  function ctBuildSignpost(c, fill, w) {
-    var P = PS, ch = ctChip(c);
-    var items = w.featOn ? w.items.filter(function(p) { return ctTrim(p.title); }) : [];
-    var more = ctTrim(w.moreLabel);
-
-    var featured = "";
-    if (items.length) {
-      featured = '<div class="' + P + '-feat">' +
-        (ctTrim(w.featLabel) ? '<h3 class="' + P + '-fh">' + esc(ctTrim(w.featLabel)) + "</h3>" : "") +
-        '<ul class="' + P + '-tiles">' + items.map(function(p) {
-          var meta = [ctDur(p.dur)];
-          if (ctHasRoom(p.format) && ctTrim(p.where)) meta.push(ctTrim(p.where));
-          if (ctTrim(p.trainer)) meta.push(ctTrim(p.trainer));
-          meta = meta.filter(Boolean).join(" · ");
-          var link = ctSafe(p.href), ext = link && ctExternal(link);
-          // a tile with nothing to link to still earns its place as a card:
-          // the format, the title and the facts are worth reading. It just
-          // loses the affordance that would promise a click and not deliver.
-          var inner =
-            '<span class="' + P + '-tag">' + esc(ctFormat(p.format)) + "</span>" +
-            '<span class="' + P + '-tt">' + esc(ctTrim(p.title)) + "</span>" +
-            (meta ? '<span class="' + P + '-tm">' + esc(meta) + "</span>" : "") +
-            (link && more ? '<span class="' + P + '-tgo">' + esc(more) +
-              '<span class="' + P + '-arrow" aria-hidden="true">&#8594;</span></span>' : "");
-          return link
-            ? '<li><a class="' + P + '-tile" href="' + escAttr(link) + '"' +
-              (ext ? ' target="_blank" rel="noopener noreferrer"' : "") + ">" + inner +
-              (ext ? '<span class="' + P + '-sr"> (opens in a new tab)</span>' : "") + "</a></li>"
-            : '<li><div class="' + P + '-tile">' + inner + "</div></li>";
-        }).join("") + "</ul></div>";
-    }
-
-    var btnMarkup = ctTrim(w.btnText) ? ctBtnHtml(P, ctTrim(w.btnText), w.btnHref) : "";
-    var btn = btnMarkup ? '<div class="' + P + '-act">' + btnMarkup + "</div>" : "";
-
-    var markup = '<div class="' + P + '-wrap"><div class="' + P + '-panel">' +
-      '<div class="' + P + '-top">' +
-        '<span class="' + P + '-badge">' + ctSvg(P, "cal") + "</span>" +
-        '<div class="' + P + '-main">' +
-          (ctTrim(w.eyebrow) ? '<p class="' + P + '-eyebrow">' + esc(ctTrim(w.eyebrow)) + "</p>" : "") +
-          '<h2 class="' + P + '-t">' + esc(ctTrim(w.title) || "Live training") + "</h2>" +
-          (ctTrim(w.body) ? '<p class="' + P + '-body">' + esc(ctTrim(w.body)) + "</p>" : "") +
-        "</div>" + btn +
-      "</div>" + featured + "</div></div>";
-
-    var t = ctTone(c);
-
-    var css = ctBaseCss(c, fill, "clamp(22px,2.8cqw,34px)") + ctBtnCss(c) +
-      // no button means no third column, or its gap would sit on the right as
-      // an unexplained 18px of air
-      ".ct-top{display:grid;grid-template-columns:auto minmax(0,1fr)" + (btn ? " auto" : "") +
-        ";gap:clamp(16px,1.8cqw,24px);align-items:center}\n" +
-      // 14px on a 56px square is the same optical curvature as the 16px on the
-      // panel around it, which is what keeps a nested shape from looking like
-      // it came from somewhere else
-      ".ct-badge{flex:none;display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;" +
-        "border-radius:14px;background:" + ch.bg + ";color:" + ch.fg + "}\n" +
-      ".ct-badge .ct-i{width:26px;height:26px;stroke-width:1.5}\n" +
-      ".ct-main{min-width:0}\n" +
-      ".ct-eyebrow{margin:0;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:" + c.accent + "}\n" +
-      // balance and pretty do the work no one notices: no one-word last line
-      // under the title, no single orphan word ending the description
-      ".ct-t{margin:6px 0 0;font-size:clamp(19px,2.5cqw,26px);font-weight:800;line-height:1.18;letter-spacing:-0.02em;" +
-        "text-wrap:balance;color:" + c.heading + "}\n" +
-      ".ct-body{margin:8px 0 0;font-size:13.5px;font-weight:400;line-height:1.55;color:" + c.body +
-        ";max-width:60ch;text-wrap:pretty}\n" +
-      ".ct-act{flex:none}\n" +
-
-      (items.length
-        ? ".ct-feat{margin-top:clamp(20px,2.2cqw,28px);padding-top:clamp(18px,2cqw,24px);border-top:1px solid " + c.line + "}\n" +
-          ".ct-fh{margin:0 0 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:" + c.body + "}\n" +
-          /* N tiles, N columns, or one column. Never a half-empty row.
-             auto-fit used to drop three tiles into two columns from about a
-             700px container down, which left the third one sitting alone
-             beside an empty cell for the whole tablet range. The same gap is
-             invisible in a text layout and glaring in a row of cards,
-             because the card outlines draw the hole for you.
-
-             The breakpoint is what N tiles genuinely need: 210px each, the
-             gaps between them, and the panel's own padding either side. */
-          ".ct-tiles{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}\n" +
-          (items.length > 1
-            ? "@container (min-width:" + (210 * items.length + 14 * (items.length - 1) + 72) + "px){" +
-              ".ct-tiles{grid-template-columns:repeat(" + items.length + ",minmax(0,1fr))}}\n"
-            : "") +
-          // the whole tile is the link, so the target is the size of the card
-          // rather than the size of the words "learn more"
-          ".ct-tile{display:flex;flex-direction:column;height:100%;padding:18px;border-radius:12px;background:" + c.card +
-            ";border:1px solid " + c.line + ";box-shadow:" + t.card + ";text-decoration:none;" +
-            "transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease}\n" +
-          // only the linked tiles lift and highlight: a plain card that
-          // reacted to the pointer would be promising a click it cannot honour
-          "a.ct-tile:hover{border-color:" + c.accent + ";transform:translateY(-3px);box-shadow:" + t.cardUp +
-            ";text-decoration:none}\n" +
-          "a.ct-tile:focus-visible{outline:2px solid " + c.accent + ";outline-offset:2px}\n" +
-          ".ct-tag{align-self:flex-start;padding:3px 9px;border-radius:999px;background:" + ch.bg + ";color:" + ch.fg +
-            ";font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em}\n" +
-          ".ct-tt{margin-top:10px;font-size:15.5px;font-weight:800;line-height:1.28;letter-spacing:-0.015em;" +
-            "text-wrap:balance;color:" + c.heading + "}\n" +
-          ".ct-tm{margin-top:5px;font-size:12.5px;font-weight:500;line-height:1.45;color:" + c.body + ";text-wrap:pretty}\n" +
-          ".ct-tgo{display:inline-flex;align-items:center;gap:6px;margin-top:auto;padding-top:14px;font-size:13px;font-weight:700;color:" + c.accent + "}\n" +
-          "a.ct-tile:hover .ct-arrow{transform:translateX(3px)}\n" +
-
-          /* Between a phone and the breakpoint above, the tiles are stacked
-             but the column is wide, so a tile drawn as a narrow card leaves
-             two thirds of itself empty. In that band it becomes a row
-             instead: everything on the left, the link on the right, centred
-             against the whole card. Same markup, same tap target, the width
-             just gets used.
-
-             This has to sit after the .ct-tile rules above, not beside the
-             .ct-tiles one it belongs with: a container query adds no
-             specificity, so declared first, its display:grid loses to the
-             base display:flex while its align-items:center survives, and the
-             tile silently centres its own text. */
-          (items.length > 1
-            ? "@container (min-width:470px) and (max-width:" +
-                (210 * items.length + 14 * (items.length - 1) + 71) + "px){" +
-                ".ct-tile{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:22px}" +
-                // spelled out rather than auto-placed: the link spans all
-                // three rows to centre, and a tile with no meta has only two
-                // justify-self, not the align-self the base rule uses: in a
-                // grid that one is the block axis, so the pill would stretch
-                // the full width of the card and stop being a pill
-                ".ct-tag{grid-area:1/1;justify-self:start}" +
-                ".ct-tt{grid-area:2/1}.ct-tm{grid-area:3/1}" +
-                ".ct-tgo{grid-area:1/2/4/3;margin-top:0;padding-top:0}}\n"
-            : "") +
-
-          "@media (prefers-reduced-motion:reduce){.ct-tile{transition:none}a.ct-tile:hover{transform:none}}\n"
-        : "") +
-
-      "@container (max-width:640px){.ct-top{grid-template-columns:auto minmax(0,1fr);gap:16px 18px}" +
-        ".ct-act{grid-column:1/-1}.ct-btn{width:100%}" +
-        // no grid-template-columns here: the min-width query above already
-        // owns the column count, and repeating it at max-width:640 would
-        // outrank that query on source order and strand two tiles in one
-        // column at a width they both fit
-        (items.length ? ".ct-tiles{gap:12px}.ct-tile{padding:16px}" : "") + "}\n" +
-      "@container (max-width:400px){.ct-panel{padding:18px}.ct-top{grid-template-columns:minmax(0,1fr)}" +
-        ".ct-badge{width:44px;height:44px;border-radius:12px}.ct-badge .ct-i{width:20px;height:20px}}\n";
-
-    return ctWrap("Signpost with featured paths", P, markup, css);
-  }
-
-  /* ---- layout 2 · Path slides ----
+  /* ---- Path slides ----
 
      Next has to work with no JavaScript at all. So each slide owns a hidden
      radio button, and Next is a <label> that ticks the next one. The browser
@@ -2933,7 +3536,10 @@ keyframes + charRules;
      space, 2026-07-28. */
 
   function ctBuildDeck(c, fill, w) {
-    var P = PD, ch = ctChip(c), edge = ctEdge(c);
+    // the deck is the widget that actually breaks when two share a prefix, so
+    // the seed covers everything this build reads: palette, panel and content
+    var P = uid("ctd", stateSeed({ c: c, fill: fill, w: w }));
+    var edge = ctEdge(c), tl = ctTile(c);
     var picks = w.slides.filter(function(p) { return ctTrim(p.title); });
     var n = picks.length;
     var cta = ctTrim(w.ctaText);
@@ -2946,14 +3552,24 @@ keyframes + charRules;
       radios += '<input class="' + P + '-r" type="radio" name="' + P + '-deck" id="' + P + "-s" + k + '"' +
         (i === 0 ? " checked" : "") + ' aria-label="' + escAttr(ctTrim(p.title)) + ", path " + k + " of " + n + '">';
 
+      /* The tile is the slide's headline, so the programme name is set large
+         in white on it rather than repeated as a heading in the right
+         column. */
       slides +=
         '<article class="' + P + "-slide " + P + "-sl" + k + '">' +
-          '<span class="' + P + '-tag">' + esc(ctFormat(p.format)) + "</span>" +
-          '<h3 class="' + P + '-t">' + esc(ctTrim(p.title)) + "</h3>" +
-          (ctTrim(p.summary) ? '<p class="' + P + '-lede">' + esc(ctTrim(p.summary)) + "</p>" : "") +
-          ctFactsHtml(P, p) +
-          (ctSectionsHtml(P, p, w) ? '<div class="' + P + '-cols">' + ctSectionsHtml(P, p, w) + "</div>" : "") +
-          (cta && ctBtnHtml(P, cta, p.href) ? '<div class="' + P + '-cta">' + ctBtnHtml(P, cta, p.href) + "</div>" : "") +
+          '<div class="' + P + '-tile"><h3 class="' + P + '-tt">' + esc(ctTrim(p.title)) + "</h3>" +
+            // whoever leads it, directly under the name, which is where the
+            // platform's own cards put a person
+            (ctTrim(p.trainer)
+              ? '<p class="' + P + '-by">' +
+                (ctTrim(w.trainerLabel) ? esc(ctTrim(w.trainerLabel)) + ": " : "") +
+                esc(ctTrim(p.trainer)) + "</p>"
+              : "") +
+            ctPillsHtml(P, p) + "</div>" +
+          '<div class="' + P + '-right">' +
+            (ctTrim(p.summary) ? '<p class="' + P + '-lede">' + esc(ctTrim(p.summary)) + "</p>" : "") +
+            ctSectionsHtml(P, p, w, cta ? ctBtnHtml(P, cta, p.href) : "") +
+          "</div>" +
         "</article>";
 
       /* The dot is a child of the label rather than the label itself, so the
@@ -2966,29 +3582,18 @@ keyframes + charRules;
 
       if (k > 1) {
         arrows += '<label class="' + P + "-bk " + P + "-bk" + k + '" for="' + P + "-s" + (k - 1) + '">' +
-          '<span class="' + P + '-la" aria-hidden="true">&#8592;</span>Back</label>';
+          ctSvg(P, "chevL") + "Back</label>";
       }
       // the last slide gets Back only: the dots already say where you are,
       // and anyone who wants slide 1 again can click its dot
       if (k < n) {
         arrows += '<label class="' + P + "-nx " + P + "-nx" + k + '" for="' + P + "-s" + (k + 1) + '">Next' +
-          '<span class="' + P + '-ra" aria-hidden="true">&#8594;</span></label>';
+          ctSvg(P, "chevR") + "</label>";
       }
     });
 
-    var allHref = ctSafe(w.allHref);
-    var allLink = (w.allOn && ctTrim(w.allText) && allHref)
-      ? '<a class="' + P + '-all" href="' + escAttr(allHref) + '"' +
-        (ctExternal(allHref) ? ' target="_blank" rel="noopener noreferrer"' : "") + ">" + esc(ctTrim(w.allText)) +
-        '<span class="' + P + '-arrow" aria-hidden="true">&#8594;</span>' +
-        (ctExternal(allHref) ? '<span class="' + P + '-sr"> (opens in a new tab)</span>' : "") + "</a>"
-      : "";
-
-    var head = (ctTrim(w.heading) || allLink)
-      ? '<div class="' + P + '-dhead">' +
-          (ctTrim(w.heading) ? '<h2 class="' + P + '-h">' + esc(ctTrim(w.heading)) + "</h2>" : "<span></span>") +
-          allLink + "</div>"
-      : "";
+    // a heading, and one link to everything this widget is not showing
+    var head = ctHeadHtml(P, w.heading, w.allOn ? w.allText : "", w.allOn ? w.allHref : "");
 
     var markup = '<div class="' + P + '-wrap"><div class="' + P + '-panel">' + head +
       '<div class="' + P + '-deck">' + radios +
@@ -2997,37 +3602,106 @@ keyframes + charRules;
           '<div class="' + P + '-arrows">' + arrows + "</div></div>" +
       "</div></div></div>";
 
-    var t = ctTone(c);
+    var css = ctBaseCss(c, fill) + ctHeadCss(c) + ctCardCss(c) +
+        ctBtnCss(c) + ctSectionsCss(c) +
+      ".ct-head{margin:0 0 14px}\n" +
 
-    var css = ctBaseCss(c, fill, "clamp(18px,2.2cqw,28px)") + ctBtnCss(c) + ctFactsCss(c) + ctSectionsCss(c) +
-      ".ct-dhead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px}\n" +
-      // balance stops a marketing headline breaking one word onto its own
-      // last line. Same size as the slide title, so the two carry equal weight
-      ".ct-h{margin:0;font-size:clamp(19px,2.5cqw,26px);font-weight:800;letter-spacing:-0.02em;line-height:1.2;" +
-        "text-wrap:balance;color:" + c.heading + "}\n" +
-      // a text link, not a second button: the slide’s own call to action has
-      // to stay the loudest thing in the widget. 44px of height on a link
-      // that draws 18px of text is hit area, and the negative margin keeps it
-      // from pushing the header taller or dropping off the heading’s baseline
-      ".ct-all{display:inline-flex;align-items:center;gap:6px;min-height:44px;margin:-13px 0;font-size:13px;" +
-        "font-weight:700;color:" + c.accent + ";text-decoration:none}\n" +
-      ".ct-all:hover{text-decoration:underline;color:" + c.accent + "}\n" +
-      ".ct-all:focus-visible{outline:2px solid " + c.accent + ";outline-offset:3px;border-radius:4px}\n" +
-      ".ct-all:hover .ct-arrow{transform:translateX(3px)}\n" +
-
-      // the slide itself, which is also what a fallback list item looks like
-      ".ct-slide{padding:clamp(16px,1.8cqw,24px);border-radius:12px;background:" + c.card +
-        ";border:1px solid " + c.line + ";box-shadow:" + t.card + "}\n" +
+      /* A catalogue card turned on its side: the tile is a column rather than
+         a 16:9 crop, its content sits at the bottom, and the name is set at
+         heading size because on a slide it is the headline. */
+      /* 228px, not 276. The tile is a solid block of the loudest colour in
+         the palette and it stretches to whatever the text beside it needs, so
+         every pixel of width is a pixel of saturation. Narrower, it still
+         reads as a thumbnail and stops dominating the slide. */
+      ".ct-slide{display:grid;grid-template-columns:minmax(0,228px) minmax(0,1fr);" +
+        "border-radius:" + R_CARD + ";background:" + c.card + ";border:1px solid " + c.line +
+        ";overflow:hidden}\n" +
       ".ct-slide + .ct-slide{margin-top:10px}\n" +
-      ".ct-tag{display:inline-block;padding:3px 10px;border-radius:999px;background:" + ch.bg + ";color:" + ch.fg +
-        ";font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.06em}\n" +
-      ".ct-t{margin:10px 0 0;font-size:clamp(19px,2.5cqw,26px);font-weight:800;line-height:1.16;letter-spacing:-0.022em;" +
-        "text-wrap:balance;color:" + c.heading + "}\n" +
-      ".ct-lede{margin:7px 0 0;font-size:13.5px;font-weight:400;line-height:1.55;color:" + c.body + ";max-width:75ch;text-wrap:pretty}\n" +
-      ".ct-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 22px;margin-top:6px;" +
-        "padding-top:6px;border-top:1px solid " + c.line + "}\n" +
-      ".ct-cols .ct-sec{margin-top:14px}\n" +
-      ".ct-cta{margin-top:16px}\n" +
+      /* Top-aligned, decided by rendering all three and looking rather than by
+         arguing. Bottom-aligned sank the name below the bullets and left a void
+         above it. Centred floated it 40px below the first column heading, which
+         is the offset that made the box feel unbalanced. Top-aligned puts the
+         programme name on the same optical line as "What you'll learn", so the
+         two halves of the card start together and read as one row of content.
+
+         18px on top against 20px elsewhere: the right-hand column pads to 18,
+         and matching it is what puts the two cap-heights on the same line. */
+      ".ct-slide .ct-tile{align-items:flex-start;justify-content:flex-start;text-align:left;" +
+        "min-height:150px;padding:18px 20px 20px}\n" +
+      // pulled in with the heading above it, so the section label and the
+      // slide's own headline stay in proportion to each other
+      ".ct-slide .ct-tt{font-size:clamp(18px,2cqw,21px);line-height:1.18;letter-spacing:-0.022em}\n" +
+      /* Whoever leads it, in the same white as the name above it and the pill
+         labels below it. The three are one stack, so they are spaced as one:
+         8px off the name, and the pills close up from 14 to 10 when this line
+         is between them, which keeps the gaps even rather than leaving the
+         trainer stranded nearer the title than the chips. */
+      ".ct-by{margin:6px 0 0;font-size:13px;font-weight:600;line-height:1.3;color:" + tl.fg + "}\n" +
+      // the pills invert on the tile: an outline in the palette's quiet tone
+      // would be invisible on a deep gradient
+      /* The pills go to the foot of the tile, and this is the fix for the
+         emptiest area in the whole widget. The tile stretches to whatever the
+         text beside it needs, so with everything packed at the top it was 221px
+         tall with content ending at 98: 123 pixels, more than half the tile,
+         of the loudest colour in the palette doing nothing. Measured at 795px,
+         which is what a real embed gets with the newsfeed open.
+
+         `margin-top:auto` on the last item is all it takes. The name and the
+         trainer keep the top alignment that puts the programme name on the
+         optical line of "What you'll learn", and the chips fall to the bottom,
+         which is exactly where the platform's own course card puts its meta
+         pill. So the tile now reads top-and-bottom on purpose instead of
+         top-and-then-nothing, and it is closer to the card it is modelled on
+         rather than further from it.
+
+         The floor stays: `margin-top:12px` is what spaces the chips on a short
+         tile, where there is no slack for auto to take up. */
+      ".ct-slide .ct-pills{position:relative;z-index:1;margin-top:auto;padding-top:12px;gap:5px}\n" +
+      ".ct-slide .ct-dur{border-color:rgba(255,255,255,0.5);color:#fff}\n" +
+      ".ct-slide .ct-mode{background:rgba(255,255,255,0.18);color:#fff}\n" +
+      // even padding, not a grid gap: a gap on a card carrying a full-bleed
+      // tile is card background showing between them, which reads as a seam
+      // rather than as the margin of the text beside it
+      ".ct-right{padding:18px;min-width:0}\n" +
+      // level with the description text below it, which it is a lede for
+      ".ct-lede{margin:0;font-size:14px;font-weight:400;line-height:1.5;color:" + c.body +
+        ";max-width:70ch;text-wrap:pretty}\n" +
+
+      /* The three configurable columns survive, and they are equal tracks
+         because their content is roughly equal in length, not because equal
+         columns are a look. At 1.5fr the bullet column was half again as wide
+         as its longest line, so it ended a third of the way across itself and
+         left a gap before the prose that read as a mistake rather than as a
+         gutter.
+
+         The rule above the columns belongs to the description, not to the
+         columns. On .ct-cols it drew a line across the top of a slide that had
+         no description, which is a divider dividing nothing, so an
+         adjacent-sibling selector puts it where it means something.
+
+         The button closes the slide: its own row, spanning every column,
+         aligned left under the content it belongs to. It used to sit inside the
+         bullet column with the prose column spanning both rows, which is about
+         twenty pixels shorter and looked it. The bullet column ran tall while
+         the prose column stopped short, so the box was heavy on the left and
+         hollow at the bottom right, and the primary action read as something
+         left over rather than as the close. */
+      ".ct-cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 22px}\n" +
+      ".ct-lede + .ct-cols{margin-top:12px;padding-top:12px;border-top:1px solid " + c.line + "}\n" +
+      ".ct-main,.ct-side{min-width:0}\n" +
+      ".ct-cta{grid-column:1/-1;padding-top:14px}\n" +
+      // one track when there is only one thing to put in it, so nothing is held
+      // to half the card for the sake of an empty column
+      ".ct-one{grid-template-columns:minmax(0,1fr)}\n" +
+      /* Descendant, not child. `> .ct-sec` only reached the bullet block,
+         because the thing that is actually a child of the grid is the .ct-side
+         wrapper, so the first heading inside it kept the 12px that ctSectionsCss
+         gives every section and sat 12px below "What you'll learn". Two column
+         headings that are meant to be a pair, out of line by exactly one
+         margin. This zeroes both, and the sibling rule below is what spaces
+         the two side blocks from each other. */
+      ".ct-cols .ct-sec{margin-top:0}\n" +
+      ".ct-side .ct-sec + .ct-sec{margin-top:9px}\n" +
 
       // fallback state: radios missing, so this is a plain list and the
       // controls are not shown at all
@@ -3044,7 +3718,7 @@ keyframes + charRules;
           ".ct-deck:has(.ct-r:checked) .ct-slide{grid-area:1/1;margin-top:0;visibility:hidden;opacity:0;" +
             "transform:translateY(6px);transition:opacity .28s ease,transform .28s cubic-bezier(.16,1,.3,1),visibility .28s ease}\n" +
           ".ct-deck:has(.ct-r:checked) .ct-nav{display:flex;align-items:center;justify-content:space-between;gap:14px;" +
-            "flex-wrap:wrap;margin-top:14px}\n" +
+            "flex-wrap:wrap;margin-top:12px}\n" +
 
           // one rule per slide. Ids beat the :has rule on specificity, so the
           // checked slide always wins however the two are ordered.
@@ -3065,40 +3739,83 @@ keyframes + charRules;
              than by colour alone, which also means it survives being seen in
              greyscale. An 11px circle is an 11px tap target, so the label
              around it is 24 by 44 and the circle sits in the middle. */
-          ".ct-dots{display:flex;align-items:center;gap:0;margin-left:-6px}\n" +
-          ".ct-dot{display:inline-flex;align-items:center;justify-content:center;width:24px;height:44px;cursor:pointer}\n" +
+          /* 32 by 44, not the 24 by 44 it was. 24 is under the 44px minimum on
+             the horizontal axis, and three of them touching is a precision tap
+             on a phone. Back and Next are still the reliable way through the
+             deck; this stops the dots being the unreliable one.
+
+             The negative margin cancels the label's own padding so the first
+             circle lines up with the left edge of the card above it, which
+             means it has to move with the width: (32 - 11) / 2. */
+          ".ct-dots{display:flex;align-items:center;gap:0;margin-left:-10px}\n" +
+          ".ct-dot{display:inline-flex;align-items:center;justify-content:center;width:32px;height:44px;cursor:pointer}\n" +
           ".ct-dc{box-sizing:border-box;width:11px;height:11px;border-radius:50%;border:2px solid " + c.accent +
             ";background-color:transparent;transition:background-color .2s ease}\n" +
           ".ct-dot:hover .ct-dc{background-color:" + c.accent + "}\n" +
           ".ct-arrows{display:flex;align-items:center;gap:8px}\n" +
-          // the card these sit on is nearly the colour of the panel, so the
-          // edge has to be the quiet tone or they read as loose text
-          ".ct-bk,.ct-nx{display:none;align-items:center;gap:7px;min-height:44px;padding:11px 20px;border-radius:999px;" +
-            "border:1px solid " + edge + ";background:" + c.card + ";color:" + c.heading + ";font-size:13.5px;font-weight:700;" +
-            "cursor:pointer;user-select:none;box-shadow:" + t.card +
-            ";transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease}\n" +
-          ".ct-bk:hover,.ct-nx:hover{border-color:" + c.accent + ";box-shadow:" + t.cardUp + "}\n" +
+          /* The same 8px rectangle as every other button in the builder, and
+             flat, because that is what the platform's own carousel controls
+             are: a bordered rectangle you press. They used to be pills with a
+             drop shadow, which is a shape this platform reserves for filter
+             tabs and a depth it uses nowhere.
+
+             The card these sit on is nearly the colour of the panel, so the
+             border has to be the quiet tone or they read as loose text. */
+          ".ct-bk,.ct-nx{display:none;align-items:center;gap:6px;min-height:44px;padding:11px 18px;" +
+            "border-radius:" + R_BTN + ";border:1px solid " + edge + ";background:" + c.card + ";color:" + c.heading +
+            ";font-size:13.5px;font-weight:700;cursor:pointer;user-select:none;" +
+            "transition:border-color .15s ease,background-color .15s ease,transform .1s ease}\n" +
+          ".ct-bk:hover,.ct-nx:hover{border-color:" + c.accent + ";color:" + c.accent + "}\n" +
           // the press is the whole point: these are the only two controls in
           // the widget a learner clicks repeatedly
-          ".ct-bk:active,.ct-nx:active{transform:translateY(1px);box-shadow:" + t.card + "}\n" +
-          ".ct-la,.ct-ra{color:" + c.accent + "}\n" +
+          ".ct-bk:active,.ct-nx:active{transform:translateY(1px)}\n" +
           "@media (prefers-reduced-motion:reduce){.ct-deck:has(.ct-r:checked) .ct-slide,.ct-dc,.ct-bk,.ct-nx{transition:none}" +
             ".ct-deck:has(.ct-r:checked) .ct-slide{transform:none}.ct-bk:active,.ct-nx:active{transform:none}}\n"
         : "") +
 
-      "@container (max-width:620px){.ct-panel{padding:14px}.ct-slide{padding:14px}.ct-cols{gap:0 18px}}\n" +
-      "@container (max-width:400px){.ct-btn{width:100%}.ct-cta{width:100%}" +
+      /* Three columns once there is room for three. On a wide page, and
+         especially with the newsfeed collapsed, the two tracks are far wider
+         than their text needs: the bullet list ended a third of the way across
+         its own column and left a visible hole between it and the prose. Above
+         1200px the prose splits into two, so the slide reads as three columns
+         of content instead of two with a gap.
+
+         `:has()` is what keeps a single prose block out of it: on its own it
+         spans both right-hand columns and reads full width, rather than
+         sitting in the left half of a two-column grid with an empty cell
+         beside it. The deck already depends on `:has()` for the radio gate, so
+         this adds no new requirement. */
+      "@container (min-width:1200px){" +
+        ".ct-cols{grid-template-columns:repeat(3,minmax(0,1fr))}" +
+        ".ct-side{grid-column:2/4}" +
+        ".ct-side:has(.ct-sec + .ct-sec){display:grid;" +
+          "grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 22px;align-content:start}" +
+        ".ct-side:has(.ct-sec + .ct-sec) .ct-sec + .ct-sec{margin-top:0}" +
+        // re-asserted after the rule above, so a slide with only one of the two
+        // blocks keeps its single full-width track
+        ".ct-one{grid-template-columns:minmax(0,1fr)}}\n" +
+
+      /* Below this the tile stops being a column and becomes a band across the
+         top, keeping its gradient and its name. */
+      "@container (max-width:660px){.ct-slide{grid-template-columns:minmax(0,1fr)}" +
+        ".ct-slide .ct-tile{min-height:0;padding:18px}" +
+        ".ct-right{padding:18px}" +
+        /* One track, and the DOM order is already the right order, so there is
+           nothing to reorder: bullets, prose, button. */
+        ".ct-cols{grid-template-columns:minmax(0,1fr)}" +
+        ".ct-cols > *{grid-column:auto}" +
+        // on the wrapper, not on its first child
+        ".ct-side{margin-top:12px}" +
+        ".ct-cta{padding-top:14px}}\n" +
+      "@container (max-width:400px){" + (fill === "none" ? "" : ".ct-panel{padding:18px}") +
+        ".ct-btn{width:100%}.ct-cta{width:100%}" +
         (n > 1 ? ".ct-deck:has(.ct-r:checked) .ct-nav{justify-content:center}.ct-arrows{width:100%}" +
                  ".ct-bk,.ct-nx{flex:1;justify-content:center}" : "") + "}\n";
 
     return ctWrap("Path slides", P, markup, css);
   }
 
-  function ctBuild() {
-    return ct.layout === "deck"
-      ? ctBuildDeck(ct.c, ct.fill, ct.w2)
-      : ctBuildSignpost(ct.c, ct.fill, ct.w1);
-  }
+  function ctBuild() { return ctBuildDeck(ct.c, ct.fill, ct.w2); }
 
   /* ---- what the pasted code will be missing ----
      Anything the builder refuses to emit has to be explained, because the
@@ -3107,23 +3824,8 @@ keyframes + charRules;
      is wrong, and says what to type. */
 
   function ctReadiness(add) {
-    if (ct.layout === "signpost") {
-      var w = ct.w1;
-      if (ctTrim(w.btnText) && !ctSafe(w.btnHref)) {
-        add("warn", "The main button has no working link, so it isn’t in the code. Add a path starting with / or a full https address.");
-      }
-      if (w.featOn) {
-        var named = w.items.filter(function(p) { return ctTrim(p.title); });
-        if (!named.length) {
-          add("warn", "Featured paths is on but no path has a title yet, so nothing is shown under the button.");
-        }
-        named.forEach(function(p) {
-          if (!ctSafe(p.href)) {
-            add("warn", "“" + ctTrim(p.title) + "” has no link, so it’s shown as a plain card rather than something to click.");
-          }
-        });
-      }
-      return;
+    if (ct.c.dark) {
+      add("warn", "A dark palette needs a panel to sit on. Without one the heading and the link would sit straight on your page's own background, which is white, and a white heading on a white page is not there at all.");
     }
     var d = ct.w2;
     var picks = d.slides.filter(function(p) { return ctTrim(p.title); });
@@ -3152,25 +3854,49 @@ keyframes + charRules;
 
   function ctContrastReport() {
     if (active !== "classroom") return;
-    var c = ct.c, ch = ctChip(c), edge = ctEdge(c);
+    var c = ct.c, ch = ctChip(c), edge = ctEdge(c), tl = ctTile(c);
+    /* Without a panel the widget's own heading, description and link sit on
+       the host page rather than on anything the builder painted, so measuring
+       them against the panel colour would be measuring a surface that is not
+       there. 360Learning's pages are white, so white is what they are checked
+       against, and the labels say "the page" so nobody has to guess which
+       surface a row refers to.
+
+       This is also what catches the one combination that cannot work: a dark
+       palette with no panel puts a white heading on a white page. Nothing else
+       in the builder would notice, and the preview would look fine because the
+       preview paints itself dark. */
+    var bare = ct.fill === "none";
+    var surface = bare ? "#ffffff" : c.panel;
+    var on = bare ? " on the page" : " on the panel";
+    // white on the tile is walked into place by ctTile, so these two rows are
+    // what proves it rather than what hopes it. Both ends, because a gradient
+    // that passes where it starts can still fail where it finishes.
     var tests = [
-      ["Programme titles on a card", c.heading, c.card, 4.5],
-      ["Headings on the panel", c.heading, c.panel, 4.5],
+      // the name, the trainer line and the pill labels are all the same white,
+      // so these two rows cover every word painted on a tile
+      ["Text on a programme tile", tl.fg, tl.start, 4.5],
+      ["Text at the tile's far end", tl.fg, tl.end, 4.5],
+      ["Duration pill text on a card", c.heading, c.card, 4.5],
+      ["The outline of the duration pill", edge, c.card, 3],
+      ["Format tags", ch.fg, ch.bg, 4.5],
+      ["Headings" + on, c.heading, surface, 4.5],
       ["Descriptions on a card", c.body, c.card, 4.5],
-      ["Descriptions on the panel", c.body, c.panel, 4.5],
-      ["Descriptions on the gradient end", c.body, c.panel2, 4.5],
+      ["Descriptions" + on, c.body, surface, 4.5],
       ["Learn more links on a card", c.accent, c.card, 4.5],
-      ["Accent text on the panel", c.accent, c.panel, 4.5],
-      ["Format tags and the badge", ch.fg, ch.bg, 4.5],
+      ["Link beside the heading" + on, c.accent, surface, 4.5],
       ["Bullet dots on a card", c.accent, c.card, 3],
       // one row covers both dot states: filled and outlined are the same colour
-      ["Slide dots, filled and outlined", c.accent, c.panel, 3],
+      ["Slide dots, filled and outlined", c.accent, surface, 3],
       ["Back and Next label text", c.heading, c.card, 4.5],
-      ["The edge of Back and Next", edge, c.panel, 3],
+      ["The edge of Back and Next", edge, surface, 3],
       ["Button label on the button", c.btnFg, c.btnBg, 4.5],
       ["Button shape against a card", c.btnBg, c.card, 3],
-      ["Button shape against the panel", c.btnBg, c.panel, 3]
-    ];
+      ["Button shape" + on, c.btnBg, surface, 3]
+    ].concat(bare ? [] : [
+      // only a gradient panel has a far end to check
+      ["Descriptions on the gradient end", c.body, c.panel2, 4.5]
+    ]);
     // measure first, then decide whether anything on screen needs replacing:
     // this runs on every repaint and the verdict rarely moves
     var fails = 0;
@@ -3251,7 +3977,14 @@ keyframes + charRules;
   function ctCard(host, num, title) {
     var c = ctEl("section", "card");
     var h = ctEl("h2");
-    if (num) h.appendChild(ctEl("span", "num", String(num)));
+    if (num) {
+      // hidden from the accessibility tree, the way the hand-written cards hide
+      // theirs. It is a position in a list of cards, which a screen reader
+      // already conveys; read out it turns "Heading" into "1 Heading".
+      var badge = ctEl("span", "num", String(num));
+      badge.setAttribute("aria-hidden", "true");
+      h.appendChild(badge);
+    }
     h.appendChild(document.createTextNode(title));
     c.appendChild(h);
     host.appendChild(c);
@@ -3474,102 +4207,37 @@ keyframes + charRules;
     host.appendChild(head);
   }
 
-  /* ---- signpost panel ---- */
-
-  function ctPanel1() {
-    var host = $("ctPanel1");
-    host.innerHTML = "";
-    var w = ct.w1;
-    ctCtx = "w1";
-
-    var c1 = ctCard(host, 2, "Heading");
-    ctTextField(c1, "Small line above the title", w, "eyebrow", {
-      max: 42, sub: "Sets the scene in three or four words. Leave it empty to drop it.",
-      placeholder: "Live and in person training"
-    });
-    ctTextField(c1, "Title", w, "title", { max: 60, placeholder: "See what is coming up" });
-    ctTextField(c1, "Description", w, "body", {
-      area: true, max: 240,
-      sub: "Say what they will find when they get there. Two sentences is plenty."
-    });
-
-    var c2 = ctCard(host, 3, "Main button");
-    ctTextField(c2, "Button text", w, "btnText", {
-      max: 30, sub: "Leave empty to hide the button.", placeholder: "See all sessions"
-    });
-    ctLinkField(c2, "Where it goes", w, "btnHref",
-      "The classrooms tab lists every live session with its dates and free places.");
-
-    var c3 = ctCard(host, 4, "Featured paths");
-    ctToggleField(c3, "Show featured paths", w, "featOn",
-      "Up to 3 paths with a link straight to each one.", ctRebuild1);
-    if (w.featOn) {
-      ctTextField(c3, "Heading over them", w, "featLabel", {
-        max: 34, sub: "Call them whatever your learners call them. Workshops, classrooms, live learning.",
-        placeholder: "Featured paths"
-      });
-      ctTextField(c3, "Link text on each one", w, "moreLabel", { max: 24, placeholder: "Learn more" });
-
-      w.items.forEach(function(p, i) {
-        var box = ctEl("div", "item");
-        c3.appendChild(box);
-        ctCtx = "w1.items." + i;
-        ctItemHead(box, "Path " + (i + 1), i, w.items, ctRebuild1, "w1.items");
-        ctTextField(box, "Title", p, "title", { max: 60, placeholder: "Giving Great Feedback" });
-        ctSelectField(box, "Format", CT_FORMATS, p, "format", ctRebuild1);
-        if (ctHasRoom(p.format)) {
-          ctTextField(box, "Where", p, "where", {
-            max: 46, sub: "Only shown for in person training.", placeholder: "Head office, or a city"
-          });
-        }
-        ctDurationField(box, p.dur);
-        ctTextField(box, "Who leads it", p, "trainer", {
-          max: 40, sub: "Optional, and the one detail here that does any selling.",
-          placeholder: "Priya Raman"
-        });
-        ctLinkField(box, "Link to the path", p, "href");
-      });
-
-      ctCtx = "w1";
-      var add = ctEl("button", "add block", "+ Add a path");
-      add.type = "button";
-      add.disabled = w.items.length >= CT_MAX_ITEMS;
-      if (add.disabled) add.textContent = "Three is the most that fits on one row";
-      ctKeyed(add, "w1.addItem");
-      add.addEventListener("click", function() {
-        w.items.push({ title: "", format: "virtual", where: "", trainer: "", dur: { n: 1, unit: "hours" }, href: "" });
-        // land in the new card’s first field, not back at the top of the panel
-        ctPending = "w1.items." + (w.items.length - 1) + ".title";
-        ctRebuild1();
-      });
-      c3.appendChild(add);
-    }
-  }
 
   /* ---- path slides panel ---- */
 
-  function ctPanel2() {
-    var host = $("ctPanel2");
+  function ctPanel() {
+    var host = $("ctPanel");
     host.innerHTML = "";
     var w = ct.w2;
     ctCtx = "w2";
 
-    var c1 = ctCard(host, 2, "Heading");
+    var c1 = ctCard(host, 1, "Heading");
     ctTextField(c1, "Heading over the deck", w, "heading", {
       max: 54, placeholder: "Workshops on offer",
       sub: "This is the marketing line. It can be a claim, not just a label."
     });
     ctToggleField(c1, "Show a link to all sessions", w, "allOn",
-      "Sits beside the heading, so the deck can feature a few without hiding the rest.", ctRebuild2);
+      "Sits beside the heading, so the deck can feature a few without hiding the rest.", ctRebuild);
     if (w.allOn) {
       ctTextField(c1, "Link text", w, "allText", { max: 30, placeholder: "See all sessions" });
       ctLinkField(c1, "Where it goes", w, "allHref");
     }
     ctTextField(c1, "Button on every slide", w, "ctaText", {
-      max: 30, sub: "Leave empty to hide it.", placeholder: "See dates and enroll"
+      max: 30, sub: "Leave empty to hide it.", placeholder: "See dates and book"
+    });
+    // one word for the whole deck, because a customer who runs facilitators
+    // rather than trainers should not retype it on every slide
+    ctTextField(c1, "Word for the person leading it", w, "trainerLabel", {
+      max: 24, sub: "Printed before the name on each slide. Empty prints the name on its own.",
+      placeholder: "Trainer"
     });
 
-    var c2 = ctCard(host, 3, "What each slide shows");
+    var c2 = ctCard(host, 2, "What each slide shows");
     var lhint = ctEl("p", "hint",
       "Up to 3 columns, side by side on every slide. Give each its own title. A slide skips any column you leave empty on it.");
     lhint.style.margin = "0 0 14px";
@@ -3586,7 +4254,7 @@ keyframes + charRules;
       // the tick and its title edit different objects under the same name, so
       // they need to be told apart or focus would land on the wrong one
       ctCtx = "w2.cols";
-      ctToggleField(c2, row[1], w.cols, key, row[2], ctRebuild2);
+      ctToggleField(c2, row[1], w.cols, key, row[2], ctRebuild);
       if (w.cols[key]) {
         ctCtx = "w2.labels";
         var f = ctTextField(c2, "Title learners see", w.labels, key, {
@@ -3600,7 +4268,7 @@ keyframes + charRules;
       }
     });
 
-    var c3 = ctCard(host, 4, "Slides");
+    var c3 = ctCard(host, 3, "Slides");
     w.slides.forEach(function(p, i) {
       var box = ctEl("div", "item");
       c3.appendChild(box);
@@ -3612,32 +4280,28 @@ keyframes + charRules;
           ctShowSlide();
         }
       });
-      ctItemHead(box, "Slide " + (i + 1), i, w.slides, ctRebuild2, "w2.slides");
+      ctItemHead(box, "Slide " + (i + 1), i, w.slides, ctRebuild, "w2.slides");
       ctTextField(box, "Title", p, "title", { max: 60, placeholder: "Giving Great Feedback" });
-      ctSelectField(box, "Format", CT_FORMATS, p, "format", ctRebuild2);
-      if (ctHasRoom(p.format)) {
-        ctTextField(box, "Where", p, "where", { max: 46, placeholder: "Head office, or a city" });
-      }
+      ctSelectField(box, "Format", CT_FORMATS, p, "format", ctRebuild);
       ctDurationField(box, p.dur);
       ctTextField(box, "Who leads it", p, "trainer", { max: 40, placeholder: "Priya Raman" });
 
-      // one select instead of a toggle plus a select: "Don’t say" is an option
-      if (!p.cad.on) p.cad.every = "";
-      var cadOpts = [{ v: "", t: "Don’t say" }].concat(CT_EVERY.map(function(e) { return { v: e, t: "Every " + e }; }));
-      ctSelectField(box, "How often new dates appear", cadOpts, p.cad, "every", function() {
-        p.cad.on = !!p.cad.every;
-        render(true);
+      /* Empty by default. It was a pitch sitting two inches above "Why you'll
+         love it", which is also a pitch, and the slide reads tighter with one
+         of them. The field stays for anyone who wants to set a scene. */
+      ctTextField(box, "Short description", p, "summary", {
+        area: true, max: 200,
+        sub: "Optional. The three columns below usually say it better, and leaving this empty takes a couple of lines off the slide."
       });
-
-      ctTextField(box, "Short description", p, "summary", { area: true, max: 200 });
       if (w.cols.obj) {
-        var objWrap = ctField(box, colTitle("obj"), "One line each. Three is the sweet spot.", true);
+        var objWrap = ctField(box, colTitle("obj"),
+          "Three is the sweet spot. Around 35 characters stays on one line in a narrow column, and the cap keeps the longest to two.", true);
         colLabelEls.obj.push(objWrap.labelEl);
         p.obj.forEach(function(_, j) {
           var row = ctEl("div", "obj-row");
           var inp = ctEl("input");
           inp.type = "text";
-          inp.maxLength = 90;
+          inp.maxLength = CT_MAX_OBJ_CHARS;
           inp.value = p.obj[j];
           inp.setAttribute("aria-label", "Line " + (j + 1));
           noAutofill(inp, false);
@@ -3654,10 +4318,14 @@ keyframes + charRules;
             ctPending = p.obj.length
               ? "w2.slides." + i + ".obj." + Math.min(j, p.obj.length - 1)
               : "w2.slides." + i + ".addObj";
-            ctRebuild2();
+            ctRebuild();
           });
           row.appendChild(inp);
           row.appendChild(rm);
+          // after the remove button, so auto-placement drops it into row 2 of
+          // the row's own grid, right-aligned under the input like every other
+          // counter in the builder
+          ctCounted(row, inp, CT_MAX_OBJ_CHARS);
           objWrap.appendChild(row);
         });
         var addObj = ctEl("button", "add block", "+ Add a line");
@@ -3667,7 +4335,7 @@ keyframes + charRules;
         addObj.addEventListener("click", function() {
           p.obj.push("");
           ctPending = "w2.slides." + i + ".obj." + (p.obj.length - 1);
-          ctRebuild2();
+          ctRebuild();
         });
         objWrap.appendChild(addObj);
       }
@@ -3684,19 +4352,18 @@ keyframes + charRules;
     ctKeyed(add, "w2.addSlide");
     add.addEventListener("click", function() {
       w.slides.push({
-        title: "", format: "virtual", where: "", trainer: "", dur: { n: 1, unit: "hours" },
-        cad: { on: true, every: "month" }, summary: "", obj: [""], who: "", why: "",
+        title: "", format: "virtual", trainer: "", dur: { n: 1, unit: "hours" },
+        summary: "", obj: [""], who: "", why: "",
         href: ""
       });
       ctPreviewSlide = w.slides.length - 1;
       ctPending = "w2.slides." + (w.slides.length - 1) + ".title";
-      ctRebuild2();
+      ctRebuild();
     });
     c3.appendChild(add);
   }
 
-  function ctRebuild1() { ctPanel1(); ctRestoreFocus(); render(false); }
-  function ctRebuild2() { ctPanel2(); ctRestoreFocus(); render(false); }
+  function ctRebuild() { ctPanel(); ctRestoreFocus(); render(false); }
 
   /* The preview turns to whichever slide is being edited, and stays there
      until another slide’s card is touched. Every repaint reloads the frame
@@ -3705,7 +4372,7 @@ keyframes + charRules;
      nothing here runs until focus comes back to a slide card. */
   var ctPreviewSlide = null;
   function ctShowSlide() {
-    if (active !== "classroom" || ct.layout !== "deck" || ctPreviewSlide == null) return;
+    if (active !== "classroom" || ctPreviewSlide == null) return;
     var k = 0, target = 0;
     for (var i = 0; i < ct.w2.slides.length; i++) {
       if (ctTrim(ct.w2.slides[i].title)) {
@@ -3725,14 +4392,30 @@ keyframes + charRules;
 
   /* ---- layout and fill ---- */
 
-  segment("ctLayoutSeg", "ctlayout", function(v) {
-    ct.layout = v;
-    $("ctLayoutHint").textContent = CT_LAYOUT_HINTS[v];
-    $("ctPanel1").hidden = v !== "signpost";
-    $("ctPanel2").hidden = v !== "deck";
+  /* A dark palette cannot go without a panel. Its heading is white and the
+     page it would sit on is not, so the widget would be a row of dark cards
+     under an invisible title, and the preview would not even show it because
+     the preview paints itself dark to match the palette.
+
+     The readability report catches it, but a report that lights up red on a
+     combination the builder offered is a worse answer than not offering it.
+     So the option is disabled while the palette is dark, and a palette change
+     that strands the widget there puts the panel back on its own. */
+  function ctEnforcePanel() {
+    var btn = $("ctFillSeg").querySelector('button[data-ctfill="none"]');
+    var blocked = !!ct.c.dark;
+    btn.setAttribute("aria-disabled", String(blocked));
+    if (blocked && ct.fill === "none") ct.fill = "flat";
+    pressSeg("ctFillSeg", "ctfill", ct.fill);
+  }
+
+  segment("ctFillSeg", "ctfill", function(v) {
+    // the click is ignored, and pressSeg puts the pressed state back where the
+    // segment helper had already moved it from
+    if (v === "none" && ct.c.dark) { ctEnforcePanel(); return; }
+    ct.fill = v;
     render(false);
   });
-  segment("ctFillSeg", "ctfill", function(v) { ct.fill = v; render(false); });
 
   /* ---- colours, managed the same way as the hero banner ---- */
 
@@ -3812,10 +4495,21 @@ keyframes + charRules;
       e.setAttribute("aria-pressed", String(e.getAttribute("data-ctpreset") === p.id));
     });
     ctSyncColorInputs();
+    ctEnforcePanel();
     render(false);
   }
 
   function ctDropPreset() {
+    /* Hand-editing a colour hands the tile back to the deriving walk. The two
+       monochrome palettes state their tile outright, and a stated tile does not
+       follow the accent, so without this someone who moved the accent to red
+       would watch every other colour change and the tile stay grey. Editing a
+       colour should move the things that depend on it.
+
+       Set to null rather than deleted, so the key is present on every palette
+       whatever route it arrived by. `absorb` merges rather than replaces, and it
+       can only overwrite a key the incoming state actually has. */
+    ct.c.tile = null;
     ct.presetId = null;
     ctEachPreset(function(e) { e.setAttribute("aria-pressed", "false"); });
     ctResetBtn.textContent = "Reset to " + ctLastPreset.name;
@@ -3826,6 +4520,7 @@ keyframes + charRules;
     ct.c = c;
     ctDropPreset();
     ctSyncColorInputs();
+    ctEnforcePanel();
     render(false);
   }
   $("ctShuffle").addEventListener("click", function() {
@@ -3910,14 +4605,38 @@ keyframes + charRules;
   var WIDGET_STATE = { companion: companion, hero: hero, classroom: ct };
 
   /* Copies src over target in place. Nested plain objects are merged rather
-     than replaced, so the references held by the classroom panels (ct.w1,
-     ct.w2, hero.c) survive a restore and keep pointing at live state. Arrays
+     than replaced, so the references held by the classroom panel (ct.w2 and
+     hero.c) survive a restore and keep pointing at live state. Arrays
      are replaced whole: merging a 2-item list into a 3-item one leaves a
      stray third item that belongs to nobody. */
+  /* The three names below are skipped, and this is a security guard rather
+     than tidiness. `absorb` is reached from the two inputs that come from
+     outside this session: a `#s=` share link and a pasted widget comment.
+     JSON.parse makes `__proto__` a real own key, so `{"hero":{"__proto__":
+     {"x":1}}}` reaches `target["__proto__"]`, which reads back as
+     Object.prototype, and the recursion writes `x` onto every object on the
+     page. Confirmed reproducible on 2026-07-30.
+
+     Nothing downstream turned out to be exploitable, because every state
+     object carries its keys as own properties that shadow the prototype and
+     every generated string is escaped. But `clone()` walks a bare for-in and
+     would carry a polluted key into a palette, and a share link is a thing
+     people forward, so this is a boundary worth closing rather than a bet
+     worth holding.
+
+     Spelled out as three comparisons rather than looked up in a set, because
+     the obvious way to write that set is `{__proto__:1,...}`, and in an object
+     literal `__proto__` sets the prototype instead of becoming a key. The
+     lookup table for this bug cannot hold the name of this bug. */
+  function unsafeKey(k) {
+    return k === "__proto__" || k === "constructor" || k === "prototype";
+  }
+
   function absorb(target, src) {
     if (!src || typeof src !== "object" || !target) return;
     for (var k in src) {
       if (!Object.prototype.hasOwnProperty.call(src, k)) continue;
+      if (unsafeKey(k)) continue;
       var v = src[k];
       if (v && typeof v === "object" && !Array.isArray(v) &&
           target[k] && typeof target[k] === "object" && !Array.isArray(target[k])) {
@@ -3931,6 +4650,7 @@ keyframes + charRules;
   function snapshot(only) {
     var s = { v: 1, active: active };
     for (var k in WIDGET_STATE) {
+      if (!Object.prototype.hasOwnProperty.call(WIDGET_STATE, k)) continue;
       if (!only || only === k) s[k] = WIDGET_STATE[k];
     }
     return s;
@@ -4005,6 +4725,14 @@ keyframes + charRules;
 
     /* companion */
     renderPrompts();
+    var cwp = findPreset(CW_PRESETS, companion.preset);
+    if (cwp) cwLastPreset = cwp;
+    cwEachPreset(function(el) {
+      el.setAttribute("aria-pressed", String(el.getAttribute("data-cwpreset") === companion.preset));
+    });
+    cwResetBtn.textContent = "Reset to " + cwLastPreset.name;
+    cwResetBtn.hidden = !!companion.preset;
+    cwSyncColorInputs();
 
     /* hero */
     heroSyncers.forEach(function(fn) { fn(); });
@@ -4034,11 +4762,7 @@ keyframes + charRules;
     syncColorInputs();
 
     /* live training */
-    pressSeg("ctLayoutSeg", "ctlayout", ct.layout);
     pressSeg("ctFillSeg", "ctfill", ct.fill);
-    $("ctLayoutHint").textContent = CT_LAYOUT_HINTS[ct.layout] || "";
-    $("ctPanel1").hidden = ct.layout !== "signpost";
-    $("ctPanel2").hidden = ct.layout !== "deck";
     var cp = findPreset(CT_CURATED, ct.presetId);
     if (cp) ctLastPreset = cp;
     ctEachPreset(function(el) {
@@ -4047,8 +4771,8 @@ keyframes + charRules;
     ctResetBtn.textContent = "Reset to " + ctLastPreset.name;
     ctResetBtn.hidden = !!ct.presetId;
     ctSyncColorInputs();
-    ctPanel1();
-    ctPanel2();
+    ctEnforcePanel();
+    ctPanel();
 
     clearUndo();   // the closures held in there point at lists that just went
   }
@@ -4084,15 +4808,18 @@ keyframes + charRules;
 
   function adopt(data) {
     if (!data || typeof data !== "object") return false;
-    if (data.active && WIDGETS[data.active]) active = data.active;
+    // WIDGETS is a literal, so a hostile `active` of "constructor" would
+    // otherwise pass the truthiness test on an inherited member
+    if (data.active && Object.prototype.hasOwnProperty.call(WIDGETS, data.active)) active = data.active;
     for (var k in WIDGET_STATE) {
+      if (!Object.prototype.hasOwnProperty.call(WIDGET_STATE, k)) continue;
       if (data[k] && typeof data[k] === "object") absorb(WIDGET_STATE[k], data[k]);
     }
+    cleanColors(companion, "c", DEFAULTS.companion.c);
     cleanColors(hero, "c", DEFAULTS.hero.c);
     cleanColors(ct, "c", DEFAULTS.classroom.c);
     // a stored list can be empty or missing; every renderer assumes at least one
     if (!companion.prompts || !companion.prompts.length) companion.prompts = [""];
-    if (!ct.w1.items || !ct.w1.items.length) ct.w1.items = [DEFAULTS.classroom.w1.items[0]];
     if (!ct.w2.slides || !ct.w2.slides.length) ct.w2.slides = [DEFAULTS.classroom.w2.slides[0]];
     return true;
   }
@@ -4169,9 +4896,7 @@ keyframes + charRules;
       } else if (active === "classroom") {
         // only the layout this code actually renders. Carrying the other one
         // doubled the payload for content that is not on the page.
-        var t = { c: ct.c, presetId: ct.presetId, layout: ct.layout, fill: ct.fill };
-        if (ct.layout === "deck") t.w2 = ct.w2; else t.w1 = ct.w1;
-        s.classroom = t;
+        s.classroom = { c: ct.c, presetId: ct.presetId, fill: ct.fill, w2: ct.w2 };
       } else {
         s.companion = companion;
       }
