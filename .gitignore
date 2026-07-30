@@ -1,0 +1,21 @@
+# macOS
+.DS_Store
+
+# test dependencies, not shipped and not part of the builder
+tests/node_modules/
+
+# local editor and tool settings
+.claude/settings.local.json
+
+# Screenshots used to check a widget against a real 360Learning page. They are
+# how most of this builder's design decisions got measured, and they are also
+# megabytes each, so they stay local.
+Screenshot *.png
+
+# The prototypes the hero banner and the Live training widget were built in
+# before being merged into index.html. Kept on disk because they are readable
+# history, ignored because they are dead: the shipped widgets have moved a long
+# way past them, and the real risk is somebody editing a lab file believing it
+# is the live one.
+hero-lab.html
+classroom-lab.html

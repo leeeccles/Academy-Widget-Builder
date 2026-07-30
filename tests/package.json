@@ -1,0 +1,16 @@
+{
+  "name": "academy-widget-builder-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Regression tests for index.html. Nothing here is shipped: the builder itself has no dependencies and no build step.",
+  "scripts": {
+    "test": "node run.js",
+    "test:browser": "node run.js --browser"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  },
+  "optionalDependencies": {
+    "playwright": "^1.44.0"
+  }
+}
