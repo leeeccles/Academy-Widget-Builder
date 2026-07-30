@@ -2954,7 +2954,21 @@ keyframes + charRules;
     return {
       dark: false, panel: lp, panel2: lp2, card: card, line: line,
       heading: hslToHex(h, 0.38, 0.1), accent: accent,
-      body: walkTo(hslToHex(h, 0.13, 0.34), bgs, 4.6, -1),
+      /* 0.40, not the 0.34 it was, and the number came off a real embed.
+         Sampled from a screenshot of a live widget on 2026-07-30: the glyph
+         cores of 360Learning's own newsfeed body copy are #5f6578, which is
+         5.8:1 on white, and the widget was painting its descriptions at
+         7.7:1. Darker than the platform is not "safer", it is louder: the
+         widget's supporting text was carrying more weight than the page's
+         own, which is the same mistake as the type being too small, in the
+         other direction. 0.40 lands every hue between 5.1 and 6.6:1, either
+         side of the platform's 5.8.
+
+         The walk still owns the floor. A gradient panel gives body text a
+         tinted surface rather than white, so on those this comes back darker
+         than 0.40 by itself, which is correct and is why the target is a
+         starting point rather than a value. */
+      body: walkTo(hslToHex(h, 0.13, 0.40), bgs, 4.6, -1),
       btnBg: walkTo(accent, ["#ffffff"], 4.6, -1),
       btnFg: "#ffffff",
       /* Explicitly null, never absent, and that is a bug fix. `absorb` merges a
@@ -3079,13 +3093,19 @@ keyframes + charRules;
      Every value below is measured, not chosen by eye: all seventeen pairings
      in the readability report pass, and the tile ends carry white at better
      than 4.5:1. The two differ in ink weight rather than in hue, so Black
-     reads as a statement and Grey as a quiet one. */
+     reads as a statement and Grey as a quiet one.
+
+     They share one `body`, deliberately. Body copy is measured against the
+     platform's own, not against the rest of its palette: whichever of these two
+     somebody picks, the descriptions should sit at the same weight as the text
+     on the page around them. What makes Black a statement and Grey a quiet one
+     is the tile, the heading and the button. */
   var CT_MONO = [
     {
       id: "black", name: "Black", mood: "dark",
       c: {
         dark: false, panel: "#f4f4f5", panel2: "#e8e8ea", card: "#ffffff", line: "#e4e4e7",
-        heading: "#111114", accent: "#3f3f46", body: "#52525b",
+        heading: "#111114", accent: "#3f3f46", body: "#63636d",
         btnBg: "#18181b", btnFg: "#ffffff", tile: ["#2b2b30", "#141417"]
       }
     },
