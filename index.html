@@ -1164,18 +1164,65 @@
         d + ":active{transform:none}}\n";
   }
 
-  /* ---- one text link, shared by every widget ----
+  /* ---- one text link ----
      The platform's secondary action is an underlined bold link, not a second
      button and not an arrow. "Find more" above a row of courses is exactly
-     this, so the widget's own section links are built the same way. */
-  function linkCss(ns, color) {
+     this, so the widget's own section links are built the same way.
+
+     Only Live training calls this today, unlike buttonCss which the hero banner
+     shares. It lives up here with the button rather than down in the Live
+     training section because it is the same kind of thing: a platform control
+     reproduced once, so that a second widget needing a section link gets the
+     one that already matches rather than a second opinion. */
+  /* The underline is drawn as a background rather than declared as a
+     text-decoration, and that is what makes the hover possible.
+
+     Measured off a real page on 2026-07-30: the platform's "Find more" rests
+     with a 2px rule under it, and on hover that rule grows up into a solid
+     block about 22px tall with the label knocked out of it in white. Ours rested
+     with a 1px `text-decoration:underline` and did nothing on hover, so it was
+     both thinner than the thing it sits beside and inert next to it.
+
+     A background gradient sized `100% 2px` and pinned to the bottom of the box
+     is the same 2px rule, and animating that one number to `100% 100%` is the
+     same block. text-decoration cannot be animated this way, which is why it
+     had to go. Nothing here moves position: only the height of one background
+     layer changes, so there is no reflow and no repaint of anything around it.
+
+     `onColor` is the label's colour once the block is up. It cannot be assumed
+     to be white: a dark palette's accent is light, and white on it would be the
+     one unreadable state in the widget. ctOnAccent works it out and the
+     readability report measures the pair.
+
+     The hit area comes from ::after rather than from min-height, because the box
+     is now the highlight and a 44px highlight would be a slab. The overlay is
+     transparent, sits over the link, and extends the clickable area to 44px
+     without changing what is drawn or where anything sits. */
+  function linkCss(ns, color, onColor) {
     var d = "." + ns + "-link";
     // 14px, measured against the platform's own "Find more": 15 ink to our 14,
     // which at 13.5px put ours a size step below the thing it sits next to
-    return d + "{display:inline-flex;align-items:center;min-height:44px;font-size:14px;font-weight:700;" +
-      "color:" + color + ";text-decoration:underline;text-underline-offset:3px}\n" +
-      d + ":hover{color:" + color + ";text-decoration:underline}\n" +
-      d + ":focus-visible{outline:2px solid " + color + ";outline-offset:3px;border-radius:4px}\n";
+    /* No padding, so the highlight is the text and nothing more. Measured off
+       the platform: its hovered block is 22px tall against a 15px label, which
+       is exactly one line box, and it is the width of the label to the pixel.
+       Padding of 4px and 6px put a cushion round ours that the original does not
+       have, and the block read as a button rather than as a highlight.
+
+       Dropping it also puts the resting rule where the platform's sits. A line
+       box at 1.5 leaves about 4px under the glyphs, which is the gap measured
+       between the platform's text and its underline, so pinning the rule to the
+       bottom of the box lands it there without a magic offset. */
+    return d + "{position:relative;display:inline-block;padding:0;" +
+      "font-size:14px;font-weight:700;line-height:1.5;color:" + color + ";text-decoration:none;" +
+      "background-image:linear-gradient(" + color + "," + color + ");background-repeat:no-repeat;" +
+      "background-position:left bottom;background-size:100% 2px;" +
+      "transition:background-size .18s ease,color .18s ease}\n" +
+      d + ":hover,\n" + d + ":focus-visible{background-size:100% 100%;color:" + onColor + "}\n" +
+      d + ":focus-visible{outline:2px solid " + color + ";outline-offset:3px;border-radius:2px}\n" +
+      // the 44px target, laid over the label without disturbing it
+      d + "::after{content:'';position:absolute;left:0;right:0;top:50%;" +
+      "transform:translateY(-50%);height:44px}\n" +
+      "@media (prefers-reduced-motion:reduce){" + d + "{transition:none}}\n";
   }
 
   /* ================================================================
@@ -1398,12 +1445,12 @@ keyframes + charRules;
      toward the accent hue rather than neutral grey, and gradient ends stay
      in a narrow luminance band so nothing degrades halfway across. */
   var PRESETS = [
-    { id: "ocean",    name: "Ocean",    c: { panel: "#eef2f8", panel2: "#dce7f6", heading: "#0f1b2e", accent: "#1546c4", body: "#465468", btnBg: "#1546c4", btnFg: "#ffffff" } },
-    { id: "indigo",   name: "Indigo",   c: { panel: "#f1f1fd", panel2: "#e4e4fb", heading: "#17172e", accent: "#4a3fc4", body: "#4d4d63", btnBg: "#4a3fc4", btnFg: "#ffffff" } },
-    { id: "teal",     name: "Teal",     c: { panel: "#e9f4f4", panel2: "#d4eaea", heading: "#0c2626", accent: "#0b615e", body: "#44585a", btnBg: "#0b615e", btnFg: "#ffffff" } },
-    { id: "forest",   name: "Forest",   c: { panel: "#ebf3ee", panel2: "#d7e9de", heading: "#0f2419", accent: "#116336", body: "#46584e", btnBg: "#116336", btnFg: "#ffffff" } },
-    { id: "sand",     name: "Sand",     c: { panel: "#f7f0e7", panel2: "#eee0cd", heading: "#2a2118", accent: "#8f4310", body: "#5b5044", btnBg: "#2a2118", btnFg: "#fdf9f4" } },
-    { id: "plum",     name: "Plum",     c: { panel: "#fbeef6", panel2: "#f4dfed", heading: "#2b1024", accent: "#9d1f6d", body: "#5f4356", btnBg: "#9d1f6d", btnFg: "#ffffff" } },
+    { id: "ocean",    name: "Ocean",    c: { panel: "#eef2f8", panel2: "#dce7f6", heading: "#0f1b2e", accent: "#1546c4", body: "#52627a", btnBg: "#1546c4", btnFg: "#ffffff" } },
+    { id: "indigo",   name: "Indigo",   c: { panel: "#f1f1fd", panel2: "#e4e4fb", heading: "#17172e", accent: "#4a3fc4", body: "#595973", btnBg: "#4a3fc4", btnFg: "#ffffff" } },
+    { id: "teal",     name: "Teal",     c: { panel: "#e9f4f4", panel2: "#d4eaea", heading: "#0c2626", accent: "#0b615e", body: "#4f6768", btnBg: "#0b615e", btnFg: "#ffffff" } },
+    { id: "forest",   name: "Forest",   c: { panel: "#ebf3ee", panel2: "#d7e9de", heading: "#0f2419", accent: "#116336", body: "#51675b", btnBg: "#116336", btnFg: "#ffffff" } },
+    { id: "sand",     name: "Sand",     c: { panel: "#f7f0e7", panel2: "#eee0cd", heading: "#2a2118", accent: "#8f4310", body: "#695d4e", btnBg: "#2a2118", btnFg: "#fdf9f4" } },
+    { id: "plum",     name: "Plum",     c: { panel: "#fbeef6", panel2: "#f4dfed", heading: "#2b1024", accent: "#9d1f6d", body: "#78546c", btnBg: "#9d1f6d", btnFg: "#ffffff" } },
     { id: "midnight", name: "Midnight", c: { panel: "#15182b", panel2: "#26204a", heading: "#ffffff", accent: "#a9b6ff", body: "#c6cbdb", btnBg: "#ffffff", btnFg: "#15182b" } }
   ];
 
@@ -1539,7 +1586,20 @@ keyframes + charRules;
       panel: panel, panel2: panel2,
       heading: hslToHex(h, 0.38, 0.1),
       accent: accent,
-      body: walkTo(hslToHex(h, 0.13, 0.34), [panel, panel2], 4.6, -1),
+      /* 0.40, matching the Live training widget and for the same reason.
+         The hero sits on the same white 360Learning page as everything else,
+         and its panel is a 94 to 97 percent lightness tint rather than a
+         genuinely different surface, so the measurement that moved the other
+         widget applies here too: the platform sets its own body copy at
+         5.8:1 and this was running at 7.0. Supporting text louder than the
+         page it supports is the same mistake as type that is too small.
+
+         It also buys the hero its own hierarchy. Heading to body separation
+         was only 2.0 to 2.2x, and in a banner the heading is meant to carry
+         the weight while the body is a lede under it. The seven hand-written
+         presets above moved with this, or PRESETS and CURATED would have
+         drifted into two different ideas of a body colour. */
+      body: walkTo(hslToHex(h, 0.13, 0.40), [panel, panel2], 4.6, -1),
       btnBg: walkTo(accent, ["#ffffff"], 4.6, -1),
       btnFg: "#ffffff"
     };
@@ -3048,6 +3108,40 @@ keyframes + charRules;
     };
   }
 
+  /* The label's colour once the link's highlight has risen behind it.
+
+     White is the obvious answer and it is wrong for a third of the palettes.
+     The accent is walked to clear 4.6:1 against light surfaces, which makes it
+     dark on a light palette and light on a dark one, so white on a dark
+     palette's accent is pale-on-pale: the one moment in the widget where
+     hovering something would make it harder to read. The heading is the reliable
+     opposite tone in both cases, and white only wins when it actually wins. */
+  function ctOnAccent(c) {
+    /* Chosen by measurement rather than by a rule about lightness. The first
+       attempt branched on `lum(accent) > 0.4` and picked the wrong pole for
+       every accent sitting near that line: three of the five dark palettes came
+       out at 2.4 to 2.9:1, which is worse than the state it replaced. Ranking
+       the candidates and taking the best cannot get that wrong, and it costs
+       four comparisons.
+
+       Ranked in order of preference rather than by ratio alone, so a dark
+       palette lands on its own panel colour the way its buttons already do
+       instead of on flat black, which beat it by a hair and is the one tone this
+       file mixes nothing from. */
+    // white first: the accent is dark on every light palette, which is most of them
+    if (ratio("#ffffff", c.accent) >= 4.5) return "#ffffff";
+    // then the palette's own tones, the way btnFg already resolves for a dark palette
+    var native = [c.panel, c.card, c.heading], best = null, bestR = 4.5;
+    for (var i = 0; i < native.length; i++) {
+      if (!isHex(native[i])) continue;
+      var r = ratio(native[i], c.accent);
+      if (r >= bestR) { bestR = r; best = native[i]; }
+    }
+    if (best) return best;
+    // nothing in the palette clears it, so take whichever pole is further away
+    return ratio("#000000", c.accent) >= ratio("#ffffff", c.accent) ? "#000000" : "#ffffff";
+  }
+
   /* The quiet tone. A dot you have not reached and the edge of the Back and
      Next buttons were both drawn in the hairline colour, which is tuned to
      be almost invisible against the panel. That is right for a divider and
@@ -3391,10 +3485,7 @@ keyframes + charRules;
          section happens to be. */
       ".ct-h{margin:0;font-size:18px;font-weight:600;line-height:1.25;" +
         "letter-spacing:-0.02em;text-wrap:balance;color:" + c.heading + "}\n" +
-      linkCss("ct", c.accent) +
-      // 44px of hit area on a link drawing 18px of text, pulled back out again
-      // so it cannot push the header taller or float off the heading's baseline
-      ".ct-link{margin:-13px 0}\n";
+      linkCss("ct", c.accent, ctOnAccent(c));
   }
 
   /* ---- the card ----
@@ -3905,6 +3996,9 @@ keyframes + charRules;
       ["Descriptions" + on, c.body, surface, 4.5],
       ["Learn more links on a card", c.accent, c.card, 4.5],
       ["Link beside the heading" + on, c.accent, surface, 4.5],
+      // the link's highlight is a state a reader spends real time in, so the
+      // label on it is measured like any other pair rather than assumed
+      ["Link text while it is hovered", ctOnAccent(c), c.accent, 4.5],
       ["Bullet dots on a card", c.accent, c.card, 3],
       // one row covers both dot states: filled and outlined are the same colour
       ["Slide dots, filled and outlined", c.accent, surface, 3],
