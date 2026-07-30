@@ -24,8 +24,20 @@
     --amber: #a15c07; --green: #15803d; --green-bg: #dcfce7;
     --red: #b91c1c; --red-bg: #fee2e2;
 
-    /* type scale */
-    --fs-micro: 11px; --fs-sm: 12px; --fs-md: 13px; --fs-base: 14px; --fs-lg: 19px;
+    /* Type scale: four sizes, each with a job.
+         micro 11  numerals, badges, chips, code
+         sm    12  secondary prose: hints, notes, errors, captions
+         base  14  everything primary, and every interactive label
+         lg    19  the page title
+
+       --fs-md (13px) used to sit between sm and base, which put three sizes
+       inside two pixels of each other doing three jobs that nobody could tell
+       apart: 12 for hints, 13 for field labels and buttons, 14 for input text.
+       A label a pixel under the value it labels is not a hierarchy, it is a
+       wobble. The fourteen things that were 13 are 14 now, which puts every
+       label and every button on the same size as the text they act on, and
+       leaves one honest step down to 12 for the prose that supports them. */
+    --fs-micro: 11px; --fs-sm: 12px; --fs-base: 14px; --fs-lg: 19px;
     /* 4px spacing rhythm */
     --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
     --r: 12px; --r-sm: 8px;
@@ -65,7 +77,7 @@
   .skip {
     position: absolute; left: var(--sp-3); top: -60px; z-index: 10;
     background: var(--card); color: var(--brand-dark);
-    font-size: var(--fs-md); font-weight: 700;
+    font-size: var(--fs-base); font-weight: 700;
     padding: 10px var(--sp-4); border-radius: var(--r-sm);
     border: 1px solid var(--brand); text-decoration: none;
   }
@@ -95,7 +107,7 @@
   header p { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   @media (max-width: 900px) { header p { display: none; } }
   header h1 { font-size: var(--fs-lg); font-weight: 800; letter-spacing: -0.01em; }
-  header p { font-size: var(--fs-md); color: var(--text-secondary); }
+  header p { font-size: var(--fs-base); color: var(--text-secondary); }
   header a { color: var(--brand); font-weight: 600; text-decoration: none; }
   header a:hover { text-decoration: underline; }
   /* Global actions sit opposite the title. They wrap under it rather than
@@ -106,7 +118,7 @@
      the header it sits in */
   .header-actions .btn {
     flex: none; white-space: nowrap;
-    font-size: var(--fs-md); padding: 8px var(--sp-3); min-height: var(--tap-compact);
+    font-size: var(--fs-base); padding: 8px var(--sp-3); min-height: var(--tap-compact);
   }
   /* A reserved slot, not a growing one. This used to size itself to its own
      text, so the first "Saved" of the session shoved both buttons left by the
@@ -287,8 +299,8 @@
   .wtype button:hover:not(:disabled) { border-color: var(--text-muted); }
   .wtype button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
   .wtype button svg { flex: none; color: var(--text-muted); }
-  .wtype button[aria-pressed="true"] { border-color: var(--brand); background: var(--brand-light); color: var(--brand-dark); }
-  .wtype button[aria-pressed="true"] svg { color: var(--brand-dark); }
+  .wtype button[aria-checked="true"] { border-color: var(--brand); background: var(--brand-light); color: var(--brand-dark); }
+  .wtype button[aria-checked="true"] svg { color: var(--brand-dark); }
   /* aria-disabled, not disabled: a disabled button is removed from the tab
      order, so a keyboard or screen-reader user never finds out the fourth
      widget is coming. This one is reachable and announced, and the click
@@ -307,7 +319,7 @@
   /* fields */
   .field { margin-bottom: var(--sp-4); }
   .field:last-child { margin-bottom: 0; }
-  .field > label, .field > .group-label { display: block; font-size: var(--fs-md); font-weight: 700; margin-bottom: 6px; }
+  .field > label, .field > .group-label { display: block; font-size: var(--fs-base); font-weight: 700; margin-bottom: 6px; }
   .field .row { display: flex; gap: var(--sp-2); align-items: center; }
   input[type="text"], input[type="url"], textarea {
     font: inherit; font-size: var(--fs-base); width: 100%; min-width: 0;
@@ -349,7 +361,7 @@
   .remove:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
   .remove:disabled { opacity: 0.4; cursor: default; }
   .add {
-    font: inherit; font-size: var(--fs-md); font-weight: 700;
+    font: inherit; font-size: var(--fs-base); font-weight: 700;
     padding: 11px var(--sp-4);
     min-height: var(--tap);
     border: 1px dashed var(--brand);
@@ -367,7 +379,7 @@
      targets, and the spacing rhythm the rest of the builder already uses. */
   .seg { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
   .seg button {
-    font: inherit; font-size: var(--fs-md); font-weight: 600;
+    font: inherit; font-size: var(--fs-base); font-weight: 600;
     padding: 9px var(--sp-3); min-height: var(--tap);
     border: 1px solid var(--border-strong); border-radius: var(--r-sm);
     background: var(--card); color: var(--text-primary);
@@ -377,11 +389,11 @@
   }
   .seg button:hover { border-color: var(--text-muted); }
   .seg button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-  .seg button[aria-pressed="true"] {
+  .seg button[aria-checked="true"] {
     border-color: var(--brand); background: var(--brand-light); color: var(--brand-dark);
   }
   .seg svg { flex: none; color: var(--text-muted); }
-  .seg button[aria-pressed="true"] svg { color: var(--brand-dark); }
+  .seg button[aria-checked="true"] svg { color: var(--brand-dark); }
   /* aria-disabled, not disabled: a removed button never tells a keyboard or
      screen-reader user that the option exists or why it is unavailable */
   .seg button[aria-disabled="true"] { color: var(--text-muted); background: var(--bg); cursor: default; }
@@ -408,13 +420,13 @@
     transition: border-color 0.18s ease;
   }
   .preset:hover { border-color: var(--text-muted); }
-  .preset[aria-pressed="true"] { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); color: var(--brand-dark); }
+  .preset[aria-checked="true"] { border-color: var(--brand); box-shadow: inset 0 0 0 1px var(--brand); color: var(--brand-dark); }
   .preset:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
   .swatches { display: flex; height: 22px; border-radius: 5px; overflow: hidden; margin-bottom: 6px; border: 1px solid rgba(0,0,0,0.08); }
   .swatches span { flex: 1; }
 
   .disclose {
-    font: inherit; font-size: var(--fs-md); font-weight: 700;
+    font: inherit; font-size: var(--fs-base); font-weight: 700;
     display: flex; align-items: center; gap: var(--sp-2);
     /* A disclosure carries no border or fill, so it reads as a link and the
        temptation is to size it like one. It is a press target, and it gets the
@@ -427,16 +439,23 @@
   .disclose[aria-expanded="true"] svg { transform: rotate(90deg); }
   /* no min-height: .btn already sets one, and a second value here was the
      only reason Reset stood 4px shorter than every button beside it */
-  .reset { margin-top: var(--sp-3); font-size: var(--fs-md); padding: 9px var(--sp-4); }
+  .reset { margin-top: var(--sp-3); font-size: var(--fs-base); padding: 9px var(--sp-4); }
   .colors { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); margin-top: var(--sp-3); }
   .cfield > label { font-size: var(--fs-micro); font-weight: 600; color: var(--text-secondary); display: block; margin-bottom: 5px; }
   .cfield .row { display: flex; gap: 6px; align-items: center; }
+  /* --icon-btn, not a hard 38: this is a press target like any other and it
+     was the one control in the builder outside the token system, so it stayed
+     at 38 on a touch screen while every button beside it grew to 44. */
   .cfield input[type="color"] {
     -webkit-appearance: none; appearance: none;
-    width: 38px; height: 38px; flex: none; padding: 0;
+    width: var(--icon-btn); height: var(--icon-btn); flex: none; padding: 0;
     border: 1px solid var(--border-strong); border-radius: var(--r-sm);
     background: none; cursor: pointer;
   }
+  .cfield input[type="color"]:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+  /* tight to the field it belongs to, rather than the 8px .err uses when it
+     follows a full-width input */
+  .cfield .err { margin-top: 5px; }
   .cfield input[type="color"]::-webkit-color-swatch-wrapper { padding: 3px; }
   .cfield input[type="color"]::-webkit-color-swatch { border: none; border-radius: 5px; }
   .cfield input[type="text"] { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: var(--fs-sm); padding: 9px var(--sp-2); }
@@ -474,7 +493,7 @@
   }
   .drop:hover, .drop.over { border-color: var(--brand); background: var(--brand-light); }
   .drop:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-  .drop strong { display: block; font-size: var(--fs-md); margin-bottom: 3px; }
+  .drop strong { display: block; font-size: var(--fs-base); margin-bottom: 3px; }
   .drop span { font-size: var(--fs-sm); color: var(--text-secondary); }
   .thumb { display: flex; gap: var(--sp-3); align-items: center; margin-top: var(--sp-3); }
   .thumb img { width: 62px; height: 44px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); }
@@ -512,7 +531,7 @@
   .out-actions { display: flex; gap: var(--sp-3); flex-wrap: wrap; align-items: center; }
   details.code { margin-top: var(--sp-4); }
   details.code summary {
-    font-size: var(--fs-md); font-weight: 600; color: var(--brand-dark); cursor: pointer;
+    font-size: var(--fs-base); font-weight: 600; color: var(--brand-dark); cursor: pointer;
     list-style: none; display: inline-flex; align-items: center; gap: 6px;
   }
   details.code summary::-webkit-details-marker { display: none; }
@@ -533,7 +552,7 @@
   .btn-secondary:hover { border-color: var(--text-muted); }
   .size-note { font-size: var(--fs-sm); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
   .size-note.heavy { color: var(--amber); font-weight: 700; }
-  .steps { font-size: var(--fs-md); color: var(--text-secondary); line-height: 1.7; margin-top: var(--sp-4); padding-left: 18px; }
+  .steps { font-size: var(--fs-base); color: var(--text-secondary); line-height: 1.7; margin-top: var(--sp-4); padding-left: 18px; }
   .steps a { color: var(--brand); font-weight: 600; }
 
   /* ===== Live training widget only =====================================
@@ -635,16 +654,19 @@
     z-index: 60; display: flex; align-items: center; gap: var(--sp-3);
     background: var(--text-primary); color: #fff;
     padding: 10px 10px 10px var(--sp-5); border-radius: 999px;
-    font-size: var(--fs-md); font-weight: 600; max-width: calc(100vw - var(--sp-6));
+    font-size: var(--fs-base); font-weight: 600; max-width: calc(100vw - var(--sp-6));
     box-shadow: 0 12px 32px rgba(16, 19, 34, 0.28);
   }
   /* after .undo, or the display above would outrank [hidden] */
   .undo[hidden] { display: none; }
   .undo button {
-    font: inherit; font-size: var(--fs-md); font-weight: 700;
+    font: inherit; font-size: var(--fs-base); font-weight: 700;
     background: rgba(255, 255, 255, 0.14); color: #fff;
     border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 999px;
-    padding: 7px var(--sp-4); min-height: 36px; cursor: pointer; white-space: nowrap;
+    /* --tap like every other press target. Undo is the only way back from the
+       one destructive action in the builder, it is on screen for nine seconds,
+       and it was the smallest thing to hit in the whole tool at 36. */
+    padding: 7px var(--sp-4); min-height: var(--tap); cursor: pointer; white-space: nowrap;
     touch-action: manipulation; transition: background-color 0.18s ease;
   }
   .undo button:hover { background: rgba(255, 255, 255, 0.26); }
@@ -687,22 +709,35 @@
   <div class="col">
     <section class="card">
       <h2>Widget</h2>
-      <div class="wtype" id="wtype" role="group" aria-label="Widget type">
-        <button type="button" data-w="companion" aria-pressed="true">
+      <div class="wtype" id="wtype" role="radiogroup" aria-label="Widget type">
+        <button type="button" role="radio" data-w="companion" aria-checked="true">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.7a2 2 0 0 0 1.3 1.3L21 12l-5.8 1.9a2 2 0 0 0-1.3 1.3L12 21l-1.9-5.8a2 2 0 0 0-1.3-1.3L3 12l5.8-2a2 2 0 0 0 1.3-1.2z"/></svg>
           AI Companion prompt banner
         </button>
-        <button type="button" data-w="hero" aria-pressed="false">
+        <button type="button" role="radio" data-w="hero" aria-checked="false">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M14 4v16"/><path d="M5 10h5"/><path d="M5 14h3"/></svg>
           Hero banner
         </button>
-        <button type="button" data-w="classroom" aria-pressed="false">
+        <button type="button" role="radio" data-w="classroom" aria-checked="false">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 2v3M16 2v3"/></svg>
           Live training
         </button>
-        <button type="button" aria-disabled="true">
+        <button type="button" role="radio" aria-disabled="true" aria-checked="false">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="M7 13v4"/><path d="M12 9v8"/><path d="M17 5v12"/></svg>
           Learning dashboard <span class="soon">Soon</span>
+        </button>
+        <!-- The two below make images rather than widgets, which is why they
+             say what they make instead of naming a block. They are
+             aria-disabled rather than disabled for the same reason the
+             dashboard is: a disabled button leaves the tab order, so a keyboard
+             or screen-reader user would never learn they are coming. -->
+        <button type="button" role="radio" aria-disabled="true" aria-checked="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 16.5v-9a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 7.5v9a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16.5z"/><circle cx="12" cy="12" r="3"/></svg>
+          Custom logo generator <span class="soon">Soon</span>
+        </button>
+        <button type="button" role="radio" aria-disabled="true" aria-checked="false">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-4.5-4.5L6 21"/></svg>
+          Course and path covers <span class="soon">Soon</span>
         </button>
       </div>
       <hr class="divider">
@@ -720,13 +755,14 @@
         <h2><span class="num" aria-hidden="true">1</span> Prompts</h2>
         <div id="prompts"></div>
         <button type="button" class="add" id="addPrompt">+ Add prompt</button>
-        <p class="hint">Up to 5 prompts, max <strong>50&nbsp;characters</strong> each. The widget cycles through them with a typing animation. Shorter prompts are safer: in a very narrow column the end of a long prompt can be trimmed off.</p>
+        <p class="hint">Up to 5 prompts, max <strong>50&nbsp;characters</strong> each. The widget cycles through them with a typing animation, one after another, on a loop.</p>
+        <p class="hint">On a phone there isn’t room for the label and a long prompt on one line, so <strong>“Ask&nbsp;Companion:” moves to its own line</strong> and the prompt gets the full width. Your longest prompt decides when that happens, so a set of short prompts stays on one line further down.</p>
       </section>
 
       <section class="card">
         <h2><span class="num" aria-hidden="true">2</span> Colours</h2>
         <p class="hint" style="margin-top:0">The gradient runs through the word <strong>Companion</strong> and the star beside it. The prompt text stays near-black, because it is the part people read.</p>
-        <div class="presets" id="cwPresets" role="group" aria-label="Recommended gradients" style="margin-top:var(--sp-3)"></div>
+        <div class="presets" id="cwPresets" role="radiogroup" aria-label="Recommended gradients" style="margin-top:var(--sp-3)"></div>
 
         <hr class="divider">
         <button type="button" class="disclose" id="cwCustomToggle" aria-expanded="false" aria-controls="cwCustomPanel">
@@ -758,16 +794,16 @@
     <div class="panel" id="panelHero" hidden>
       <section class="card">
         <h2><span class="num" aria-hidden="true">1</span> Layout</h2>
-        <div class="seg stack" id="layoutSeg" role="group" aria-label="Hero layout">
-          <button type="button" data-layout="textFirst" aria-pressed="true">
+        <div class="seg stack" id="layoutSeg" role="radiogroup" aria-label="Hero layout">
+          <button type="button" role="radio" data-layout="textFirst" aria-checked="true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M14 4v16"/><path d="M5 10h5"/><path d="M5 14h3"/></svg>
             Text left, image right
           </button>
-          <button type="button" data-layout="imageFirst" aria-pressed="false">
+          <button type="button" role="radio" data-layout="imageFirst" aria-checked="false">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 4v16"/><path d="M14 10h5"/><path d="M14 14h3"/></svg>
             Image left, text right
           </button>
-          <button type="button" data-layout="overlay" aria-pressed="false">
+          <button type="button" role="radio" data-layout="overlay" aria-checked="false">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="17.5" cy="8.5" r="1.5"/><path d="M5 15h9"/><path d="M5 11.5h6"/></svg>
             Text over full-width image
           </button>
@@ -799,9 +835,9 @@
       <section class="card">
         <h2><span class="num" aria-hidden="true">3</span> Image</h2>
         <div class="field">
-          <div class="seg" id="imgSeg" role="group" aria-label="Image source">
-            <button type="button" data-img="url" aria-pressed="true">Hosted URL <span class="pill">Best</span></button>
-            <button type="button" data-img="upload" aria-pressed="false">Upload and embed</button>
+          <div class="seg" id="imgSeg" role="radiogroup" aria-label="Image source">
+            <button type="button" role="radio" data-img="url" aria-checked="true">Hosted URL <span class="pill">Best</span></button>
+            <button type="button" role="radio" data-img="upload" aria-checked="false">Upload and embed</button>
           </div>
         </div>
 
@@ -840,9 +876,9 @@
       <section class="card">
         <h2><span class="num" aria-hidden="true">4</span> Button</h2>
         <div class="field">
-          <div class="seg" id="btnSeg" role="group" aria-label="Show a button">
-            <button type="button" data-btn="on" aria-pressed="true">Show button</button>
-            <button type="button" data-btn="off" aria-pressed="false">No button</button>
+          <div class="seg" id="btnSeg" role="radiogroup" aria-label="Show a button">
+            <button type="button" role="radio" data-btn="on" aria-checked="true">Show button</button>
+            <button type="button" role="radio" data-btn="off" aria-checked="false">No button</button>
           </div>
         </div>
         <div id="btnFields">
@@ -855,9 +891,9 @@
             <!-- a <label> has to name one control; this names a group of
                  buttons, so it is a span that the group points at -->
             <span class="group-label" id="linkLabel">Where it goes</span>
-            <div class="seg" id="linkSeg" role="group" aria-labelledby="linkLabel">
-              <button type="button" data-link="internal" aria-pressed="true">Page in 360Learning</button>
-              <button type="button" data-link="external" aria-pressed="false">External site</button>
+            <div class="seg" id="linkSeg" role="radiogroup" aria-labelledby="linkLabel">
+              <button type="button" role="radio" data-link="internal" aria-checked="true">Page in 360Learning</button>
+              <button type="button" role="radio" data-link="external" aria-checked="false">External site</button>
             </div>
           </div>
           <div class="field">
@@ -871,23 +907,23 @@
 
       <section class="card">
         <h2><span class="num" aria-hidden="true">5</span> Colours</h2>
-        <div class="presets" id="presets" role="group" aria-label="Recommended colour palettes"></div>
+        <div class="presets" id="presets" role="radiogroup" aria-label="Recommended colour palettes"></div>
 
         <button type="button" class="disclose" id="moreToggle" aria-expanded="false" aria-controls="morePanel">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           More palettes
         </button>
         <div id="morePanel" hidden>
-          <div class="seg" id="moodSeg" role="group" aria-label="Palette mood"></div>
-          <div class="presets" id="morePresets" role="group" aria-label="More palettes" style="margin-top:var(--sp-3)"></div>
+          <div class="seg" id="moodSeg" role="radiogroup" aria-label="Palette mood"></div>
+          <div class="presets" id="morePresets" role="radiogroup" aria-label="More palettes" style="margin-top:var(--sp-3)"></div>
           <button type="button" class="btn btn-secondary reset" id="shuffle">Surprise me</button>
           <p class="hint">Every palette here passes the same readability checks as the ones above. Surprise me invents a brand-new one that passes too.</p>
         </div>
 
         <div class="field" id="fillField" style="margin-top:var(--sp-4)">
-          <div class="seg" id="fillSeg" role="group" aria-label="Panel fill">
-            <button type="button" data-fill="solid" aria-pressed="true">Solid panel</button>
-            <button type="button" data-fill="gradient" aria-pressed="false">Gradient panel</button>
+          <div class="seg" id="fillSeg" role="radiogroup" aria-label="Panel fill">
+            <button type="button" role="radio" data-fill="solid" aria-checked="true">Solid panel</button>
+            <button type="button" role="radio" data-fill="gradient" aria-checked="false">Gradient panel</button>
           </div>
         </div>
 
@@ -923,24 +959,24 @@
 
       <section class="card">
         <h2><span class="num" aria-hidden="true">4</span> Colours</h2>
-        <div class="presets" id="ctPresets" role="group" aria-label="Recommended colour palettes"></div>
+        <div class="presets" id="ctPresets" role="radiogroup" aria-label="Recommended colour palettes"></div>
 
         <button type="button" class="disclose" id="ctMoreToggle" aria-expanded="false" aria-controls="ctMorePanel">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
           More palettes
         </button>
         <div id="ctMorePanel" hidden>
-          <div class="seg" id="ctMoodSeg" role="group" aria-label="Palette mood"></div>
-          <div class="presets" id="ctMorePresets" role="group" aria-label="More palettes" style="margin-top:var(--sp-3)"></div>
+          <div class="seg" id="ctMoodSeg" role="radiogroup" aria-label="Palette mood"></div>
+          <div class="presets" id="ctMorePresets" role="radiogroup" aria-label="More palettes" style="margin-top:var(--sp-3)"></div>
           <button type="button" class="btn btn-secondary reset" id="ctShuffle">Surprise me</button>
           <p class="hint">Every palette here passes the same readability checks as the ones above. Surprise me invents a brand-new one that passes too.</p>
         </div>
 
         <div class="field" style="margin-top:var(--sp-4)">
-          <div class="seg" id="ctFillSeg" role="group" aria-label="Panel">
-            <button type="button" data-ctfill="none" aria-pressed="true">No panel <span class="pill">Best</span></button>
-            <button type="button" data-ctfill="flat" aria-pressed="false">Solid panel</button>
-            <button type="button" data-ctfill="gradient" aria-pressed="false">Gradient panel</button>
+          <div class="seg" id="ctFillSeg" role="radiogroup" aria-label="Panel">
+            <button type="button" role="radio" data-ctfill="none" aria-checked="true">No panel <span class="pill">Best</span></button>
+            <button type="button" role="radio" data-ctfill="flat" aria-checked="false">Solid panel</button>
+            <button type="button" role="radio" data-ctfill="gradient" aria-checked="false">Gradient panel</button>
           </div>
         </div>
 
@@ -981,7 +1017,19 @@
       </div>
       <div class="preview-stage" id="stage">
         <div class="preview-frame-wrap" id="frameWrap">
-          <iframe id="preview" title="Widget preview" scrolling="no"></iframe>
+          <!-- Not inert, and that was tried first. `inert` does take the
+               preview out of the tab order, and it also stops every click
+               inside it, so you could no longer press Next to look at slide
+               two of your own deck. Measured, not assumed. The tab stops are
+               removed one element at a time instead, in the load handler
+               below, which leaves the pointer alone. -->
+          <!-- tabindex="-1" on the frame itself, because a frame is a tab stop
+               in its own right even once its contents are not. It only removes
+               it from sequential navigation: clicking works, and a screen
+               reader can still reach it while browsing. What it stops is a
+               keyboard user landing on a picture of the widget they just
+               configured, on the way between two controls. -->
+          <iframe id="preview" title="Widget preview" scrolling="no" tabindex="-1"></iframe>
         </div>
       </div>
       <div class="notes" id="previewNotes" role="status" aria-live="polite"></div>
@@ -1347,6 +1395,29 @@
     return ch === "&" ? "&amp;" : ch === "<" ? "&lt;" : ch === ">" ? "&gt;" : ch;
   }
 
+  /* How long one pass through every prompt takes, in words. The same sum
+     buildCompanion uses for the master timeline, which is why it is stated
+     here once rather than in both places: type the characters, hold, delete
+     them, pause, and on to the next.
+
+     Worth surfacing because it is invisible and it is long. Five prompts at
+     the full fifty characters is fifty seconds, so a learner would have to
+     stand on the homepage for the better part of a minute to see the last
+     one, and nothing in the builder said so. */
+  function cwCycle() {
+    return companion.prompts
+      .map(function(p) { return p.trim().slice(0, MAX_CHARS); })
+      .filter(Boolean)
+      .reduce(function(t, p) { return t + p.length * TYPE + HOLD + p.length * DEL + GAP; }, 0);
+  }
+  function cwCycleText() {
+    var s = Math.round(cwCycle() / 1000);
+    if (!s) return "no time at all";
+    if (s < 60) return s + " seconds";
+    var m = Math.floor(s / 60), r = s % 60;
+    return m + (m === 1 ? " minute" : " minutes") + (r ? " " + r + " seconds" : "");
+  }
+
   function buildCompanion() {
     var PC = uid("cw", stateSeed(companion));
     var phrases = companion.prompts
@@ -1383,6 +1454,31 @@
     var g = companion.c;
     var C1 = g.c1, CM = g.cm, C2 = g.c2;
 
+    /* ---- the width below which the prompt gets a line of its own ----
+       The banner is one nowrap line inside an overflow:hidden wrapper, so
+       anything past the right edge is simply gone: no ellipsis, no wrap, no
+       sign that a word was ever there. On a phone that was most of the prompt.
+       Measured on a 360px viewport, where the clamp floors the type at 15px:
+       "Ask ✦ Companion: " takes about 150px, leaving 210 for a 50-character
+       prompt that needs roughly 375. Some 45 percent of the longest prompt was
+       never visible, and it still typed itself out into the space off-screen.
+
+       Giving the label its own line hands the prompt the full width, which is
+       about 356px at that size: the worst case goes from losing 22 characters
+       to losing about 3, and every prompt shorter than the cap fits outright.
+
+       The breakpoint is computed from the longest prompt rather than fixed,
+       so a deck of short prompts keeps the single line down to a much narrower
+       column and only a genuinely long one asks for the second. 0.55em per
+       character is deliberately generous for a 700-weight face, and 5.2em
+       covers the label: both err toward breaking one step early, because an
+       unnecessary second line costs a few pixels of height and a late break
+       costs words. */
+    var longest = phrases.reduce(function(m, p) { return Math.max(m, p.length); }, 0);
+    // 15px is the clamp floor, and it holds for every container under 600px,
+    // which is every container this query can fire in
+    var stackAt = Math.min(640, Math.ceil((5.2 + longest * 0.55) * 15));
+
     var css =
 ".cw-wrap{container-type:inline-size;position:relative;width:100%;margin:0;overflow:hidden;background:transparent}\n" +
 ".cw-main{font-family:" + FONT_STACK + ";font-size:20px;font-size:clamp(15px,2.5cqw,22px);font-weight:700;line-height:1.3;color:#18191D;white-space:nowrap;margin:0;padding:0}\n" +
@@ -1398,6 +1494,14 @@
 "@keyframes cw-blink{0%{opacity:1}100%{opacity:0}}\n" +
 ".cw-main:hover .cw-c,.cw-main:hover .cw-cur,.cw-main:hover .cw-star::before,.cw-main:hover .cw-star::after{animation-play-state:paused}\n" +
 "@media (prefers-reduced-motion:reduce){.cw-c{animation:none;max-width:none}.cw-ph~.cw-ph{display:none}.cw-cur{display:none}.cw-star::before,.cw-star::after{display:none}}\n" +
+// the label takes a line of its own so the prompt gets the full width. Only
+// the label changes: the prompt line stays nowrap, so the typing animation
+// behaves exactly as it does on one line. The trailing space after the colon
+// would otherwise sit at the end of the label's own line and push it wide.
+(stackAt > 240
+  ? "@container (max-width:" + stackAt + "px){.cw-lead{display:block}" +
+    ".cw-lead .cw-nb{display:none}}\n"
+  : "") +
 keyframes + charRules;
 
     var srText = esc("Ask AI Companion: " + phrases.join(" \u00b7 "));
@@ -1406,8 +1510,8 @@ keyframes + charRules;
       '<div class="' + PC + '-wrap">' +
       '<span class="' + PC + '-sr">' + srText + "</span>" +
       '<div class="' + PC + '-main" aria-hidden="true">' +
-      '<span>Ask&nbsp;<span class="' + PC + '-star"><span class="' + PC + '-ai">\u2726</span></span>' +
-      '<span class="' + PC + '-ai"> Companion</span>:&nbsp;</span>' +
+      '<span class="' + PC + '-lead">Ask&nbsp;<span class="' + PC + '-star"><span class="' + PC + '-ai">\u2726</span></span>' +
+      '<span class="' + PC + '-ai"> Companion</span>:<span class="' + PC + '-nb">&nbsp;</span></span>' +
       spansHtml +
       '<span class="' + PC + '-cur">|</span>' +
       "</div></div>\n<style>\n" + css.replace(/cw-/g, PC + "-") + "</style>";
@@ -1774,7 +1878,22 @@ keyframes + charRules;
        it becomes a light one, and the shadow goes to real black because a
        tinted shadow does nothing under a dark widget. */
     var pDark = lum(overlay ? oc.base : c.panel) < 0.22;
-    var edge = pDark ? "rgba(255,255,255,0.10)" : rgba(c.heading, 0.10);
+    /* No hairline on the overlay layout, and this is a bug fix rather than a
+       preference. An absolutely positioned child resolves `inset:0` against the
+       padding box, not the border box, so the photo stopped exactly 1px short
+       on every side and that 1px ring was painted with the panel's own fill.
+       The overlay's fill is the scrim base, which is near-black, so a bright
+       photo came out wearing a black outline. Measured: a 795 by 260 panel
+       holding a 793 by 258 image.
+
+       Filling it is not the answer. `overflow:hidden` clips to the padding box
+       too, so pulling the media out to `inset:-1px` would be clipped straight
+       back. And the hairline has nothing to do here anyway: it exists so that a
+       *pale* panel does not dissolve into a white 360Learning page, and a
+       full-bleed photograph over a near-black fallback has all the edge it
+       needs. The shadow stays and does the separating on its own. */
+    var edge = overlay ? null
+      : pDark ? "rgba(255,255,255,0.10)" : rgba(c.heading, 0.10);
     /* Tight, not dramatic. This used to spread 32px, which is a shadow that
        lifts a marketing card off a landing page. The platform's own surfaces
        barely cast one at all: the hairline does the separating and the shadow
@@ -1798,7 +1917,7 @@ keyframes + charRules;
 // mean in the second.
 ".hw-panel{display:grid;" + cols + "gap:clamp(24px,3cqw,40px);align-items:center;" +
   "padding:clamp(26px,3.2cqw,44px);border-radius:" + R_PANEL + ";" +
-  "border:1px solid " + edge + ";box-shadow:" + shade + ";" +
+  (edge ? "border:1px solid " + edge + ";" : "") + "box-shadow:" + shade + ";" +
   // a floor, not a fixed height: a full-bleed photo needs some depth to read
   // as a photo rather than a stripe, but short copy should still give a short
   // hero. Set too high, this is what makes an overlay hero feel oversized.
@@ -1875,6 +1994,34 @@ keyframes + charRules;
 // Once the column is narrow the two columns stack, and a 16:10 photo would eat
 // the whole widget, so it flattens. The overlay scrim switches from a
 // horizontal sweep to a full cover, because the text now spans the width.
+/* The overlay's text box goes full width well before the panel stacks, and
+   that is a squeeze this used to sit in for 280px of width. `max-width:56%`
+   is right on a wide banner, where 56 percent is still a comfortable measure.
+   It stops being right the moment the panel is narrow enough that 56 percent
+   is a column rather than a measure: at a 700px container the heading is
+   scaling at 3.6cqw, so 25px type in a 392px box is about 15 characters a
+   line, and "Welcome to your Digital Academy" breaks to three. The panel does
+   not stack until 620, so between there and roughly 900 the words were held
+   in a narrow shaft down the left of a wide photograph.
+
+   Releasing the width means releasing the scrim with it, and that is the part
+   worth being careful about. The horizontal sweep is built so that text never
+   crosses anything lighter than SCRIM_MIN, which is what the contrast report
+   measures against: it holds 0.75 out to 56 percent and then falls away to
+   0.16 so the photo can be seen. Text at full width would run out over the
+   0.34 and 0.16 stops and every guarantee in overlayColors would be void.
+
+   So the two move together, to the vertical cover the narrow layout already
+   uses. Its lightest stop is 0.8, above SCRIM_MIN, so the worst case the
+   report checks is still the worst case on the page and nothing about the
+   colour maths changes. Below 620 the existing rule restates the same pair,
+   which is harmless and keeps that block readable on its own. */
+(overlay
+  ? "@container (max-width:900px){.hw-text{max-width:100%}" +
+    ".hw-media::after{background:linear-gradient(180deg," +
+      rgba(oc.base, 0.88) + " 0%," + rgba(oc.base, 0.8) + " 100%)}}\n"
+  : "") +
+
 "@container (max-width:620px){.hw-panel{grid-template-columns:minmax(0,1fr);gap:22px;padding:26px;" +
   (overlay ? "min-height:0;" : "") + "}" +
   (split ? ".hw-text,.hw-media{grid-column:1;grid-row:auto}.hw-img,.hw-ph{aspect-ratio:21/9}" : "") +
@@ -2059,6 +2206,26 @@ keyframes + charRules;
        settled twice on every load. One measurement, taken once the font that
        will actually be used is ready. The timer is the escape hatch for a
        blocked or slow font: a late preview beats a stuck one. */
+    /* The preview is something to look at, not something to tab through.
+       Without this, Tab walks out of the builder and into the generated
+       widget: a five-slide Live training deck puts five radios and up to six
+       links between the last control above the preview and the first one
+       below it, none of which configure anything.
+
+       One tabindex per element rather than `inert` on the frame. Both take
+       the contents out of the tab order; `inert` also swallows every click,
+       which would mean you could not press Next to see slide two of the deck
+       you are building. Measured on 2026-07-30: with inert the preview's own
+       Next label stopped changing slides entirely.
+
+       It runs on every load because srcdoc is rewritten on every repaint, so
+       these are new elements each time. */
+    try {
+      Array.prototype.forEach.call(
+        d.querySelectorAll("a[href],input,button,select,textarea,[tabindex]"),
+        function(el) { el.setAttribute("tabindex", "-1"); });
+    } catch (e) { /* preview only, and it is still only a preview without this */ }
+
     var done = false;
     function settle() {
       if (done) return;
@@ -2108,7 +2275,12 @@ keyframes + charRules;
         ? "Exactly the code you’ll paste, rendered live. The widget fills the full width of whatever column it lands in and rearranges itself automatically when that column gets narrow."
       : active === "classroom"
         ? "Exactly the code you’ll paste, rendered live. The widget spans the full width of wherever it lands, and reflows on a phone by itself."
-        : "Exactly the code you’ll paste, rendered live. Hover it to pause the animation.");
+        /* The loop length is worth saying out loud. Five prompts at the full
+           50 characters run for 50 seconds, so the last one is nearly a minute
+           of standing still away, and nothing else on the page would tell you
+           that. Long enough to matter, and invisible until it is named. */
+        : "Exactly the code you’ll paste, rendered live. Hover it to pause the animation. " +
+          "One full cycle through your prompts takes " + cwCycleText() + ".");
   }
 
   /* Contrast warnings have to say what’s wrong and what to change. A ratio on
@@ -2198,7 +2370,7 @@ keyframes + charRules;
     $("panelHero").hidden = active !== "hero";
     $("panelClassroom").hidden = active !== "classroom";
     Array.prototype.forEach.call($("wtype").querySelectorAll("button[data-w]"), function(b) {
-      b.setAttribute("aria-pressed", String(b.getAttribute("data-w") === active));
+      b.setAttribute("aria-checked", String(b.getAttribute("data-w") === active));
     });
     // deliberately not reset to a small height first: collapsing the frame and
     // then growing it back is two movements where the new widget needs one
@@ -2222,7 +2394,7 @@ keyframes + charRules;
       var btn = e.target.closest("button[data-" + attr + "]");
       if (!btn) return;
       Array.prototype.forEach.call(wrap.querySelectorAll("button[data-" + attr + "]"), function(b) {
-        b.setAttribute("aria-pressed", String(b === btn));
+        b.setAttribute("aria-checked", String(b === btn));
       });
       onPick(btn.getAttribute("data-" + attr));
     });
@@ -2463,7 +2635,7 @@ keyframes + charRules;
   }
 
   /* ---- colours ---- */
-  var presetsEl = $("presets"), colorsEl = $("colors"), colorInputs = {};
+  var presetsEl = $("presets"), colorsEl = $("colors"), colorInputs;
   var customToggle = $("customToggle"), customPanel = $("customPanel"), resetBtn = $("resetColors");
   var lastPreset = PRESETS[0];
 
@@ -2473,8 +2645,9 @@ keyframes + charRules;
     var b = document.createElement("button");
     b.type = "button";
     b.className = "preset";
+    b.setAttribute("role", "radio");
     b.setAttribute("data-preset", p.id);
-    b.setAttribute("aria-pressed", String(p.id === hero.preset));
+    b.setAttribute("aria-checked", String(p.id === hero.preset));
     var sw = document.createElement("div");
     sw.className = "swatches";
     [p.c.panel, p.c.accent, p.c.btnBg].forEach(function(col) {
@@ -2500,8 +2673,9 @@ keyframes + charRules;
   MOODS.forEach(function(m, i) {
     var b = document.createElement("button");
     b.type = "button";
+    b.setAttribute("role", "radio");
     b.setAttribute("data-mood", m.id);
-    b.setAttribute("aria-pressed", String(i === 0));
+    b.setAttribute("aria-checked", String(i === 0));
     b.textContent = m.name;
     $("moodSeg").appendChild(b);
   });
@@ -2534,58 +2708,132 @@ keyframes + charRules;
     applyGenerated(buildPalette($("seedColor").value, false));
   });
 
-  COLOR_FIELDS.forEach(function(f) {
-    var wrap = document.createElement("div");
-    wrap.className = "cfield";
-    var lab = document.createElement("label");
-    lab.textContent = f.label;
-    lab.setAttribute("for", "c_" + f.key);
-    var row = document.createElement("div");
-    row.className = "row";
+  /* ---- one colour field, built once ----
+     The hero banner, the Companion gradient and the Live training palette each
+     had their own copy of this, forty-odd lines apiece and identical but for
+     which object they wrote into. Three copies is three places to fix anything,
+     and the thing that needed fixing had been missed in all three.
 
-    var swatch = document.createElement("input");
-    swatch.type = "color";
-    swatch.id = "c_" + f.key;
-    swatch.value = hero.c[f.key];
+     A hex the field cannot parse set `aria-invalid` and turned the border red,
+     and that was the whole of the feedback. Red border alone is colour as the
+     only carrier of meaning, which is the one thing 1.4.1 rules out, and it is
+     no help to anyone regardless: it says something is wrong and never what.
+     The link and image-URL fields next door have always answered this properly
+     with a sentence in a live region. These now do the same, once, so all
+     twenty-one of them behave the same way and cannot drift apart again.
 
-    var hexIn = document.createElement("input");
-    hexIn.type = "text";
-    hexIn.value = hero.c[f.key];
-    hexIn.maxLength = 7;
-    noAutofill(hexIn, true);
-    hexIn.setAttribute("aria-label", f.label + " hex value");
+     `getC` is a function rather than the object itself because every one of
+     these palettes gets *replaced* on a preset click (`hero.c = clone(p.c)`),
+     so a captured reference would go on writing into the palette that was on
+     screen two clicks ago. */
+  function colorFields(host, fields, idPrefix, getC, onEdit) {
+    var reg = {};
+    fields.forEach(function(f) {
+      var wrap = document.createElement("div");
+      wrap.className = "cfield";
+      var lab = document.createElement("label");
+      lab.textContent = f.label;
+      lab.setAttribute("for", idPrefix + f.key);
+      var row = document.createElement("div");
+      row.className = "row";
 
-    swatch.addEventListener("input", function() {
-      hero.c[f.key] = swatch.value;
-      hexIn.value = swatch.value;
-      dropPreset();
-      render(true);
+      var swatch = document.createElement("input");
+      swatch.type = "color";
+      swatch.id = idPrefix + f.key;
+      swatch.value = getC()[f.key];
+
+      var hexIn = document.createElement("input");
+      hexIn.type = "text";
+      hexIn.value = getC()[f.key];
+      hexIn.maxLength = 7;
+      noAutofill(hexIn, true);
+      hexIn.setAttribute("aria-label", f.label + " hex value");
+
+      // role="alert" so the sentence is spoken when it appears, and
+      // aria-describedby so it is still reachable from the field afterwards.
+      // Without the second one a screen reader hears "invalid" on every later
+      // visit to the field with nothing saying what would fix it.
+      var err = document.createElement("p");
+      err.className = "err";
+      err.id = idPrefix + f.key + "e";
+      err.setAttribute("role", "alert");
+      err.hidden = true;
+      hexIn.setAttribute("aria-describedby", err.id);
+
+      function bad(on) {
+        hexIn.setAttribute("aria-invalid", on ? "true" : "false");
+        err.hidden = !on;
+        // names the fix rather than the rule, and shows the shape rather than
+        // describing it
+        if (on) err.textContent = "Use a colour like #4a3fc4, or pick one with the swatch.";
+      }
+
+      swatch.addEventListener("input", function() {
+        getC()[f.key] = swatch.value;
+        hexIn.value = swatch.value;
+        bad(false);
+        onEdit();
+        render(true);
+      });
+      hexIn.addEventListener("input", function() {
+        var v = hexIn.value.trim();
+        if (v && v.charAt(0) !== "#") v = "#" + v;
+        /* Half-typed is not wrong yet, but wrong is wrong straight away, and
+           the first version of this rule could not tell the difference. It
+           waited for seven characters before complaining, on the grounds that
+           "#4a3f" is four characters on the way to six. True, and it also
+           meant "zzz" sat there silently: three characters, no error, no
+           colour, nothing to say why.
+
+           The two cases separate on content rather than on length. A character
+           that is not a hex digit can never become a colour however much more
+           is typed, so it is flagged the moment it appears. Anything made only
+           of hex digits is still on its way somewhere, so it stays quiet until
+           it is long enough to be finished and still wrong. An empty field is
+           neither: it is just empty. */
+        if (!isHex(v)) {
+          bad(/[^0-9a-f]/i.test(v.slice(1)) || v.length >= 7);
+          return;
+        }
+        bad(false);
+        // colour inputs only accept #rrggbb, so shorthand is expanded first
+        if (v.length === 4) v = "#" + v[1] + v[1] + v[2] + v[2] + v[3] + v[3];
+        getC()[f.key] = v;
+        swatch.value = v;
+        onEdit();
+        render(true);
+      });
+      // an invalid value left behind snaps back to the last colour that worked
+      hexIn.addEventListener("blur", function() {
+        hexIn.value = getC()[f.key];
+        bad(false);
+      });
+
+      row.appendChild(swatch);
+      row.appendChild(hexIn);
+      wrap.appendChild(lab);
+      wrap.appendChild(row);
+      wrap.appendChild(err);
+      host.appendChild(wrap);
+      reg[f.key] = { swatch: swatch, hex: hexIn, err: err };
     });
-    hexIn.addEventListener("input", function() {
-      var v = hexIn.value.trim();
-      if (v && v.charAt(0) !== "#") v = "#" + v;
-      if (!isHex(v)) { hexIn.setAttribute("aria-invalid", "true"); return; }
-      hexIn.setAttribute("aria-invalid", "false");
-      // colour inputs only accept #rrggbb, so shorthand is expanded first
-      if (v.length === 4) v = "#" + v[1] + v[1] + v[2] + v[2] + v[3] + v[3];
-      hero.c[f.key] = v;
-      swatch.value = v;
-      dropPreset();
-      render(true);
-    });
-    // an invalid value left behind snaps back to the last colour that worked
-    hexIn.addEventListener("blur", function() {
-      hexIn.value = hero.c[f.key];
-      hexIn.setAttribute("aria-invalid", "false");
-    });
+    return reg;
+  }
 
-    row.appendChild(swatch);
-    row.appendChild(hexIn);
-    wrap.appendChild(lab);
-    wrap.appendChild(row);
-    colorsEl.appendChild(wrap);
-    colorInputs[f.key] = { swatch: swatch, hex: hexIn };
-  });
+  /* Pushes a palette back into the fields after a preset, a seed or a restore,
+     and clears any error left sitting under one of them. Shared for the same
+     reason the fields are. */
+  function syncColorFields(reg, fields, c) {
+    fields.forEach(function(f) {
+      reg[f.key].swatch.value = c[f.key];
+      reg[f.key].hex.value = c[f.key];
+      reg[f.key].hex.setAttribute("aria-invalid", "false");
+      reg[f.key].err.hidden = true;
+    });
+  }
+
+  colorInputs = colorFields(colorsEl, COLOR_FIELDS, "c_",
+    function() { return hero.c; }, dropPreset);
 
   /* Presets are the path almost everyone should take, so the seven hex fields
      stay folded away until someone actually has brand colours to match. */
@@ -2602,7 +2850,7 @@ keyframes + charRules;
     lastPreset = p;
     hero.c = clone(p.c);
     eachPresetButton(function(el) {
-      el.setAttribute("aria-pressed", String(el.getAttribute("data-preset") === p.id));
+      el.setAttribute("aria-checked", String(el.getAttribute("data-preset") === p.id));
     });
     syncColorInputs();
     render(false);
@@ -2611,33 +2859,28 @@ keyframes + charRules;
   function dropPreset() {
     hero.preset = null;
     eachPresetButton(function(el) {
-      el.setAttribute("aria-pressed", "false");
+      el.setAttribute("aria-checked", "false");
     });
     resetBtn.textContent = "Reset to " + lastPreset.name;
     resetBtn.hidden = false;
   }
 
-  function syncColorInputs() {
-    COLOR_FIELDS.forEach(function(f) {
-      colorInputs[f.key].swatch.value = hero.c[f.key];
-      colorInputs[f.key].hex.value = hero.c[f.key];
-      colorInputs[f.key].hex.setAttribute("aria-invalid", "false");
-    });
-  }
+  function syncColorInputs() { syncColorFields(colorInputs, COLOR_FIELDS, hero.c); }
 
   /* ---- companion colours ----
      The same three moves the other two widgets offer, in the same order:
      pick a checked gradient, build one from a brand colour, or set the stops by
      hand and watch the report. Nothing new to learn on the third widget. */
-  var cwColorInputs = {}, cwResetBtn = $("cwResetColors");
+  var cwColorInputs, cwResetBtn = $("cwResetColors");
   var cwLastPreset = CW_PRESETS[0];
 
   function cwPresetButton(p) {
     var b = document.createElement("button");
     b.type = "button";
     b.className = "preset";
+    b.setAttribute("role", "radio");
     b.setAttribute("data-cwpreset", p.id);
-    b.setAttribute("aria-pressed", String(p.id === companion.preset));
+    b.setAttribute("aria-checked", String(p.id === companion.preset));
     var sw = document.createElement("div");
     sw.className = "swatches";
     // the three bands are the three stops, so the swatch is the gradient
@@ -2662,7 +2905,7 @@ keyframes + charRules;
     cwLastPreset = p;
     companion.c = clone(p.c);
     cwEachPreset(function(el) {
-      el.setAttribute("aria-pressed", String(el.getAttribute("data-cwpreset") === p.id));
+      el.setAttribute("aria-checked", String(el.getAttribute("data-cwpreset") === p.id));
     });
     cwSyncColorInputs();
     render(false);
@@ -2670,7 +2913,7 @@ keyframes + charRules;
 
   function cwDropPreset() {
     companion.preset = null;
-    cwEachPreset(function(el) { el.setAttribute("aria-pressed", "false"); });
+    cwEachPreset(function(el) { el.setAttribute("aria-checked", "false"); });
     cwResetBtn.textContent = "Reset to " + cwLastPreset.name;
     cwResetBtn.hidden = false;
   }
@@ -2688,64 +2931,10 @@ keyframes + charRules;
   });
   cwResetBtn.addEventListener("click", function() { cwApplyPreset(cwLastPreset); cwResetBtn.hidden = true; });
 
-  CW_COLOR_FIELDS.forEach(function(fd) {
-    var wrap = document.createElement("div");
-    wrap.className = "cfield";
-    var lab = document.createElement("label");
-    lab.textContent = fd.label;
-    lab.setAttribute("for", "cwc_" + fd.key);
-    var row = document.createElement("div");
-    row.className = "row";
+  cwColorInputs = colorFields($("cwColors"), CW_COLOR_FIELDS, "cwc_",
+    function() { return companion.c; }, cwDropPreset);
 
-    var swatch = document.createElement("input");
-    swatch.type = "color";
-    swatch.id = "cwc_" + fd.key;
-    swatch.value = companion.c[fd.key];
-
-    var hexIn = document.createElement("input");
-    hexIn.type = "text";
-    hexIn.value = companion.c[fd.key];
-    hexIn.maxLength = 7;
-    noAutofill(hexIn, true);
-    hexIn.setAttribute("aria-label", fd.label + " hex value");
-
-    swatch.addEventListener("input", function() {
-      companion.c[fd.key] = swatch.value;
-      hexIn.value = swatch.value;
-      cwDropPreset();
-      render(true);
-    });
-    hexIn.addEventListener("input", function() {
-      var v = hexIn.value.trim();
-      if (v && v.charAt(0) !== "#") v = "#" + v;
-      if (!isHex(v)) { hexIn.setAttribute("aria-invalid", "true"); return; }
-      hexIn.setAttribute("aria-invalid", "false");
-      if (v.length === 4) v = "#" + v[1] + v[1] + v[2] + v[2] + v[3] + v[3];
-      companion.c[fd.key] = v;
-      swatch.value = v;
-      cwDropPreset();
-      render(true);
-    });
-    hexIn.addEventListener("blur", function() {
-      hexIn.value = companion.c[fd.key];
-      hexIn.setAttribute("aria-invalid", "false");
-    });
-
-    row.appendChild(swatch);
-    row.appendChild(hexIn);
-    wrap.appendChild(lab);
-    wrap.appendChild(row);
-    $("cwColors").appendChild(wrap);
-    cwColorInputs[fd.key] = { swatch: swatch, hex: hexIn };
-  });
-
-  function cwSyncColorInputs() {
-    CW_COLOR_FIELDS.forEach(function(fd) {
-      cwColorInputs[fd.key].swatch.value = companion.c[fd.key];
-      cwColorInputs[fd.key].hex.value = companion.c[fd.key];
-      cwColorInputs[fd.key].hex.setAttribute("aria-invalid", "false");
-    });
-  }
+  function cwSyncColorInputs() { syncColorFields(cwColorInputs, CW_COLOR_FIELDS, companion.c); }
 
   /* ---- readability report ----
      This widget had no contrast check of any kind until now, which made the
@@ -2943,7 +3132,7 @@ keyframes + charRules;
     var url = URL.createObjectURL(blob);
     a.href = url;
     a.download = active === "hero" ? "hero-widget.html"
-      : active === "classroom" ? "path-slides-widget.html"
+      : active === "classroom" ? "live-training-widget.html"
       : "ai-companion-widget.html";
     /* In the document, and revoked on the next turn of the loop rather than on
        this one. Chrome tolerates a detached anchor and a URL revoked in the
@@ -2962,12 +3151,18 @@ keyframes + charRules;
   /* ================================================================
      Live training
 
-     Two layouts sharing one set of content, one palette and one preview:
-     one layout, Path slides, which pages through a few programmes one at a
-     time. A second layout, a Signpost that put three featured paths in a row,
-     was built and then removed on 2026-07-30: the deck does the same job with
-     more room to sell, and two layouts sharing one palette and one preview was
+     One layout, Slides, which pages through a few programmes one at a time. A
+     second layout, a Signpost that put three featured paths in a row, was
+     built and then removed on 2026-07-30: the deck does the same job with more
+     room to sell, and two layouts sharing one palette and one preview was
      twice the surface for one purpose.
+
+     One noun per thing. The carousel item is a slide, everywhere: in the
+     builder, in the screen-reader text, in the arrows. The 360Learning content
+     a slide links out to is a programme. Until 2026-07-30 the item was called
+     a slide on screen and a path to a screen reader, the emitted comment said
+     "Path slides" and the download came out as path-slides-widget.html, so
+     four surfaces of one widget used three different words for it.
 
      Everything here is prefixed `ct`, because it lives in the same closure
      as the other two widgets and several of the names would otherwise
@@ -3043,13 +3238,52 @@ keyframes + charRules;
     };
   }
 
-  /* The format tag sits on a wash of the accent. A wash is lighter than the
-     card in dark mode and darker in light mode, so the accent has to be
-     re-walked against it or the label drifts under the line. */
-  function ctChip(c) {
-    var bg = blend(c.accent, c.card, c.dark ? 0.22 : 0.10);
-    return { bg: bg, fg: walkTo(c.accent, [bg], 4.6, c.dark ? 1 : -1) };
-  }
+  /* `ctChip` used to live here. It walked the accent against a wash of itself
+     on a card, for a format tag that has sat on the tile in white since the
+     deck became the only layout: every one of its callers was computing a
+     colour that was then overridden before it reached the page. Removed
+     2026-07-30 along with the two dead declarations it fed and the two report
+     rows that measured them.
+
+     What the pills are actually painted in lives here instead, as two numbers
+     rather than as literals in a CSS string, because the readability report
+     has to composite the same two washes to measure them. Spelled out once, the
+     report cannot drift away from the widget. Drifting is precisely what went
+     wrong before: the rules said one thing, the report measured another, and
+     the pills sat under the bar for months with eighteen green rows above them.
+
+     The outline is the answer to a measurement, not a taste: white at 0.5
+     measured 2.17:1 against the tile, so the outlined duration pill had no
+     visible outline at all. 0.7 is the first alpha that clears the 3:1 a
+     non-text boundary needs; 0.8 is used, for the headroom the tile's own
+     radial highlight can eat. */
+  var CT_DUR_EDGE_ALPHA = 0.8;
+  function ctDurEdge(tl) { return blend("#ffffff", tl.start, CT_DUR_EDGE_ALPHA); }
+
+  /* ---- the format pill ----
+     Solid, in the tile's own colour on white, and it took three goes to get
+     here because a translucent wash cannot do this job at all.
+
+     A pill has two separate bars to clear. Its label has to be readable on the
+     pill, and the pill itself has to be distinguishable from the tile behind
+     it, or there is no pill. Measured across every palette the builder can
+     reach, a wash fails one or the other every time. White at 0.18 with a white
+     label, which is what shipped for months, put the label at 3.39:1. Turning
+     the wash dark fixes the label and takes the pill itself to 1.13:1 against
+     the tile, which is a pill you cannot see. And no dark wash can ever fix
+     that: tile luminance runs down to 0.0245, so there is no room underneath it
+     to find 3:1 of separation. The whole family of options is closed.
+
+     Solid white opens it, and the guarantee is one the tile already carries.
+     ctTile walks the gradient down until white clears 4.8:1 on it, so a white
+     pill is 4.8:1 distinct from the tile, and the tile's own colour set as the
+     label is the same 4.8:1 the other way round. One existing invariant, both
+     bars, nothing new to keep true.
+
+     It also puts the pair in the platform's own order: an outlined pill for the
+     duration beside a solid one for the status, which is exactly how a course
+     card sets "3min" against its status chip. */
+  function ctChipFg(tl) { return tl.start; }
 
   /* ---- the programme tile ----
      360Learning generates a gradient thumbnail with the item's name typeset
@@ -3283,6 +3517,12 @@ keyframes + charRules;
       allHref: "/home/content/classrooms",
       ctaText: "See dates and book",
       cols: { obj: true, who: true, why: true },
+      /* Sentence case, and printed exactly as typed. The widget used to force
+         these to capitals in CSS, so the field said one thing and the widget
+         showed another and there was no way to ask for anything else. The
+         transform is gone, and with it the reason to shout: at body size in
+         heading ink these read as what they are, three short questions over
+         three short answers. Anyone who wants capitals types capitals. */
       labels: { obj: "What you’ll learn", who: "Who’s it for", why: "Why you’ll love it" },
       slides: [
         {
@@ -3449,13 +3689,19 @@ keyframes + charRules;
      group page sets a section title against its "Find more", and it is why
      there is no standalone button here: on this platform the section-level
      action is a link, and there is only one of them. */
-  function ctHeadHtml(P, heading, linkText, href) {
+  /* The see-everything link, on its own, because it has two homes now. It sits
+     on the heading's baseline when there is a heading, and drops into the
+     control row when there is not. Same markup either way. */
+  function ctLinkHtml(P, linkText, href) {
     var h = ctSafe(href), txt = ctTrim(linkText);
-    var link = (h && txt)
-      ? '<a class="' + P + '-link" href="' + escAttr(h) + '"' +
-        (ctExternal(h) ? ' target="_blank" rel="noopener noreferrer"' : "") + ">" + esc(txt) +
-        (ctExternal(h) ? '<span class="' + P + '-sr"> (opens in a new tab)</span>' : "") + "</a>"
-      : "";
+    if (!h || !txt) return "";
+    return '<a class="' + P + '-link" href="' + escAttr(h) + '"' +
+      (ctExternal(h) ? ' target="_blank" rel="noopener noreferrer"' : "") + ">" + esc(txt) +
+      (ctExternal(h) ? '<span class="' + P + '-sr"> (opens in a new tab)</span>' : "") + "</a>";
+  }
+
+  function ctHeadHtml(P, heading, linkText, href) {
+    var link = ctLinkHtml(P, linkText, href);
     if (!ctTrim(heading) && !link) return "";
     /* The heading is one flex item and the link is the other, so the link sits
        on the heading's baseline over on the right, which is how a group page
@@ -3498,7 +3744,7 @@ keyframes + charRules;
      than a headline is also what survives a deck of programmes that all happen
      to run for an hour. */
   function ctCardCss(c) {
-    var ch = ctChip(c), tl = ctTile(c), edge = ctEdge(c);
+    var tl = ctTile(c);
     return ".ct-tile{position:relative;display:flex;flex-direction:column;justify-content:center;" +
         "align-items:center;text-align:center;padding:18px 20px;overflow:hidden;" +
         "background:linear-gradient(140deg," + tl.start + " 0%," + tl.end + " 100%)}\n" +
@@ -3513,8 +3759,15 @@ keyframes + charRules;
       // it stops reading as a label and starts reading as a footnote
       ".ct-pill{display:inline-flex;align-items:center;padding:4px 10px;border-radius:" + R_PILL + ";" +
         "font-size:11.5px;font-weight:700;line-height:1.45;white-space:nowrap}\n" +
-      ".ct-dur{border:1px solid " + edge + ";color:" + c.heading + "}\n" +
-      ".ct-mode{background:" + ch.bg + ";color:" + ch.fg + "}\n";
+      /* Both pills live on the tile and nowhere else, so they are declared for
+         the tile and nowhere else. These used to be a palette-ink pair here
+         and a white pair overridden in ctBuildDeck, which shipped two dead
+         declarations in every widget and, worse, gave the readability report
+         two pairs to measure that no pill has painted since the deck became
+         the only layout. The alphas come from the two constants above, so the
+         report measures the wash the browser actually composites. */
+      ".ct-dur{border:1px solid rgba(255,255,255," + CT_DUR_EDGE_ALPHA + ");color:#fff}\n" +
+      ".ct-mode{background:#ffffff;color:" + ctChipFg(tl) + "}\n";
   }
 
   // duration and format, in that order, because that is the order the
@@ -3603,23 +3856,69 @@ keyframes + charRules;
       (cta ? '<div class="' + P + '-cta">' + cta + "</div>" : "") + "</div>";
   }
   function ctSectionsCss(c) {
-    // Block headings are labels, not actions. They used to be accent
-    // coloured, which spent the loudest colour in the palette on six words
-    // nobody clicks and left the call to action competing with them. The
-    // accent now means "you can act on this": links, bullets, the slide dots.
+    /* Block headings are labels, not actions. They used to be accent
+       coloured, which spent the loudest colour in the palette on six words
+       nobody clicks and left the call to action competing with them. The
+       accent now means "you can act on this": links, bullets, the slide dots.
+
+       Moving off the accent was right in hue and one step too far in value.
+       They landed on `c.body`, which is the identical token the prose and the
+       bullets use, so the label was both smaller than the text it labels and
+       the same ink as it: weight and caps were carrying the whole distinction,
+       and a smaller element in matching ink reads as a footnote under the
+       content rather than as a heading over it. `c.heading` is the option in
+       between. It costs no new check, because heading-on-card is already
+       walked to 4.5:1 for every palette and already has a row in the
+       readability report, and it makes the widget internally consistent: the
+       section h2, the slide h3 and the column h4 are now all heading-weight
+       ink, where the h4 alone used to be body.
+
+       The casing is whatever was typed, and that is what settled the rest of
+       the rule. It used to be forced to capitals here, so the field in the
+       builder and the words in the widget disagreed and there was no way to
+       ask for anything else. The three defaults are sentence case now, which
+       is what the fields always said they were.
+
+       Once both casings are possible, the small-caps label this used to be
+       stops being a safe shape. 11.5px at 0.07em tracking is a device that
+       works *because* the text is uppercase: caps have no ascenders or
+       descenders to read by, so they are set small, spaced out and bolder to
+       stay legible. Put lower case through the same rule and every one of those
+       compensations turns into a defect. It sets below the body copy it
+       introduces, the tracking that opened up the caps now pulls the lower-case
+       words apart, and a heading smaller than its own paragraph reads as a
+       footnote under the text rather than a label over it.
+
+       So the label is the body size, and the two things that separate it are
+       the two that work in either casing: weight and ink. 14px matching .ct-p
+       and the bullets exactly, 700 against their 400, and c.heading against
+       their c.body. Typed in capitals it still reads as a label, typed in
+       sentence case it reads as a subheading, and both are correct. Nothing
+       about the widget depends on which one somebody picks.
+
+       The tracking goes with the size. At 11.5px it was buying legibility; at
+       14px, matching the copy underneath, it would only be decoration, and
+       decoration on a label that might be lower case is decoration in the wrong
+       place. Line height matches the body's 1.4 for the same reason: a label
+       that wraps should lead like the text it belongs to.
+
+       The gap under it grows from 4px to 6px. At 11.5px the size difference
+       did the separating on its own; at the same size as its paragraph, the
+       label needs the space or the two run together as one block. 6px is 0.43em
+       here, against the 12px that separates one section from the next, so the
+       grouping still reads two-to-one the right way round. */
     /* 14px, not 12.5. Measured in a real embed on 2026-07-30: with the
        360Learning newsfeed open the widget gets about 795px, and at that width
        12.5px descriptions rendered visibly smaller than the newsfeed body copy
        sitting beside them. The widget read as the fine print of the page rather
        than as content on it, which is the opposite of the whole point. 14 is
        the platform's own card body size, so the words now match the words
-       around them. Column labels and pills came up with it, because a label at
-       10.5 under 14px copy reads as a footnote to it. Line height came down
-       from 1.42 to 1.4: the same optical leading at a larger size. */
+       around them. Line height came down from 1.42 to 1.4: the same optical
+       leading at a larger size. */
     return ".ct-sec{margin-top:12px}\n" +
-      ".ct-sh{margin:0;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:" + c.body + "}\n" +
-      ".ct-p{margin:4px 0 0;font-size:14px;font-weight:400;line-height:1.4;color:" + c.body + ";text-wrap:pretty}\n" +
-      ".ct-ul{margin:5px 0 0;padding:0;list-style:none}\n" +
+      ".ct-sh{margin:0;font-size:14px;font-weight:700;line-height:1.4;color:" + c.heading + "}\n" +
+      ".ct-p{margin:6px 0 0;font-size:14px;font-weight:400;line-height:1.4;color:" + c.body + ";text-wrap:pretty}\n" +
+      ".ct-ul{margin:6px 0 0;padding:0;list-style:none}\n" +
       ".ct-ul li{position:relative;padding-left:15px;margin-top:3px;font-size:14px;font-weight:400;line-height:1.4;color:" + c.body + "}\n" +
       // a drawn dot rather than a list marker, so its colour and size are ours.
       // 7px down puts it on the optical centre of a 19.6px first line, which is
@@ -3636,15 +3935,25 @@ keyframes + charRules;
   }
 
 
-  /* ---- Path slides ----
+  /* ---- Slides ----
 
      Next has to work with no JavaScript at all. So each slide owns a hidden
      radio button, and Next is a <label> that ticks the next one. The browser
      does the state, CSS does the rest.
 
+     The cost of that, and it is a real one: a <label> is not focusable, so the
+     visible Back, Next and dot controls cannot be reached by keyboard at all.
+     What can be reached is the radio group behind them, which is a genuine
+     equivalent (arrow keys change slides, each radio is named "title, slide k
+     of n", and a focused radio outlines its own dot so the focus is visible).
+     So the deck is operable by keyboard and poorly signposted for it: someone
+     sees three 44px buttons they cannot tab to. Making the labels focusable
+     would mean tabindex plus a key handler, which is JavaScript, which is the
+     one thing this widget cannot ship. Documented rather than fixed.
+
      If a platform ever strips form inputs the way 360Learning strips
      scripts, none of that exists and :has(:checked) never matches. The
-     default styles are therefore the fallback: every path stacked one under
+     default styles are therefore the fallback: every slide stacked one under
      another with the nav hidden. The deck only assembles itself once it has
      proof the radios are alive. Confirmed working in a real 360Learning
      space, 2026-07-28. */
@@ -3664,7 +3973,7 @@ keyframes + charRules;
       // naming the path in the label means a screen reader user hears where
       // each dot goes, rather than counting to a number that means nothing
       radios += '<input class="' + P + '-r" type="radio" name="' + P + '-deck" id="' + P + "-s" + k + '"' +
-        (i === 0 ? " checked" : "") + ' aria-label="' + escAttr(ctTrim(p.title)) + ", path " + k + " of " + n + '">';
+        (i === 0 ? " checked" : "") + ' aria-label="' + escAttr(ctTrim(p.title)) + ", slide " + k + " of " + n + '">';
 
       /* The tile is the slide's headline, so the programme name is set large
          in white on it rather than repeated as a heading in the right
@@ -3692,7 +4001,7 @@ keyframes + charRules;
       // strips aria-, the dot still has a name rather than none at all
       dots += '<label class="' + P + "-dot " + P + "-dt" + k + '" for="' + P + "-s" + k + '">' +
         '<span class="' + P + '-dc" aria-hidden="true"></span>' +
-        '<span class="' + P + '-sr">' + esc(ctTrim(p.title)) + ", path " + k + " of " + n + "</span></label>";
+        '<span class="' + P + '-sr">' + esc(ctTrim(p.title)) + ", slide " + k + " of " + n + "</span></label>";
 
       /* Both controls on every slide, and they wrap: Back on the first goes to
          the last, Next on the last comes round to the first.
@@ -3711,21 +4020,43 @@ keyframes + charRules;
          all, and "the icon is obvious" is not a name. */
       arrows += '<label class="' + P + "-bk " + P + "-bk" + k + '" for="' + P + "-s" + (k > 1 ? k - 1 : n) + '">' +
         ctSvg(P, "chevL") + '<span class="' + P + '-sr">' +
-        (k > 1 ? "Back" : "Back to the last path") + "</span></label>";
+        (k > 1 ? "Back" : "Back to the last slide") + "</span></label>";
       arrows += '<label class="' + P + "-nx " + P + "-nx" + k + '" for="' + P + "-s" + (k < n ? k + 1 : 1) + '">' +
         ctSvg(P, "chevR") + '<span class="' + P + '-sr">' +
-        (k < n ? "Next" : "Back to the first path") + "</span></label>";
+        (k < n ? "Next" : "Back to the first slide") + "</span></label>";
     });
 
-    // a heading, and one link to everything this widget is not showing
-    var head = ctHeadHtml(P, w.headingOn === false ? "" : w.heading,
-      w.allOn ? w.allText : "", w.allOn ? w.allHref : "");
+    /* ---- where the see-everything link goes ----
+       With a heading it sits on the heading's baseline, which is how a group
+       page sets a section title against its "Find more". Without one it had a
+       whole row to itself, right-aligned against nothing, floating between the
+       widget above and these cards: an orphan, and a seam exactly where the
+       page wants continuity. Reported from a real embed on 2026-07-30.
+
+       So with no heading it drops into the control row instead, immediately
+       left of the arrows. That is not an invention either: the platform's own
+       content rows cluster the link and the two carousel arrows together on the
+       right, in that order. The empty row goes, the widget opens straight onto
+       its cards, and the right-hand cluster reads the way the platform's does.
+
+       Two guards. A one-slide deck has no control row to drop into, so the link
+       stays where it is. And the row has to survive the fallback: if a platform
+       ever strips form inputs, the dots and arrows vanish and the link must not
+       go with them, so the row is rendered for the link's sake alone. */
+    var headingText = w.headingOn === false ? "" : ctTrim(w.heading);
+    var linkText = w.allOn ? w.allText : "";
+    var linkHref = w.allOn ? w.allHref : "";
+    var linkHtml = ctLinkHtml(P, linkText, linkHref);
+    var linkInNav = !!linkHtml && !headingText && n > 1;
+
+    var head = ctHeadHtml(P, headingText, linkInNav ? "" : linkText, linkInNav ? "" : linkHref);
 
     var markup = '<div class="' + P + '-wrap"><div class="' + P + '-panel">' + head +
       '<div class="' + P + '-deck">' + radios +
         '<div class="' + P + '-track">' + slides + "</div>" +
         '<div class="' + P + '-nav"><div class="' + P + '-dots">' + dots + "</div>" +
-          '<div class="' + P + '-arrows">' + arrows + "</div></div>" +
+          '<div class="' + P + '-navr">' + (linkInNav ? linkHtml : "") +
+            '<div class="' + P + '-arrows">' + arrows + "</div></div></div>" +
       "</div></div></div>";
 
     var css = ctBaseCss(c, fill) + ctHeadCss(c) + ctCardCss(c) +
@@ -3756,15 +4087,22 @@ keyframes + charRules;
         "min-height:150px;padding:18px 20px 20px}\n" +
       // pulled in with the heading above it, so the section label and the
       // slide's own headline stay in proportion to each other
-      ".ct-slide .ct-tt{font-size:clamp(18px,2cqw,21px);line-height:1.18;letter-spacing:-0.022em}\n" +
+      /* A 20px floor, not 18. `.ct-h`, the section label above the whole
+         widget, is a flat 18px on purpose: the platform sets its section
+         headings at one size whatever the column is doing. This is the
+         headline of a card underneath that label, and at the ~795px a real
+         embed gets with the newsfeed open, 2cqw is 15.9px, so it was flooring
+         to exactly the same 18px as the label above it. The two most important
+         pieces of type in the widget set identically at the commonest width,
+         separated only by 600 against 700 and by the surface behind them,
+         which is not a hierarchy. */
+      ".ct-slide .ct-tt{font-size:clamp(20px,2cqw,21px);line-height:1.18;letter-spacing:-0.022em}\n" +
       /* Whoever leads it, in the same white as the name above it and the pill
          labels below it. The three are one stack, so they are spaced as one:
          8px off the name, and the pills close up from 14 to 10 when this line
          is between them, which keeps the gaps even rather than leaving the
          trainer stranded nearer the title than the chips. */
       ".ct-by{margin:6px 0 0;font-size:13px;font-weight:600;line-height:1.3;color:" + tl.fg + "}\n" +
-      // the pills invert on the tile: an outline in the palette's quiet tone
-      // would be invisible on a deep gradient
       /* The pills go to the foot of the tile, and this is the fix for the
          emptiest area in the whole widget. The tile stretches to whatever the
          text beside it needs, so with everything packed at the top it was 221px
@@ -3783,8 +4121,6 @@ keyframes + charRules;
          The floor stays: `margin-top:12px` is what spaces the chips on a short
          tile, where there is no slack for auto to take up. */
       ".ct-slide .ct-pills{position:relative;z-index:1;margin-top:auto;padding-top:12px;gap:5px}\n" +
-      ".ct-slide .ct-dur{border-color:rgba(255,255,255,0.5);color:#fff}\n" +
-      ".ct-slide .ct-mode{background:rgba(255,255,255,0.18);color:#fff}\n" +
       // even padding, not a grid gap: a gap on a card carrying a full-bleed
       // tile is card background showing between them, which reads as a seam
       // rather than as the margin of the text beside it
@@ -3832,7 +4168,17 @@ keyframes + charRules;
       // fallback state: radios missing, so this is a plain list and the
       // controls are not shown at all
       ".ct-r{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}\n" +
-      ".ct-nav{display:none}\n" +
+      /* The row itself survives the fallback whenever it carries the link, and
+         only the dots and arrows go. Hiding the whole row would take the link
+         with it, and the link is the one thing in here that works without any
+         radios at all: it is an ordinary anchor. */
+      (linkInNav
+        ? ".ct-nav{display:flex;align-items:center;justify-content:flex-end;gap:14px;flex-wrap:wrap;margin-top:12px}\n" +
+          ".ct-dots,.ct-arrows{display:none}\n"
+        : ".ct-nav{display:none}\n") +
+      // the link and the arrows are one cluster, in the platform's order, so
+      // the row stays two flex items whether or not the link is in it
+      ".ct-navr{display:flex;align-items:center;gap:14px}\n" +
 
       (n > 1
         ? // proof of life: a checked radio exists, so become a deck
@@ -3865,20 +4211,31 @@ keyframes + charRules;
              than by colour alone, which also means it survives being seen in
              greyscale. An 11px circle is an 11px tap target, so the label
              around it is 24 by 44 and the circle sits in the middle. */
-          /* 32 by 44, not the 24 by 44 it was. 24 is under the 44px minimum on
-             the horizontal axis, and three of them touching is a precision tap
-             on a phone. Back and Next are still the reliable way through the
-             deck; this stops the dots being the unreliable one.
+          /* 9px on a 24px pitch, down from 11 on 32. Measured against the
+             platform's own gallery carousel, which runs its dots at a 22px
+             pitch: ours sat half again as far apart and read as a heavier row
+             of controls than anything else on the page.
+
+             The 44px these were sized to before is the AAA figure, and it is
+             not the bar that applies. WCAG 2.5.8 puts the AA minimum at 24 by
+             24, which 24 by 44 clears, and it exempts a control that has an
+             equivalent elsewhere: Back and Next are 44px squares doing the same
+             job. So the dots get to be the quiet indicator they are meant to be
+             without anything being given up for it.
 
              The negative margin cancels the label's own padding so the first
              circle lines up with the left edge of the card above it, which
-             means it has to move with the width: (32 - 11) / 2. */
-          ".ct-dots{display:flex;align-items:center;gap:0;margin-left:-10px}\n" +
-          ".ct-dot{display:inline-flex;align-items:center;justify-content:center;width:32px;height:44px;cursor:pointer}\n" +
-          ".ct-dc{box-sizing:border-box;width:11px;height:11px;border-radius:50%;border:2px solid " + c.accent +
+             means it moves with the width: (24 - 9) / 2. */
+          // display comes from the gate below, so the fallback rule above can
+          // keep them hidden while the row itself stays for the link
+          ".ct-dots{align-items:center;gap:0;margin-left:-8px}\n" +
+          ".ct-deck:has(.ct-r:checked) .ct-dots{display:flex}\n" +
+          ".ct-dot{display:inline-flex;align-items:center;justify-content:center;width:24px;height:44px;cursor:pointer}\n" +
+          ".ct-dc{box-sizing:border-box;width:9px;height:9px;border-radius:50%;border:2px solid " + c.accent +
             ";background-color:transparent;transition:background-color .2s ease}\n" +
           ".ct-dot:hover .ct-dc{background-color:" + c.accent + "}\n" +
-          ".ct-arrows{display:flex;align-items:center;gap:6px}\n" +
+          ".ct-arrows{align-items:center;gap:6px}\n" +
+          ".ct-deck:has(.ct-r:checked) .ct-arrows{display:flex}\n" +
           /* Square, icon-only, 44px, 6px apart. Measured off the platform's own
              gallery carousel on 2026-07-30: its controls are a 44px bordered
              square each, holding a chevron and nothing else, sitting 6px apart
@@ -3945,7 +4302,7 @@ keyframes + charRules;
         // stretching them to fill the row was for the labelled version
         (n > 1 ? ".ct-deck:has(.ct-r:checked) .ct-nav{justify-content:space-between}" : "") + "}\n";
 
-    return ctWrap("Path slides", P, markup, css);
+    return ctWrap("Slides", P, markup, css);
   }
 
   function ctBuild() { return ctBuildDeck(ct.c, ct.fill, ct.w2); }
@@ -3987,7 +4344,21 @@ keyframes + charRules;
 
   function ctContrastReport() {
     if (active !== "classroom") return;
-    var c = ct.c, ch = ctChip(c), edge = ctEdge(c), tl = ctTile(c);
+    var c = ct.c, edge = ctEdge(c), tl = ctTile(c);
+    /* The pills are white on the tile, not palette ink on a card, and until
+       2026-07-30 this report said otherwise. Three rows measured the base
+       `.ct-dur` and `.ct-mode` rules, which every pill overrides because every
+       pill is inside a `.ct-slide`, and a fourth measured the accent as link
+       text on a card, which no layout has painted since the Signpost was
+       removed. Four of eighteen rows described a widget that is not there,
+       while the two states that are there went unmeasured, in a report whose
+       whole claim is that nothing is judged by eye.
+
+       The two real pairs are composited here the way a browser composites
+       them, because both are a white at partial alpha over the tile gradient
+       rather than a flat colour. Both are taken at the tile's start, which is
+       the lighter of the two ends and so the worst case for white. */
+    var durEdge = ctDurEdge(tl);
     /* Without a panel the widget's own heading, description and link sit on
        the host page rather than on anything the builder painted, so measuring
        them against the panel colour would be measuring a surface that is not
@@ -4010,13 +4381,21 @@ keyframes + charRules;
       // so these two rows cover every word painted on a tile
       ["Text on a programme tile", tl.fg, tl.start, 4.5],
       ["Text at the tile's far end", tl.fg, tl.end, 4.5],
-      ["Duration pill text on a card", c.heading, c.card, 4.5],
-      ["The outline of the duration pill", edge, c.card, 3],
-      ["Format tags", ch.fg, ch.bg, 4.5],
+      // the two pills as they are actually painted, rather than as palette ink
+      // on a card. Both rows are new: the pairs they replaced described a
+      // layout that was removed, and these two went unmeasured while one of
+      // them sat at 3.39:1 and the other had no visible outline.
+      ["Format tag text on its pill", ctChipFg(tl), "#ffffff", 4.5],
+      // a pill you cannot pick out from the tile is not a pill, so its own
+      // shape is measured, not just the words in it
+      ["The format pill against the tile", "#ffffff", tl.start, 3],
+      ["The outline of the duration pill", durEdge, tl.start, 3],
       ["Headings" + on, c.heading, surface, 4.5],
+      // .ct-sh, the column labels, which moved from body ink to heading ink on
+      // 2026-07-30 and always sit on a card
+      ["Column labels on a card", c.heading, c.card, 4.5],
       ["Descriptions on a card", c.body, c.card, 4.5],
       ["Descriptions" + on, c.body, surface, 4.5],
-      ["Learn more links on a card", c.accent, c.card, 4.5],
       ["Link beside the heading" + on, c.accent, surface, 4.5],
       // the link's highlight is a state a reader spends real time in, so the
       // label on it is measured like any other pair rather than assumed
@@ -4024,7 +4403,11 @@ keyframes + charRules;
       ["Bullet dots on a card", c.accent, c.card, 3],
       // one row covers both dot states: filled and outlined are the same colour
       ["Slide dots, filled and outlined", c.accent, surface, 3],
-      ["Back and Next label text", c.heading, c.card, 4.5],
+      // icon-only since 2026-07-30, so this is the chevron stroke rather than a
+      // word. Held to the 4.5:1 text bar rather than the 3:1 a graphic needs,
+      // because heading-on-card is walked to 4.5 anyway and there is nothing to
+      // buy by measuring it loosely
+      ["The Back and Next chevrons", c.heading, c.card, 4.5],
       ["The edge of Back and Next", edge, surface, 3],
       ["Button label on the button", c.btnFg, c.btnBg, 4.5],
       ["Button shape against a card", c.btnBg, c.card, 3],
@@ -4399,7 +4782,10 @@ keyframes + charRules;
       if (w.cols[key]) {
         ctCtx = "w2.labels";
         var f = ctTextField(c2, "Title learners see", w.labels, key, {
+          // the widget prints this exactly as it is typed, capitals and all,
+          // so the sentence says so rather than letting somebody find out
           max: 32, placeholder: row[3],
+          sub: "Printed exactly as you type it, capitals and all.",
           onInput: function() {
             colLabelEls[key].forEach(function(l) { l.textContent = colTitle(key); });
           }
@@ -4482,7 +4868,7 @@ keyframes + charRules;
       }
       if (w.cols.who) colLabelEls.who.push(ctTextField(box, colTitle("who"), p, "who", { max: 140 }).labelEl);
       if (w.cols.why) colLabelEls.why.push(ctTextField(box, colTitle("why"), p, "why", { max: 140 }).labelEl);
-      ctLinkField(box, "Link to the path", p, "href");
+      ctLinkField(box, "Link to the programme", p, "href");
     });
 
     ctCtx = "w2";
@@ -4572,14 +4958,15 @@ keyframes + charRules;
     { key: "btnFg",   label: "Button text" }
   ];
 
-  var ctColorInputs = {}, ctResetBtn = $("ctResetColors");
+  var ctColorInputs, ctResetBtn = $("ctResetColors");
   var ctLastPreset = ctById("mist"), ctActiveMood = MOODS[0].id;
 
   function ctPresetButton(p) {
     var b = ctEl("button", "preset");
     b.type = "button";
+    b.setAttribute("role", "radio");
     b.setAttribute("data-ctpreset", p.id);
-    b.setAttribute("aria-pressed", String(p.id === ct.presetId));
+    b.setAttribute("aria-checked", String(p.id === ct.presetId));
     var sw = ctEl("div", "swatches");
     [p.c.panel, p.c.accent, p.c.btnBg].forEach(function(col) {
       var s = ctEl("span");
@@ -4604,8 +4991,9 @@ keyframes + charRules;
   MOODS.forEach(function(m, i) {
     var b = ctEl("button", null, m.name);
     b.type = "button";
+    b.setAttribute("role", "radio");
     b.setAttribute("data-ctmood", m.id);
-    b.setAttribute("aria-pressed", String(i === 0));
+    b.setAttribute("aria-checked", String(i === 0));
     $("ctMoodSeg").appendChild(b);
   });
   segment("ctMoodSeg", "ctmood", function(v) { ctActiveMood = v; ctRenderMore(); });
@@ -4633,7 +5021,7 @@ keyframes + charRules;
     ctLastPreset = p;
     ct.c = clone(p.c);
     ctEachPreset(function(e) {
-      e.setAttribute("aria-pressed", String(e.getAttribute("data-ctpreset") === p.id));
+      e.setAttribute("aria-checked", String(e.getAttribute("data-ctpreset") === p.id));
     });
     ctSyncColorInputs();
     ctEnforcePanel();
@@ -4652,7 +5040,7 @@ keyframes + charRules;
        can only overwrite a key the incoming state actually has. */
     ct.c.tile = null;
     ct.presetId = null;
-    ctEachPreset(function(e) { e.setAttribute("aria-pressed", "false"); });
+    ctEachPreset(function(e) { e.setAttribute("aria-checked", "false"); });
     ctResetBtn.textContent = "Reset to " + ctLastPreset.name;
     ctResetBtn.hidden = false;
   }
@@ -4673,63 +5061,10 @@ keyframes + charRules;
   });
   ctResetBtn.addEventListener("click", function() { ctApplyPreset(ctLastPreset); ctResetBtn.hidden = true; });
 
-  CT_COLOR_FIELDS.forEach(function(fd) {
-    var wrap = ctEl("div", "cfield");
-    var lab = ctEl("label", null, fd.label);
-    lab.setAttribute("for", "ctc_" + fd.key);
-    var row = ctEl("div", "row");
+  ctColorInputs = colorFields($("ctColors"), CT_COLOR_FIELDS, "ctc_",
+    function() { return ct.c; }, ctDropPreset);
 
-    var swatch = ctEl("input");
-    swatch.type = "color";
-    swatch.id = "ctc_" + fd.key;
-    swatch.value = ct.c[fd.key];
-
-    var hexIn = ctEl("input");
-    hexIn.type = "text";
-    hexIn.value = ct.c[fd.key];
-    hexIn.maxLength = 7;
-    noAutofill(hexIn, true);
-    hexIn.setAttribute("aria-label", fd.label + " hex value");
-
-    swatch.addEventListener("input", function() {
-      ct.c[fd.key] = swatch.value;
-      hexIn.value = swatch.value;
-      ctDropPreset();
-      render(true);
-    });
-    hexIn.addEventListener("input", function() {
-      var v = hexIn.value.trim();
-      if (v && v.charAt(0) !== "#") v = "#" + v;
-      if (!isHex(v)) { hexIn.setAttribute("aria-invalid", "true"); return; }
-      hexIn.setAttribute("aria-invalid", "false");
-      // colour inputs only accept #rrggbb, so shorthand is expanded first
-      if (v.length === 4) v = "#" + v[1] + v[1] + v[2] + v[2] + v[3] + v[3];
-      ct.c[fd.key] = v;
-      swatch.value = v;
-      ctDropPreset();
-      render(true);
-    });
-    // an invalid value left behind snaps back to the last colour that worked
-    hexIn.addEventListener("blur", function() {
-      hexIn.value = ct.c[fd.key];
-      hexIn.setAttribute("aria-invalid", "false");
-    });
-
-    row.appendChild(swatch);
-    row.appendChild(hexIn);
-    wrap.appendChild(lab);
-    wrap.appendChild(row);
-    $("ctColors").appendChild(wrap);
-    ctColorInputs[fd.key] = { swatch: swatch, hex: hexIn };
-  });
-
-  function ctSyncColorInputs() {
-    CT_COLOR_FIELDS.forEach(function(fd) {
-      ctColorInputs[fd.key].swatch.value = ct.c[fd.key];
-      ctColorInputs[fd.key].hex.value = ct.c[fd.key];
-      ctColorInputs[fd.key].hex.setAttribute("aria-invalid", "false");
-    });
-  }
+  function ctSyncColorInputs() { syncColorFields(ctColorInputs, CT_COLOR_FIELDS, ct.c); }
 
   /* ================================================================
      Saved work, shared work, and starting over
@@ -4852,7 +5187,7 @@ keyframes + charRules;
     var wrap = $(id);
     if (!wrap) return;
     Array.prototype.forEach.call(wrap.querySelectorAll("button[data-" + attr + "]"), function(b) {
-      b.setAttribute("aria-pressed", String(b.getAttribute("data-" + attr) === value));
+      b.setAttribute("aria-checked", String(b.getAttribute("data-" + attr) === value));
     });
   }
 
@@ -4869,7 +5204,7 @@ keyframes + charRules;
     var cwp = findPreset(CW_PRESETS, companion.preset);
     if (cwp) cwLastPreset = cwp;
     cwEachPreset(function(el) {
-      el.setAttribute("aria-pressed", String(el.getAttribute("data-cwpreset") === companion.preset));
+      el.setAttribute("aria-checked", String(el.getAttribute("data-cwpreset") === companion.preset));
     });
     cwResetBtn.textContent = "Reset to " + cwLastPreset.name;
     cwResetBtn.hidden = !!companion.preset;
@@ -4896,7 +5231,7 @@ keyframes + charRules;
     var hp = findPreset(PRESETS, hero.preset) || findPreset(CURATED, hero.preset);
     if (hp) lastPreset = hp;
     eachPresetButton(function(el) {
-      el.setAttribute("aria-pressed", String(el.getAttribute("data-preset") === hero.preset));
+      el.setAttribute("aria-checked", String(el.getAttribute("data-preset") === hero.preset));
     });
     resetBtn.textContent = "Reset to " + lastPreset.name;
     resetBtn.hidden = !!hero.preset;
@@ -4907,7 +5242,7 @@ keyframes + charRules;
     var cp = findPreset(CT_CURATED, ct.presetId);
     if (cp) ctLastPreset = cp;
     ctEachPreset(function(el) {
-      el.setAttribute("aria-pressed", String(el.getAttribute("data-ctpreset") === ct.presetId));
+      el.setAttribute("aria-checked", String(el.getAttribute("data-ctpreset") === ct.presetId));
     });
     ctResetBtn.textContent = "Reset to " + ctLastPreset.name;
     ctResetBtn.hidden = !!ct.presetId;
@@ -5106,14 +5441,24 @@ keyframes + charRules;
      Every segmented control, the widget list and both palette grids were a
      separate tab stop per button: 25 stops to cross the palettes. They are
      single-choice groups, so they get the keyboard behaviour of one: Tab in
-     and out, arrows to move within, Home and End for the ends. */
+     and out, arrows to move within, Home and End for the ends.
+
+     They are also *announced* as one now, and until 2026-07-30 they were not.
+     The keyboard behaviour below is the radio-group pattern exactly, but the
+     markup said `role="group"` full of `aria-pressed` toggle buttons, so a
+     screen reader read out "toggle button, pressed" and stopped: one tab stop,
+     one control, no reason on earth to think an arrow key would reveal six
+     more palettes. The pattern was right and nothing was telling anyone about
+     it. The wrappers are radiogroups, the buttons are radios with aria-checked,
+     and the roving tabindex and follow-focus below are now the behaviour the
+     role promises rather than a hidden convention. */
   function roveGroups() {
     Array.prototype.forEach.call(document.querySelectorAll(".wtype, .seg, .presets"), function(g) {
       var btns = g.querySelectorAll("button");
       if (btns.length < 2) return;
       var cur = 0;
       for (var i = 0; i < btns.length; i++) {
-        if (btns[i].getAttribute("aria-pressed") === "true") { cur = i; break; }
+        if (btns[i].getAttribute("aria-checked") === "true") { cur = i; break; }
       }
       for (var j = 0; j < btns.length; j++) btns[j].tabIndex = j === cur ? 0 : -1;
     });
