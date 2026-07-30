@@ -3271,6 +3271,9 @@ keyframes + charRules;
     c: clone(ctById("mist").c), presetId: "mist", fill: "none",
 
     w2: {
+      // The heading is a marketing line, and some pages already carry one from
+      // the section they sit in. Off, the deck starts at the cards.
+      headingOn: true,
       heading: "Workshops worth clearing your diary for",
       // whatever the customer calls the person at the front. Empty prints the
       // name on its own, for anyone who would rather not label it at all.
@@ -3691,20 +3694,32 @@ keyframes + charRules;
         '<span class="' + P + '-dc" aria-hidden="true"></span>' +
         '<span class="' + P + '-sr">' + esc(ctTrim(p.title)) + ", path " + k + " of " + n + "</span></label>";
 
-      if (k > 1) {
-        arrows += '<label class="' + P + "-bk " + P + "-bk" + k + '" for="' + P + "-s" + (k - 1) + '">' +
-          ctSvg(P, "chevL") + "Back</label>";
-      }
-      // the last slide gets Back only: the dots already say where you are,
-      // and anyone who wants slide 1 again can click its dot
-      if (k < n) {
-        arrows += '<label class="' + P + "-nx " + P + "-nx" + k + '" for="' + P + "-s" + (k + 1) + '">Next' +
-          ctSvg(P, "chevR") + "</label>";
-      }
+      /* Both controls on every slide, and they wrap: Back on the first goes to
+         the last, Next on the last comes round to the first.
+
+         It used to drop Back on slide one and Next on the last, on the grounds
+         that a control which does nothing should not be there. True, but the
+         cost was a control row that changed width as you paged: the pair became
+         a single button at each end and the row visibly jumped by 50px. The
+         platform's own carousel keeps all of its controls present at every
+         position, which is the tell that it wraps. Wrapping makes both buttons
+         mean something at every slide, so nothing has to be hidden and nothing
+         moves.
+
+         The label is a visually hidden word rather than a visible one, because
+         these are icon-only now: an SVG on its own has no accessible name at
+         all, and "the icon is obvious" is not a name. */
+      arrows += '<label class="' + P + "-bk " + P + "-bk" + k + '" for="' + P + "-s" + (k > 1 ? k - 1 : n) + '">' +
+        ctSvg(P, "chevL") + '<span class="' + P + '-sr">' +
+        (k > 1 ? "Back" : "Back to the last path") + "</span></label>";
+      arrows += '<label class="' + P + "-nx " + P + "-nx" + k + '" for="' + P + "-s" + (k < n ? k + 1 : 1) + '">' +
+        ctSvg(P, "chevR") + '<span class="' + P + '-sr">' +
+        (k < n ? "Next" : "Back to the first path") + "</span></label>";
     });
 
     // a heading, and one link to everything this widget is not showing
-    var head = ctHeadHtml(P, w.heading, w.allOn ? w.allText : "", w.allOn ? w.allHref : "");
+    var head = ctHeadHtml(P, w.headingOn === false ? "" : w.heading,
+      w.allOn ? w.allText : "", w.allOn ? w.allHref : "");
 
     var markup = '<div class="' + P + '-wrap"><div class="' + P + '-panel">' + head +
       '<div class="' + P + '-deck">' + radios +
@@ -3863,18 +3878,24 @@ keyframes + charRules;
           ".ct-dc{box-sizing:border-box;width:11px;height:11px;border-radius:50%;border:2px solid " + c.accent +
             ";background-color:transparent;transition:background-color .2s ease}\n" +
           ".ct-dot:hover .ct-dc{background-color:" + c.accent + "}\n" +
-          ".ct-arrows{display:flex;align-items:center;gap:8px}\n" +
-          /* The same 8px rectangle as every other button in the builder, and
-             flat, because that is what the platform's own carousel controls
-             are: a bordered rectangle you press. They used to be pills with a
-             drop shadow, which is a shape this platform reserves for filter
-             tabs and a depth it uses nowhere.
+          ".ct-arrows{display:flex;align-items:center;gap:6px}\n" +
+          /* Square, icon-only, 44px, 6px apart. Measured off the platform's own
+             gallery carousel on 2026-07-30: its controls are a 44px bordered
+             square each, holding a chevron and nothing else, sitting 6px apart
+             at the bottom right with the dots opposite them.
+
+             Ours were 44px tall but 80-odd wide, carrying the words "Back" and
+             "Next" beside the chevron. Nothing wrong with them on their own,
+             and side by side with the platform's on the same page they were
+             plainly a different control from a different product. The word is
+             still there for a screen reader; it is just no longer set in type.
 
              The card these sit on is nearly the colour of the panel, so the
-             border has to be the quiet tone or they read as loose text. */
-          ".ct-bk,.ct-nx{display:none;align-items:center;gap:6px;min-height:44px;padding:11px 18px;" +
+             border has to be the quiet tone or they read as loose glyphs. */
+          ".ct-bk,.ct-nx{display:none;align-items:center;justify-content:center;" +
+            "width:44px;height:44px;padding:0;" +
             "border-radius:" + R_BTN + ";border:1px solid " + edge + ";background:" + c.card + ";color:" + c.heading +
-            ";font-size:13.5px;font-weight:700;cursor:pointer;user-select:none;" +
+            ";cursor:pointer;user-select:none;" +
             "transition:border-color .15s ease,background-color .15s ease,transform .1s ease}\n" +
           ".ct-bk:hover,.ct-nx:hover{border-color:" + c.accent + ";color:" + c.accent + "}\n" +
           // the press is the whole point: these are the only two controls in
@@ -3920,8 +3941,9 @@ keyframes + charRules;
         ".ct-cta{padding-top:14px}}\n" +
       "@container (max-width:400px){" + (fill === "none" ? "" : ".ct-panel{padding:18px}") +
         ".ct-btn{width:100%}.ct-cta{width:100%}" +
-        (n > 1 ? ".ct-deck:has(.ct-r:checked) .ct-nav{justify-content:center}.ct-arrows{width:100%}" +
-                 ".ct-bk,.ct-nx{flex:1;justify-content:center}" : "") + "}\n";
+        // the controls are 44px squares now, so they need no help on a phone:
+        // stretching them to fill the row was for the labelled version
+        (n > 1 ? ".ct-deck:has(.ct-r:checked) .ct-nav{justify-content:space-between}" : "") + "}\n";
 
     return ctWrap("Path slides", P, markup, css);
   }
@@ -4331,10 +4353,15 @@ keyframes + charRules;
     ctCtx = "w2";
 
     var c1 = ctCard(host, 1, "Heading");
-    ctTextField(c1, "Heading over the deck", w, "heading", {
-      max: 54, placeholder: "Workshops on offer",
-      sub: "This is the marketing line. It can be a claim, not just a label."
-    });
+    ctToggleField(c1, "Show a heading over the deck", w, "headingOn",
+      "Turn it off and the deck starts at the cards, which suits a page whose section already has a title.",
+      ctRebuild);
+    if (w.headingOn !== false) {
+      ctTextField(c1, "Heading over the deck", w, "heading", {
+        max: 54, placeholder: "Workshops on offer",
+        sub: "This is the marketing line. It can be a claim, not just a label."
+      });
+    }
     ctToggleField(c1, "Show a link to all sessions", w, "allOn",
       "Sits beside the heading, so the deck can feature a few without hiding the rest.", ctRebuild);
     if (w.allOn) {
