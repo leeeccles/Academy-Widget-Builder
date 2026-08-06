@@ -50,7 +50,21 @@ module.exports = async function run() {
       t.click("#ctMoreToggle");
       t.click('#ctMoodSeg button[data-ctmood="dark"]');
       t.click('#ctMorePresets [data-ctpreset="navy"]');
-    }]
+    }],
+    /* The two that shipped alongside Slides on 2026-08-06. Each is built from
+       a different set of string concatenations, so each is its own chance at
+       the stray `+` these checks exist for. Both a light and a dark palette,
+       because half the colour in them is derived per mood. */
+    ...["marquee", "type"].flatMap(id => [
+      [`live training, ${id}, dark palette`, () => {
+        t.click(`#ctLayoutSeg button[data-ctlayout="${id}"]`);
+      }],
+      [`live training, ${id}, light palette`, () => {
+        t.click('#ctMoodSeg button[data-ctmood="calm"]');
+        t.click('#ctMorePresets [data-ctpreset="mist"]');
+      }]
+    ]),
+    ["live training, back to slides", () => t.click('#ctLayoutSeg button[data-ctlayout="slides"]')]
   ];
 
   for (const [label, setup] of variants) {

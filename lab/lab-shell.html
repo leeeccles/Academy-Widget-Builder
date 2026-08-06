@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live training · layout lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --brand: #5d5fe3; --brand-dark: #4a4ccc; --brand-light: #eeeeff;
+    --ink: #1a1a2e; --ink-2: #5b6472; --ink-3: #8b93a1;
+    --line: #e5e7eb; --line-2: #d1d5db; --bg: #f7f8fa; --card: #ffffff;
+    --ok: #15803d; --ok-bg: #dcfce7; --warn: #a15c07; --warn-bg: #fef3c7;
+    --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
+    --r: 12px; --r-sm: 8px;
+    /* The project's own chrome scale, the same five steps index.html and the
+       older labs use. This started as eight ad-hoc literals (10.5, 11, 11.5,
+       12, 12.5, 13, 14, 18) invented for this one page, which is drift for no
+       reason: a builder tool that reads as a different product from the
+       builder is a worse comparison surface, whatever the sizes are.
+
+       The range is deliberately narrow, and stays narrow. This is dense tool
+       chrome, where hierarchy is carried by weight, case and ink rather than
+       by size, exactly as the widget's own section labels are. What the tokens
+       buy is that there is one answer per role instead of eight near-misses. */
+    --fs-micro: 11px; --fs-sm: 12px; --fs-md: 13px; --fs-base: 14px; --fs-lg: 19px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background: var(--bg); color: var(--ink); font-size: var(--fs-base);
+    -webkit-font-smoothing: antialiased;
+  }
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--card); border-bottom: 1px solid var(--line);
+    padding: var(--sp-3) var(--sp-6);
+    display: flex; align-items: baseline; gap: var(--sp-3); flex-wrap: wrap;
+  }
+  header.top h1 { font-size: var(--fs-lg); font-weight: 800; letter-spacing: -0.01em; }
+  header.top p { font-size: var(--fs-md); color: var(--ink-2); }
+  .tag {
+    font-size: var(--fs-micro); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--brand-dark); background: var(--brand-light);
+    padding: 3px 8px; border-radius: 999px;
+  }
+
+  .wrap { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: var(--sp-5); padding: var(--sp-5) var(--sp-6) 64px; align-items: start; }
+  @media (max-width: 1000px) { .wrap { grid-template-columns: minmax(0, 1fr); } }
+
+  .rail { position: sticky; top: 66px; display: flex; flex-direction: column; gap: var(--sp-4); }
+  @media (max-width: 1000px) { .rail { position: static; } }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-4); }
+  .card h2 { font-size: var(--fs-sm); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-3); margin-bottom: var(--sp-3); }
+  .field + .field { margin-top: var(--sp-3); }
+  .field > label { display: block; font-size: var(--fs-md); font-weight: 600; color: var(--ink-2); margin-bottom: var(--sp-1); }
+  select, input[type=text] {
+    width: 100%; min-height: 40px; padding: 8px 10px; font: inherit; font-size: var(--fs-md);
+    border: 1px solid var(--line-2); border-radius: var(--r-sm); background: var(--card); color: var(--ink);
+  }
+  select:focus-visible, input:focus-visible, button:focus-visible {
+    outline: 2px solid var(--brand); outline-offset: 2px;
+  }
+  .checks { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-4); }
+  .checks label { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-md); min-height: 32px; cursor: pointer; }
+  .checks input { width: 16px; height: 16px; accent-color: var(--brand); }
+
+  .seg { display: grid; gap: 4px; }
+  .seg button {
+    display: block; width: 100%; text-align: left; min-height: 44px; padding: 8px 12px;
+    font: inherit; font-size: var(--fs-md); font-weight: 600; cursor: pointer;
+    background: var(--card); color: var(--ink); border: 1px solid var(--line-2); border-radius: var(--r-sm);
+  }
+  .seg button small { display: block; font-weight: 400; font-size: var(--fs-sm); color: var(--ink-3); margin-top: 2px; line-height: 1.35; }
+  .seg button:hover { border-color: var(--brand); }
+  .seg button[aria-pressed=true] { background: var(--brand-light); border-color: var(--brand); color: var(--brand-dark); }
+  .seg button[aria-pressed=true] small { color: var(--brand-dark); opacity: .8; }
+
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(34px, 1fr)); gap: 6px; }
+  .swatches button {
+    height: 34px; border-radius: var(--r-sm); border: 2px solid transparent; cursor: pointer; padding: 0;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.12);
+  }
+  .swatches button[aria-pressed=true] { border-color: var(--ink); }
+
+  .stage { display: flex; flex-direction: column; gap: var(--sp-5); min-width: 0; }
+  .bar {
+    display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap;
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: var(--sp-3) var(--sp-4);
+  }
+  .bar label { font-size: var(--fs-md); font-weight: 600; color: var(--ink-2); }
+  .bar input[type=range] { flex: 1 1 200px; accent-color: var(--brand); min-width: 140px; }
+  .bar output { font-size: var(--fs-md); font-weight: 700; font-variant-numeric: tabular-nums; min-width: 62px; }
+  .btn {
+    min-height: 40px; padding: 8px 14px; font: inherit; font-size: var(--fs-md); font-weight: 700; cursor: pointer;
+    border: 1px solid var(--line-2); border-radius: var(--r-sm); background: var(--card); color: var(--ink);
+  }
+  .btn:hover { border-color: var(--brand); color: var(--brand-dark); }
+
+  /* ---- every rule below names a class, never a bare element ----
+     The preview holds a real widget, and a widget is made of h2, h3, h4, p,
+     ul and a. A chrome rule such as `.shot h3 {font-size:13px}` is one class
+     plus one type, which outranks the widget's own single-class `.ct-mqt`,
+     so the lab silently repainted the thing it exists to show: the Marquee's
+     34px display title rendered at 13px and looked like a design fault in the
+     layout rather than a fault in the page around it.
+
+     So the lab styles `.shot-h`, not `h3`. Anything that reaches into
+     `.frame` should be assumed to be lying to you. */
+  .shot { min-width: 0; }
+  .shot-h {
+    display: flex; align-items: baseline; gap: var(--sp-2); flex-wrap: wrap;
+    font-size: var(--fs-md); font-weight: 700; margin-bottom: 2px;
+  }
+  .shot-id { font: 700 var(--fs-micro) ui-monospace, Menlo, monospace; background: rgba(0,0,0,.07); padding: 3px 7px; border-radius: 5px; }
+  .shot-note { font-size: var(--fs-sm); color: var(--ink-2); margin-bottom: var(--sp-3); line-height: 1.4; }
+  .frame {
+    background: var(--card); border: 1px solid var(--line); border-radius: var(--r);
+    padding: var(--sp-5); overflow-x: auto;
+  }
+  /* the page a widget actually lands on is white, so the frame is white and
+     the width control below it is what stands in for the column it gets */
+  .frame > div { margin: 0 auto; }
+
+  .report { font-size: var(--fs-md); }
+  .report table { width: 100%; border-collapse: collapse; }
+  .report th, .report td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); }
+  .report th { font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); font-weight: 700; }
+  .report td.n { font-variant-numeric: tabular-nums; font-weight: 700; }
+  .pass { color: var(--ok); }
+  .fail { color: #b91c1c; font-weight: 700; }
+  .pill { display: inline-block; font-size: var(--fs-micro); font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+  .pill.ok { background: var(--ok-bg); color: var(--ok); }
+  .pill.no { background: #fee2e2; color: #b91c1c; }
+
+  details.code { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); }
+  details.code > summary { cursor: pointer; padding: var(--sp-3) var(--sp-4); font-size: var(--fs-md); font-weight: 700; }
+  details.code pre {
+    margin: 0; padding: var(--sp-4); border-top: 1px solid var(--line);
+    font: var(--fs-sm)/1.5 ui-monospace, Menlo, monospace; white-space: pre-wrap; word-break: break-word;
+    max-height: 380px; overflow: auto;
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>Live training</h1>
+  <span class="tag">Lab</span>
+  <p>The three shipping layouts, built from the real palette, the real button and the real controls, sliced out of index.html.</p>
+</header>
+
+<div class="wrap">
+  <div class="rail">
+    <div class="card">
+      <h2>Layout</h2>
+      <div class="seg" id="layoutSeg"></div>
+    </div>
+
+    <div class="card">
+      <h2>Palette</h2>
+      <div class="swatches" id="paletteSwatches"></div>
+      <div class="field" style="margin-top:var(--sp-3)">
+        <label for="fillSel">Panel</label>
+        <select id="fillSel">
+          <option value="none">None, sits straight on the page</option>
+          <option value="solid">Solid tint</option>
+          <option value="gradient">Gradient tint</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Content</h2>
+      <div class="field">
+        <label for="slideCount">Slides</label>
+        <select id="slideCount">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3" selected>3</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Columns</label>
+        <div class="checks">
+          <label><input type="checkbox" id="colObj" checked> Learn</label>
+          <label><input type="checkbox" id="colWho" checked> Who</label>
+          <label><input type="checkbox" id="colWhy" checked> Why</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>Chrome</label>
+        <div class="checks">
+          <label><input type="checkbox" id="headOn" checked> Heading</label>
+          <label><input type="checkbox" id="allOn" checked> See all link</label>
+          <label><input type="checkbox" id="ctaOn" checked> Button</label>
+        </div>
+      </div>
+      <div class="field">
+        <label for="trainerLabel">Trainer label</label>
+        <input type="text" id="trainerLabel" value="Trainer">
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="bar">
+      <label for="widthRange">Column width</label>
+      <input type="range" id="widthRange" min="320" max="1400" step="10" value="795">
+      <output id="widthOut">795px</output>
+      <button type="button" class="btn" data-w="795">Newsfeed open</button>
+      <button type="button" class="btn" data-w="1180">Newsfeed closed</button>
+      <button type="button" class="btn" data-w="420">Phone</button>
+      <button type="button" class="btn" id="compareBtn" aria-pressed="false">Compare all</button>
+    </div>
+
+    <div id="shots"></div>
+
+    <div class="card report" id="report"></div>
+
+    <details class="code">
+      <summary>Generated code</summary>
+      <pre id="codeOut"></pre>
+    </details>
+  </div>
+</div>
+
+<script>
+/*__BUILDER__*/
+</script>
+
+<script>
+(function () {
+  "use strict";
+
+  var LAYOUTS = CT_LAYOUTS;
+
+  var state = {
+    layout: "marquee",
+    presetId: "mist",
+    fill: "none",
+    slides: 3,
+    compare: false,
+    width: 795
+  };
+
+  function $(id) { return document.getElementById(id); }
+
+  // a fresh copy of the builder's own default content every render, so a
+  // toggle can never leave the previous render's edits behind
+  function content() {
+    var w = JSON.parse(JSON.stringify(ct.w2));
+    w.slides = w.slides.slice(0, state.slides);
+    w.cols = { obj: $("colObj").checked, who: $("colWho").checked, why: $("colWhy").checked };
+    w.headingOn = $("headOn").checked;
+    w.allOn = $("allOn").checked;
+    w.ctaText = $("ctaOn").checked ? w.ctaText : "";
+    w.trainerLabel = $("trainerLabel").value;
+    return w;
+  }
+
+  function paletteById(id) {
+    for (var i = 0; i < CT_CURATED.length; i++) if (CT_CURATED[i].id === id) return CT_CURATED[i];
+    return CT_CURATED[0];
+  }
+
+  function build(layoutId) {
+    var p = paletteById(state.presetId);
+    var w = content();
+    /* A dark palette paints a white heading, so with no panel it would be
+       white on a white page. The builder forces a panel in that case and this
+       has to do the same or the lab shows a widget the builder cannot make. */
+    var fill = (p.c.dark && state.fill === "none") ? "solid" : state.fill;
+    return ctBuildLayout(layoutId, p.c, fill, w);
+  }
+
+  // ---- controls ----
+  function renderLayoutSeg() {
+    $("layoutSeg").innerHTML = LAYOUTS.map(function (l) {
+      return '<button type="button" data-layout="' + l.id + '" aria-pressed="' +
+        (state.layout === l.id) + '">' + l.name + "<small>" + l.blurb + "</small></button>";
+    }).join("");
+  }
+  function renderSwatches() {
+    $("paletteSwatches").innerHTML = CT_CURATED.map(function (p) {
+      return '<button type="button" data-preset="' + p.id + '" title="' + p.name +
+        '" aria-label="' + p.name + '" aria-pressed="' + (state.presetId === p.id) +
+        '" style="background:linear-gradient(135deg,' + p.c.accent + ' 0 50%,' + p.c.panel2 + ' 50% 100%)"></button>';
+    }).join("");
+  }
+
+  // ---- the readability report ----
+  /* The same question the builder's own report asks, on the pairings these
+     five layouts introduce and the shipping one does not have: chips on a
+     card, ink on the rail, the avatar, and the button when it is inverted
+     onto the Marquee's field. Anything under its bar is a real defect in the
+     layout rather than a note about it. */
+  function report() {
+    var p = paletteById(state.presetId);
+    var c = p.c, edge = ctEdge(c), tl = ctTile(c), rail = ctRail(c);
+    /* Every wash and every ink below comes from the layout code's own
+       functions rather than being recomputed here. A report that mixes its
+       own version of a colour is a report that can pass while the widget
+       fails, which is the failure mode this whole panel exists to catch. */
+    var chipWash = ctChipWash(c);
+    var chipInk = ctInkOn(c.accent, chipWash, 4.5);
+    var rows = [
+      ["Format chip label on its wash", chipInk, chipWash, 4.5],
+      ["Format chip wash against the card", chipWash, c.card, 1.05],
+      ["Duration chip outline against the card", edge, c.card, 3],
+      ["Duration chip label on the card", c.body, c.card, 4.5],
+      ["Body copy on the rail", c.body, rail, 4.5],
+      ["Heading on the rail", c.heading, rail, 4.5],
+      ["Marquee button label on the button", tl.start, tl.fg, 4.5],
+      ["Marquee button against the field", tl.fg, tl.start, 4.5],
+      ["Slides counter on the card", c.accent, c.card, 4.5],
+      ["Typographic ghost number on the card", c.line, c.card, 1.05]
+    ];
+    var bad = 0;
+    var html = '<table><thead><tr><th>Pairing</th><th>Ratio</th><th>Needs</th><th></th></tr></thead><tbody>' +
+      rows.map(function (r) {
+        var v = ratio(r[1], r[2]), ok = v >= r[3] - 0.005;
+        if (!ok) bad++;
+        return "<tr><td>" + r[0] + '</td><td class="n ' + (ok ? "pass" : "fail") + '">' + v.toFixed(2) +
+          ':1</td><td class="n">' + r[3] + ':1</td><td>' +
+          '<span class="pill ' + (ok ? "ok" : "no") + '">' + (ok ? "Pass" : "Under") + "</span></td></tr>";
+      }).join("") + "</tbody></table>";
+    $("report").innerHTML = "<h2>Readability · " + p.name + "</h2>" + html +
+      '<p style="margin-top:var(--sp-3);color:var(--ink-2)">' +
+      (bad ? bad + " pairing" + (bad === 1 ? "" : "s") + " under the bar." : "Every pairing clears its bar.") +
+      " The two rows needing only 1.05:1 are surfaces that have to be merely distinguishable, not readable.</p>";
+  }
+
+  function shot(l) {
+    var code = build(l.id);
+    return '<div class="shot"><div class="shot-h"><span class="shot-id">' + l.id + "</span>" + l.name + "</div>" +
+      '<p class="shot-note">' + l.blurb + "</p>" +
+      '<div class="frame"><div style="max-width:' + state.width + 'px">' + code + "</div></div></div>";
+  }
+
+  function render() {
+    var list = state.compare ? LAYOUTS : LAYOUTS.filter(function (l) { return l.id === state.layout; });
+    $("shots").innerHTML = '<div class="stage">' + list.map(shot).join("") + "</div>";
+    $("codeOut").textContent = build(state.layout);
+    $("widthOut").textContent = state.width + "px";
+    report();
+  }
+
+  // ---- wiring ----
+  $("layoutSeg").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-layout]");
+    if (!b) return;
+    state.layout = b.dataset.layout;
+    renderLayoutSeg();
+    render();
+  });
+  $("paletteSwatches").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-preset]");
+    if (!b) return;
+    state.presetId = b.dataset.preset;
+    renderSwatches();
+    render();
+  });
+  $("fillSel").addEventListener("change", function () { state.fill = this.value; render(); });
+  $("slideCount").addEventListener("change", function () { state.slides = +this.value; render(); });
+  $("widthRange").addEventListener("input", function () { state.width = +this.value; render(); });
+  ["colObj", "colWho", "colWhy", "headOn", "allOn", "ctaOn"].forEach(function (id) {
+    $(id).addEventListener("change", render);
+  });
+  $("trainerLabel").addEventListener("input", render);
+  document.querySelectorAll(".bar .btn[data-w]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      state.width = +b.dataset.w;
+      $("widthRange").value = state.width;
+      render();
+    });
+  });
+  $("compareBtn").addEventListener("click", function () {
+    state.compare = !state.compare;
+    this.setAttribute("aria-pressed", String(state.compare));
+    render();
+  });
+
+  renderLayoutSeg();
+  renderSwatches();
+  render();
+})();
+</script>
+</body>
+</html>

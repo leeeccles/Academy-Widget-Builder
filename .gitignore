@@ -20,3 +20,19 @@ Screenshot *.png
 hero-lab.html
 classroom-lab.html
 cover-lab.html
+
+# The layout lab's generated page, and only that. Its generator and its shell
+# are tracked, because they are source: `node lab/build-lab.js` rebuilds this
+# from index.html at any time.
+#
+# The rule above does not apply to it. Those three prototypes are ignored
+# because they can drift from the shipped widget and be mistaken for it; this
+# one is sliced out of index.html every build, so it cannot drift and there is
+# nothing in it to edit by mistake.
+lab/live-training-lab.html
+
+# The design canvas the five Live training layouts came from, 2026-08-06. A
+# 230kb bundle of gzipped base64 that has to be unpacked to read. The layouts
+# shipped, and what changed on the way across is written up in index.html
+# where it can be maintained, so this is provenance rather than a source.
+Live training widget.html

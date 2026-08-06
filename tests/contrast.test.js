@@ -7,8 +7,8 @@
    report back out, so it is testing what a user would actually be told.
 
    Hero: 7 recommended presets plus 25 curated ones, times 2 layouts, times
-   2 fills. Live training: 25 palettes, one layout since the Signpost was
-   removed on 2026-07-30. */
+   2 fills. Live training: 27 palettes times 3 layouts, since Marquee and
+   Typographic shipped alongside Slides on 2026-08-06. */
 
 const { boot, wait, suite } = require("./lib/harness");
 
@@ -17,23 +17,59 @@ module.exports = async function run() {
   const t = boot();
   await wait(300);
 
-  /* ---- Live training: the pair-by-pair report ---- */
+  /* ---- Live training: the pair-by-pair report, every layout ---- */
+  /* Every palette in every layout, because the three do not paint the same
+     surfaces and so do not run the same rows. Slides has chips on a card and
+     a tinted booking rail, Marquee has chips on a tile and flips the button
+     onto the field, Typographic has no chips at all. Walking palettes against
+     a single layout would have said "all pass" while two thirds of the widget
+     went unmeasured.
+
+     That is not a hypothetical. The Marquee's Back and Next carried the
+     canvas's white-at-0.30 outline, which composites to 1.8:1 on the tile
+     against the 3:1 a boundary needs, and it failed on all 27 palettes the
+     first time the report was pointed at that layout. */
   t.click('button[data-w="classroom"]');
   t.click("#ctMoreToggle");
   let ctChecked = 0;
   const ctFails = [];
+  const ctLayouts = t.all("#ctLayoutSeg button[data-ctlayout]").map(b => b.dataset.ctlayout);
 
-  for (const mood of ["calm", "warm", "bold", "earthy", "dark"]) {
-    t.click(`#ctMoodSeg button[data-ctmood="${mood}"]`);
-    for (const btn of t.all("#ctMorePresets [data-ctpreset]")) {
-      btn.click();
-      ctChecked++;
-      const bad = t.all("#ctChecks .chk.bad").map(x => x.textContent.trim());
-      if (bad.length) ctFails.push(`${btn.dataset.ctpreset}: ${bad.join("; ")}`);
+  s.check("Live training: all three layouts are offered",
+    ctLayouts.length === 3, ctLayouts.join(","));
+
+  for (const layout of ctLayouts) {
+    t.click(`#ctLayoutSeg button[data-ctlayout="${layout}"]`);
+    // a layout that runs no rows at all is a report that has stopped looking
+    let rowsSeen = 0;
+    for (const mood of ["calm", "warm", "bold", "earthy", "dark"]) {
+      t.click(`#ctMoodSeg button[data-ctmood="${mood}"]`);
+      for (const btn of t.all("#ctMorePresets [data-ctpreset]")) {
+        btn.click();
+        ctChecked++;
+        rowsSeen = Math.max(rowsSeen, t.all("#ctChecks .chk").length);
+        const bad = t.all("#ctChecks .chk.bad").map(x => x.textContent.trim());
+        if (bad.length) ctFails.push(`${layout}/${btn.dataset.ctpreset}: ${bad.join("; ")}`);
+      }
     }
+    s.check(`Live training: ${layout} measures something`, rowsSeen >= 12, `${rowsSeen} rows`);
   }
-  s.check(`Live training: ${ctChecked} palettes all pass`,
+  s.check(`Live training: ${ctChecked} palette and layout pairings all pass`,
     ctFails.length === 0, ctFails.slice(0, 3).join(" | "));
+
+  /* The report has to follow the layout, not just run. Marquee measures its
+     field; Typographic has no tile and must not claim to have measured one.
+     This is the check that would have caught the four dead rows the report
+     carried until 2026-07-30, and it is why CT_LAYOUTS declares surfaces. */
+  t.click('#ctLayoutSeg button[data-ctlayout="marquee"]');
+  const slidesRows = t.all("#ctChecks .chk").map(x => x.textContent);
+  t.click('#ctLayoutSeg button[data-ctlayout="type"]');
+  const typeRows = t.all("#ctChecks .chk").map(x => x.textContent);
+  s.check("Live training: Marquee measures its field",
+    slidesRows.some(r => /tile/i.test(r)));
+  s.check("Live training: Typographic claims no tile it does not paint",
+    !typeRows.some(r => /tile/i.test(r)), typeRows.filter(r => /tile/i.test(r)).join(" | "));
+  t.click('#ctLayoutSeg button[data-ctlayout="slides"]');
 
   /* ---- Hero: the sentence-form warnings ---- */
   t.click('button[data-w="hero"]');
@@ -176,14 +212,20 @@ module.exports = async function run() {
     }
 
     /* Editing a colour by hand hands the tile back to the deriving walk, or the
-       tile would stay grey while everything around it moved. */
+       tile would stay grey while everything around it moved.
+
+       On the Marquee, because since 2026-08-06 it is the only layout that
+       paints a tile: Slides took the card from the design canvas and left the
+       gradient thumbnail behind. The tile maths is unchanged and still has to
+       be checked, so the check follows it to the layout that uses it. */
+    m.click('#ctLayoutSeg button[data-ctlayout="marquee"]');
     m.click('#ctPresets [data-ctpreset="black"]');
     await wait(250);
-    const blackTile = /linear-gradient\(140deg,(#[0-9a-f]{6})/i.exec(m.widget());
+    const blackTile = /linear-gradient\(134deg,(#[0-9a-f]{6})/i.exec(m.widget());
     m.click("#ctCustomToggle");
     m.fill('#ctColors input[type="text"][aria-label^="Accent"]', "#c42a92");
     await wait(400);
-    const movedTile = /linear-gradient\(140deg,(#[0-9a-f]{6})/i.exec(m.widget());
+    const movedTile = /linear-gradient\(134deg,(#[0-9a-f]{6})/i.exec(m.widget());
     s.check("editing the accent moves a stated tile with it",
       !!blackTile && !!movedTile && blackTile[1] !== movedTile[1],
       `${blackTile && blackTile[1]} -> ${movedTile && movedTile[1]}`);

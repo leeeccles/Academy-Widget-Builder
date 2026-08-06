@@ -28,9 +28,17 @@ action later without changing anything.
 
 The builder's central claim is that it cannot hand you an unreadable widget.
 This walks **every** palette it offers, in every layout and both fill modes,
-and reads the builder's own report back out: 128 hero combinations and 50
-Live training ones. It is testing what a user would actually be told, not a
-reimplementation of the maths.
+and reads the builder's own report back out: 128 hero combinations and 81
+Live training ones, being 27 palettes across all three layouts. It is testing
+what a user would actually be told, not a reimplementation of the maths.
+
+It also checks that the report *follows* the layout. The three paint different
+sets of surfaces, and a fixed list of rows would measure a widget that is not
+on screen for two of them. That is not hypothetical: until
+2026-07-30 four of eighteen rows described a layout that had been removed
+while two live states went unmeasured, one of them at 3.39:1. The rows come
+off the surface flags in `CT_LAYOUTS`, and this suite is what holds them to
+it.
 
 ### `output.test.js`
 
