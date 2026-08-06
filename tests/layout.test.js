@@ -344,11 +344,18 @@ module.exports = async function run() {
 
   /* ---- the generated widget fits its column at every width ----
      Replaces the featured-tiles check, which guarded the Signpost's card row
-     and went with it on 2026-07-30. The deck is the one layout left and it has
-     the same class of risk: a two-track grid, a tile that is a column at one
-     width and a band at another, and pills that wrap. Any of those can push
-     past the block it was pasted into, and a widget that overflows its column
-     on somebody's homepage is the worst thing this builder could ship. */
+     and went with it on 2026-07-30. Every layout carries the same class of
+     risk: a two-track grid, a tile that is a column at one width and a band at
+     another, and pills that wrap. Any of those can push past the block it was
+     pasted into, and a widget that overflows its column on somebody's homepage
+     is the worst thing this builder could ship.
+
+     All three layouts since 2026-08-06, because each brings its own grid and
+     its own breakpoints: Slides pairs a card with a tinted rail, Marquee
+     splits its bullets two-up above 1000px and places its nav row absolutely
+     over space the card reserves, and Typographic runs a three-track hairline
+     grid. The absolute nav is the arrangement most likely to escape a narrow
+     column, so it is the one worth 27 renders. */
   {
     const p = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
     await p.goto(PAGE);
@@ -357,6 +364,8 @@ module.exports = async function run() {
     await p.waitForTimeout(500);
 
     const bad = [];
+    const layouts = await p.$$eval("#ctLayoutSeg button[data-ctlayout]",
+      bs => bs.map(b => b.dataset.ctlayout));
     for (const [label, setup] of [
       ["3 slides", null],
       ["1 slide", async () => {
@@ -372,6 +381,9 @@ module.exports = async function run() {
       }]
     ]) {
       if (setup) { await setup(); await p.waitForTimeout(500); }
+      for (const layout of layouts) {
+      await p.click(`#ctLayoutSeg button[data-ctlayout="${layout}"]`);
+      await p.waitForTimeout(400);
       const code = await p.evaluate(() => document.getElementById("code").textContent);
 
       for (const cw of [320, 380, 460, 540, 620, 700, 820, 980, 1210]) {
@@ -387,11 +399,13 @@ module.exports = async function run() {
             .map(e => e.className && e.className.toString().split(" ")[0])
             .filter(Boolean).slice(0, 3);
         });
-        if (over.length) bad.push(`${label} at ${cw}px overflowed: ${over.join(", ")}`);
+        if (over.length) bad.push(`${layout}, ${label} at ${cw}px overflowed: ${over.join(", ")}`);
         await v.close();
       }
+      }
     }
-    s.check("the generated widget never overflows its column", bad.length === 0, bad.join(" | "));
+    s.check("the generated widget never overflows its column, in every layout",
+      bad.length === 0, bad.slice(0, 3).join(" | "));
     await p.close();
   }
 

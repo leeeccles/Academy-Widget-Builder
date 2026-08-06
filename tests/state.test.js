@@ -27,6 +27,9 @@ module.exports = async function run() {
     const t = boot();
     await wait(300);
     t.click('button[data-w="classroom"]');
+    // a non-default layout, so the round trips below prove the key travels
+    // rather than proving that the default happens to match
+    t.click('#ctLayoutSeg button[data-ctlayout="marquee"]');
     t.fill('#ctPanel input[type="text"]', "Workshops for the autumn");
     await wait(900);   // saveSoon debounces at 600ms
 
@@ -46,6 +49,12 @@ module.exports = async function run() {
       await wait(400);
       s.equal("share link restores the edit",
         u.$('#ctPanel input[type="text"]').value, "Workshops for the autumn");
+      /* The layout has to travel with the content, and it has to travel as a
+         pressed control rather than only as internal state: somebody opening
+         a shared link sees six buttons and has to be able to tell which one
+         they were given. */
+      s.equal("share link restores the layout",
+        u.$('#ctLayoutSeg button[aria-checked="true"]').dataset.ctlayout, "marquee");
       // left in place, a refresh would silently discard everything done since
       s.check("share link hash is stripped after loading", u.window.location.hash === "");
       s.check("share link opens on the right widget", !u.$("#panelClassroom").hidden);
@@ -90,6 +99,18 @@ module.exports = async function run() {
     t.click('#ctMorePresets [data-ctpreset="navy"]');
     await wait(500); made.push(["path slides, dark", t.code()]);
 
+    /* Both of the 2026-08-06 layouts, each round-tripped through its own
+       emitted code. This is the check that matters most for them: a customer
+       copies the widget out of their homepage months later and pastes it back
+       to make one edit, and it has to come back as the layout they are looking
+       at rather than as the default. */
+    for (const id of ["marquee", "type"]) {
+      t.click(`#ctLayoutSeg button[data-ctlayout="${id}"]`);
+      await wait(500); made.push([`live training, ${id}`, t.code()]);
+    }
+    t.click('#ctLayoutSeg button[data-ctlayout="slides"]');
+    await wait(300);
+
     t.click('button[data-w="companion"]');
     t.fill("#prompts input", "What training is on this month?");
     await wait(500); made.push(["companion", t.code()]);
@@ -132,8 +153,18 @@ module.exports = async function run() {
         btnBg: "#fff", btnFg: "#000", panel2: "#eee" } } })],
       // deliberately the pre-2026-07-30 shape: a saved link or a pasted widget
       // from before the Signpost was removed still has to load without throwing
+      // deliberately the pre-2026-07-30 shape. Since 2026-08-06 `layout` is a
+      // live key again, so "signpost" is no longer merely ignored: it is an id
+      // that selects nothing, and ctCleanLayout is what turns it back into
+      // Slides rather than into an empty preview.
       ["a removed layout, with its data", mark({ v: 1, active: "classroom", classroom: {
         layout: "signpost", w1: { items: [{ title: "T", dur: "two hours" }] } } })],
+      ["a layout id that never existed", mark({ v: 1, active: "classroom", classroom: {
+        layout: "banana", w2: { slides: [{ title: "T" }] } } })],
+      ["a layout id that is not a string", mark({ v: 1, active: "classroom", classroom: {
+        layout: { toString: () => "marquee" }, w2: { slides: [{ title: "T" }] } } })],
+      ["a layout id borrowed from Object.prototype", mark({ v: 1, active: "classroom", classroom: {
+        layout: "constructor", w2: { slides: [{ title: "T" }] } } })],
       ["a duration that is a string", mark({ v: 1, active: "classroom", classroom: {
         w2: { slides: [{ title: "T", dur: "two hours" }] } } })],
       ["a bullet list that is not a list", mark({ v: 1, active: "classroom", classroom: {
@@ -200,6 +231,9 @@ module.exports = async function run() {
     blackSession.click('button[data-w="classroom"]');
     await wait(400);
     blackSession.$('#ctPresets [data-ctpreset="black"]').click();
+    // the Marquee, because it is the only layout carrying a tile since
+    // 2026-08-06, and the tile is what the Black palette states by hand
+    blackSession.click('#ctLayoutSeg button[data-ctlayout="marquee"]');
     await wait(400);
     const blackWidget = norm(blackSession.widget());
     const blackCode = blackSession.code();
@@ -330,7 +364,13 @@ module.exports = async function run() {
   {
     const t = boot();
     await wait(300);
+    /* `layout: "marquee"` is part of the attack, not scenery. The tile is the
+       one palette role that lands inside a `linear-gradient()` value, and
+       since 2026-08-06 only the Marquee paints one, so a payload that did not
+       also select it would be checked against a layout that never reads the
+       field. */
     t.$("#loadCode").value = mark({ v: 1, active: "classroom", classroom: { fill: "none", presetId: null,
+      layout: "marquee",
       c: { dark: false, panel: "#f4f4f5", panel2: "#e8e8ea", card: "#ffffff", line: "#e4e4e7",
            heading: "#111114", accent: "#3f3f46", body: "#52525b", btnBg: "#18181b", btnFg: "#ffffff",
            tile: ["red 0%,blue 100%);}body{display:none}.x{background:linear-gradient(red", "#000000"] } } });
@@ -340,8 +380,8 @@ module.exports = async function run() {
     s.check("a hostile tile cannot escape its declaration",
       !widget.includes(".x{background") && !widget.includes("blue 100%"));
     s.check("the tile falls back to a real colour",
-      /linear-gradient\(140deg,#[0-9a-f]{6} 0%,#[0-9a-f]{6} 100%\)/i.test(widget),
-      (widget.match(/linear-gradient\(140deg[^)]*\)/) || ["none"])[0]);
+      /linear-gradient\(134deg,#[0-9a-f]{6} 0%,#[0-9a-f]{6} 100%\)/i.test(widget),
+      (widget.match(/linear-gradient\(134deg[^)]*\)/) || ["none"])[0]);
     s.check("no page errors on a hostile tile", t.errors.length === 0, t.errors.join(" | "));
     t.close();
   }
