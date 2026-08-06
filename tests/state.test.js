@@ -346,5 +346,50 @@ module.exports = async function run() {
     t.close();
   }
 
+  /* ---- an empty heading is empty, not "Welcome" ----
+     buildHero used to substitute the word "Welcome" when both heading fields
+     were blank. That put a word into somebody's academy homepage that they
+     had not typed, could not see in either field, and could only find by
+     reading the generated code. */
+  {
+    const t = boot();
+    await wait(300);
+    t.click('button[data-w="hero"]');
+    await wait(300);
+    t.fill("#h1", "");
+    t.fill("#h2i", "");
+    await wait(600);
+    const code = t.code();
+    s.check("an empty heading invents no word", !/Welcome/.test(code));
+    s.check("and leaves no empty heading element behind", !/-title"><\/h2>/.test(code));
+    s.check("and the builder says the heading is missing",
+      /No heading/.test(t.$("#previewNotes").textContent || ""),
+      (t.$("#previewNotes").textContent || "").slice(0, 80));
+    t.close();
+  }
+
+  /* ---- the link field does not open in a fault ----
+     Selecting Hero used to show #href red with aria-invalid set before any
+     interaction: a first-timer told they had made a mistake before doing
+     anything, and a screen reader announcing "invalid entry" on a field
+     nobody had reached. The sentence was an instruction wearing an error's
+     clothes. It stays an instruction until the field is left or Copy is
+     pressed. */
+  {
+    const t = boot();
+    await wait(300);
+    t.click('button[data-w="hero"]');
+    await wait(400);
+    s.check("the empty link is not announced as invalid on arrival",
+      t.$("#href").getAttribute("aria-invalid") === "false");
+    s.check("the empty link reads as a hint, not an error",
+      t.$("#hrefErr").className === "hint", t.$("#hrefErr").className);
+    t.click("#copy");
+    await wait(300);
+    s.check("copying promotes it to a real error",
+      t.$("#hrefErr").className === "err" && t.$("#href").getAttribute("aria-invalid") === "true");
+    t.close();
+  }
+
   return s;
 };

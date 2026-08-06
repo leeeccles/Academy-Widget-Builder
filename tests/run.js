@@ -10,7 +10,8 @@ const wantBrowser = process.argv.includes("--browser");
 const SUITES = [
   "./contrast.test.js",
   "./output.test.js",
-  "./state.test.js"
+  "./state.test.js",
+  "./covers.test.js"
 ].concat(wantBrowser ? ["./layout.test.js"] : []);
 
 const GREEN = "\x1b[32m", RED = "\x1b[31m", DIM = "\x1b[2m", OFF = "\x1b[0m";

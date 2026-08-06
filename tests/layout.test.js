@@ -111,7 +111,7 @@ module.exports = async function run() {
     await p.goto(PAGE);
     await p.waitForTimeout(500);
     const small = [], tight = [];
-    for (const w of ["companion", "hero", "classroom"]) {
+    for (const w of ["companion", "hero", "classroom", "covers"]) {
       await p.click(`[data-w="${w}"]`);
       await p.waitForTimeout(350);
       await p.evaluate(() => document.querySelectorAll(".disclose[aria-expanded=false]").forEach(b => b.click()));
@@ -159,7 +159,7 @@ module.exports = async function run() {
     await p.goto(PAGE);
     await p.waitForTimeout(500);
     const sizes = new Set();
-    for (const w of ["companion", "hero", "classroom"]) {
+    for (const w of ["companion", "hero", "classroom", "covers"]) {
       await p.click(`[data-w="${w}"]`);
       await p.waitForTimeout(350);
       await p.evaluate(() => {
@@ -172,7 +172,19 @@ module.exports = async function run() {
         document.querySelectorAll("body *").forEach(el => {
           const s = getComputedStyle(el);
           if (s.display === "none" || !el.offsetParent) return;
+          /* Paints nothing, so it renders no type. The covers type fitter
+             measures in an off-screen rule that it leaves holding whichever
+             size it last tried, and those are fractional on the template that
+             sizes its title to the homepage crop: 195.802px, from a measuring
+             instrument nobody can see. */
+          if (s.visibility === "hidden") return;
           if (![...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) return;
+          /* Anything inside a `.cv` is the cover itself, which is artwork
+             rather than interface: a title set at 220px is the product this
+             tool exists to make, and the display sizes come from the design
+             doc and the type fitter, not from the builder's scale. The rule
+             is about the chrome around it, and the chrome is still scanned. */
+          if (el.closest(".cv")) return;
           out.push(parseFloat(s.fontSize));
         });
         return [...new Set(out)];
@@ -247,7 +259,7 @@ module.exports = async function run() {
     await p.goto(PAGE);
     await p.waitForTimeout(500);
     const bad = [];
-    for (const w of ["companion", "hero", "classroom"]) {
+    for (const w of ["companion", "hero", "classroom", "covers"]) {
       await p.click(`[data-w="${w}"]`);
       await p.waitForTimeout(400);
       const gaps = await p.evaluate(() => {
@@ -487,6 +499,179 @@ module.exports = async function run() {
     await p.waitForTimeout(400);
     s.check("picking a preset clears an error left under a colour field",
       !(await p.isVisible(err)));
+    await p.close();
+  }
+
+  /* ---- every colour control can be typed into ----
+     The three "build from one colour" seeds were a swatch and nothing else
+     until 2026-08-06, so the one thing somebody arriving with a brand guide
+     wants to do, paste #0B6E4F, was the one thing they could not do: they had
+     to open the OS picker and match it by eye, in the panel called "Match your
+     brand colours". They share `pairHex` with the palette roles now, so this
+     checks the sharing held rather than restating the rules: same expansion,
+     same silence while half-typed, same snap-back. */
+  {
+    const p = await browser.newPage({ viewport: { width: 1500, height: 1000 } });
+    await p.goto(PAGE);
+    await p.waitForTimeout(600);
+    const seeds = [
+      ["hero", "hero", "#customToggle", "#seedColor", "#seedHex", "#seedHexE"],
+      ["companion", "companion", "#cwCustomToggle", "#cwSeedColor", "#cwSeedHex", "#cwSeedHexE"],
+      ["live training", "classroom", "#ctCustomToggle", "#ctSeedColor", "#ctSeedHex", "#ctSeedHexE"]
+    ];
+    const broken = [];
+    for (const [name, w, toggle, swatch, hex, err] of seeds) {
+      await p.click(`button[data-w="${w}"]`);
+      await p.waitForTimeout(350);
+      await p.click(toggle);
+      await p.waitForTimeout(250);
+
+      if (!(await p.isVisible(hex))) { broken.push(`${name}: no hex field`); continue; }
+
+      await p.fill(hex, "#0b6e4f");
+      await p.waitForTimeout(250);
+      if (await p.inputValue(swatch) !== "#0b6e4f") broken.push(`${name}: typing did not move the swatch`);
+
+      await p.fill(hex, "#0f0");
+      await p.waitForTimeout(250);
+      if (await p.inputValue(swatch) !== "#00ff00") broken.push(`${name}: shorthand did not expand`);
+
+      await p.fill(hex, "#4a3f");
+      await p.waitForTimeout(250);
+      if (await p.isVisible(err)) broken.push(`${name}: warned about a half-typed value`);
+
+      await p.fill(hex, "#zz");
+      await p.waitForTimeout(250);
+      if (!(await p.isVisible(err))) broken.push(`${name}: stayed quiet about a non-hex character`);
+
+      // blur snaps an unparseable value back to the colour that still works
+      await p.click(toggle);
+      await p.click(toggle);
+      await p.waitForTimeout(300);
+      if (await p.inputValue(hex) !== await p.inputValue(swatch)) {
+        broken.push(`${name}: field and swatch disagree after leaving it`);
+      }
+
+      // and the swatch still drives the field, not only the other way round
+      await p.evaluate(sel => {
+        const el = document.querySelector(sel);
+        el.value = "#123456";
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+      }, swatch);
+      await p.waitForTimeout(250);
+      if (await p.inputValue(hex) !== "#123456") broken.push(`${name}: swatch did not update the hex`);
+    }
+    s.check("every seed colour can be typed as a hex, not only picked",
+      broken.length === 0, broken.join(" | "));
+    await p.close();
+  }
+
+  /* ---- arrows move in two dimensions ----
+     The roving-tabindex handler treated every group as one long line, so
+     ArrowDown was a synonym for ArrowRight. In the five-wide symbol grid Down
+     went from Padlock to Key, one to the right, when the thing directly below
+     Padlock was Scales. Thirty symbols in six groups is exactly where
+     somebody reaches for Down.
+
+     Geometry rather than a step count, because these grids are ragged: "No
+     symbol" spans all five columns, group headings break the flow, and the
+     column count changes with the viewport. So this asserts the *rectangles*
+     move correctly rather than which index was chosen. */
+  {
+    const p = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    await p.goto(PAGE);
+    await p.waitForTimeout(600);
+    await p.click('button[data-w="covers"]');
+    await p.waitForTimeout(900);
+    await p.click('#cvTemplates button[data-cvdesign="2a"]');
+    await p.waitForTimeout(400);
+
+    const at = () => p.evaluate(() => {
+      const a = document.activeElement, r = a.getBoundingClientRect();
+      return { label: a.getAttribute("aria-label") || a.textContent.trim(), top: Math.round(r.top), left: Math.round(r.left) };
+    });
+    const wrong = [];
+
+    for (const [name, sel] of [["symbols", "#cvSymbols"], ["templates", "#cvTemplates"], ["widget list", "#wtype"]]) {
+      await p.focus(`${sel} button[tabindex="0"]`);
+      const a = await at();
+      await p.keyboard.press("ArrowDown");
+      await p.waitForTimeout(280);
+      const d = await at();
+      if (!(d.top > a.top)) wrong.push(`${name}: Down stayed on the row (${a.label} -> ${d.label})`);
+    }
+
+    // and a column is held across a vertical move in the widest grid
+    await p.focus('#cvSymbols button[tabindex="0"]');
+    await p.keyboard.press("ArrowDown");
+    await p.waitForTimeout(250);
+    await p.keyboard.press("ArrowRight");
+    await p.waitForTimeout(250);
+    const before = await at();
+    await p.keyboard.press("ArrowDown");
+    await p.waitForTimeout(250);
+    const below = await at();
+    if (!(below.top > before.top && Math.abs(below.left - before.left) < 6)) {
+      wrong.push(`symbols: Down lost the column (${before.left} -> ${below.left})`);
+    }
+    await p.keyboard.press("ArrowUp");
+    await p.waitForTimeout(250);
+    const back = await at();
+    if (back.label !== before.label) wrong.push(`symbols: Up did not undo Down (${before.label} -> ${back.label})`);
+
+    s.check("ArrowDown moves a row down, not one to the right",
+      wrong.length === 0, wrong.join(" | "));
+    await p.close();
+  }
+
+  /* ---- there is a way to the artefact on a phone ----
+     Live training is 8,482px at 390px wide, hero 4,651 and covers 4,803, and
+     the button somebody came for is at the bottom of all three. The skip link
+     is revealed by :focus so a thumb can never reach it. The bar carries the
+     primary action down the page instead, and forwards to the real control
+     rather than reimplementing it. */
+  {
+    const p = await browser.newPage({ viewport: { width: 390, height: 844 } });
+    await p.goto(PAGE);
+    await p.waitForTimeout(600);
+    const bad = [];
+    for (const [w, label] of [["companion", "Copy widget code"], ["hero", "Copy widget code"],
+                              ["classroom", "Copy widget code"], ["covers", "Download image"]]) {
+      await p.click(`button[data-w="${w}"]`);
+      await p.waitForTimeout(700);
+      const m = await p.evaluate(() => {
+        const bar = document.getElementById("actionBar");
+        const r = bar.getBoundingClientRect();
+        return {
+          shown: getComputedStyle(bar).display !== "none",
+          label: document.getElementById("barAction").textContent,
+          bottom: Math.round(r.bottom), vh: window.innerHeight,
+          tabbable: document.getElementById("barAction").tabIndex >= 0
+        };
+      });
+      if (!m.shown) bad.push(`${w}: no bar`);
+      if (m.label !== label) bad.push(`${w}: bar says "${m.label}"`);
+      if (m.bottom > m.vh + 2) bad.push(`${w}: bar below the fold (${m.bottom} of ${m.vh})`);
+      // it duplicates a control that is already in the tab order, so it must
+      // not add a second stop for a keyboard user
+      if (m.tabbable) bad.push(`${w}: bar button is a second tab stop`);
+    }
+    s.check("every tool has its primary action within reach on a phone",
+      bad.length === 0, bad.join(" | "));
+
+    // pressing it must drive the real button, not a copy of its logic
+    await p.click('button[data-w="classroom"]');
+    await p.waitForTimeout(600);
+    await p.evaluate(() => { navigator.clipboard.writeText = () => Promise.resolve(); });
+    await p.click("#barAction");
+    await p.waitForTimeout(600);
+    s.check("the bar drives the real Copy button",
+      /Copied|Copy failed/.test(await p.textContent("#copy")), await p.textContent("#copy"));
+
+    await p.setViewportSize({ width: 1440, height: 1000 });
+    await p.waitForTimeout(400);
+    s.check("and it is gone on desktop, where the real button is always on screen",
+      await p.evaluate(() => getComputedStyle(document.getElementById("actionBar")).display === "none"));
     await p.close();
   }
 
